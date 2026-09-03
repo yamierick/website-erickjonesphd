@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Basics of Markov Chains · Erick C. Jones Jr., Ph.D.</title>
+<meta name="description" content="Assistant Professor, Industrial, Manufacturing, and Systems Engineering, UT Arlington. Building the future of energy and critical mineral systems — end to end and back.">
+<link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+<header class="site-header">
+  <a class="site-title" href="/">Erick C. Jones Jr.</a>
+  <nav>
+    <a href="/about/">About</a><a href="/research/">Research</a><a href="/labs/">Labs</a><a href="/publications/">Publications</a><a href="/teaching/">Teaching</a><a href="/resources/">Resources</a><a href="/beyond/">Beyond</a>
+  </nav>
+</header>
+<main>
+
+<article>
+  <h1>Basics of Markov Chains</h1>
+  <p class="meta"><time>January 4, 2020</time> · ORIE Basics</p>
+  <h2 id="background">Background</h2>
+<p>This post explores how to markov chains work and how to visulaize them in R.
+I use a R package specifically designed to visualize markov chains.
+I also represent these markov chains using tables.
+This is a reproducible example if you have R Studio just  make sure you have installed the correct packages.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-r" data-lang="r"><span style="display:flex;"><span><span style="color:#a6e22e">library</span>(markovchain)
+</span></span></code></pre></div><pre tabindex="0"><code>## Warning: package &#39;markovchain&#39; was built under R version 4.1.2
+</code></pre><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-r" data-lang="r"><span style="display:flex;"><span><span style="color:#a6e22e">library</span>(diagram)
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#Allows the use of exponential operators in matrix</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">library</span>(expm)
+</span></span></code></pre></div><pre tabindex="0"><code>## Warning: package &#39;expm&#39; was built under R version 4.1.2
+</code></pre><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-r" data-lang="r"><span style="display:flex;"><span><span style="color:#75715e">#library(matlib)</span>
+</span></span></code></pre></div><h2 id="example">Example</h2>
+<p>A good article about Markov Chain Monte Carlo Methods: <a href="https://towardsdatascience.com/a-zero-math-introduction-to-markov-chain-monte-carlo-methods-dcba889e0c50">https://towardsdatascience.com/a-zero-math-introduction-to-markov-chain-monte-carlo-methods-dcba889e0c50</a></p>
+<p>Example from <a href="https://www.analyticsvidhya.com/blog/2014/07/markov-chain-simplified/">https://www.analyticsvidhya.com/blog/2014/07/markov-chain-simplified/</a></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-r" data-lang="r"><span style="display:flex;"><span><span style="color:#75715e"># Creating a transition matrix</span>
+</span></span><span style="display:flex;"><span>trans_mat <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">matrix</span>(<span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">0.7</span>,<span style="color:#ae81ff">0.3</span>,<span style="color:#ae81ff">0.1</span>,<span style="color:#ae81ff">0.9</span>),nrow <span style="color:#f92672">=</span> <span style="color:#ae81ff">2</span>, byrow <span style="color:#f92672">=</span> <span style="color:#66d9ef">TRUE</span>)
+</span></span><span style="display:flex;"><span>trans_mat
+</span></span></code></pre></div><pre tabindex="0"><code>##      [,1] [,2]
+## [1,]  0.7  0.3
+## [2,]  0.1  0.9
+</code></pre><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-r" data-lang="r"><span style="display:flex;"><span><span style="color:#75715e"># create the Discrete Time Markov Chain</span>
+</span></span><span style="display:flex;"><span>disc_trans <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">new</span>(<span style="color:#e6db74">&#34;markovchain&#34;</span>,transitionMatrix<span style="color:#f92672">=</span>trans_mat, states<span style="color:#f92672">=</span><span style="color:#a6e22e">c</span>(<span style="color:#e6db74">&#34;Pepsi&#34;</span>,<span style="color:#e6db74">&#34;Coke&#34;</span>), name<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;MC 1&#34;</span>) 
+</span></span><span style="display:flex;"><span>mcDF <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">as</span>(disc_trans,<span style="color:#e6db74">&#34;data.frame&#34;</span>)
+</span></span><span style="display:flex;"><span>mcDF
+</span></span></code></pre></div><pre tabindex="0"><code>##      t0    t1 prob
+## 1 Pepsi Pepsi  0.7
+## 2 Pepsi  Coke  0.3
+## 3  Coke Pepsi  0.1
+## 4  Coke  Coke  0.9
+</code></pre><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-r" data-lang="r"><span style="display:flex;"><span>disc_trans
+</span></span></code></pre></div><pre tabindex="0"><code>## MC 1 
+##  A  2 - dimensional discrete Markov Chain defined by the following states: 
+##  Pepsi, Coke 
+##  The transition matrix  (by rows)  is defined as follows: 
+##       Pepsi Coke
+## Pepsi   0.7  0.3
+## Coke    0.1  0.9
+</code></pre><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-r" data-lang="r"><span style="display:flex;"><span><span style="color:#a6e22e">plot</span>(disc_trans)
+</span></span></code></pre></div><img src="/blog/ORIE/Markov Chains/markovchains_files/figure-html/unnamed-chunk-3-1.png" width="672" />
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-r" data-lang="r"><span style="display:flex;"><span><span style="color:#75715e">#Market Share after one month</span>
+</span></span><span style="display:flex;"><span>Current_state <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">0.55</span>,<span style="color:#ae81ff">0.45</span>)
+</span></span><span style="display:flex;"><span>steps <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>finalState <span style="color:#f92672">&lt;-</span> Current_state<span style="color:#f92672">*</span>disc_trans^steps <span style="color:#75715e">#using power operator</span>
+</span></span><span style="display:flex;"><span>finalState
+</span></span></code></pre></div><pre tabindex="0"><code>##      Pepsi Coke
+## [1,]  0.43 0.57
+</code></pre><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-r" data-lang="r"><span style="display:flex;"><span><span style="color:#75715e">#Market Share after two month</span>
+</span></span><span style="display:flex;"><span>Current_state <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">0.55</span>,<span style="color:#ae81ff">0.45</span>)
+</span></span><span style="display:flex;"><span>steps <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span>finalState <span style="color:#f92672">&lt;-</span> Current_state<span style="color:#f92672">*</span>disc_trans^steps <span style="color:#75715e">#using power operator</span>
+</span></span><span style="display:flex;"><span>finalState
+</span></span></code></pre></div><pre tabindex="0"><code>##      Pepsi  Coke
+## [1,] 0.358 0.642
+</code></pre><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-r" data-lang="r"><span style="display:flex;"><span><span style="color:#75715e">#Markov Chain Statistical Operations</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">steadyStates</span>(disc_trans)
+</span></span></code></pre></div><pre tabindex="0"><code>##      Pepsi Coke
+## [1,]  0.25 0.75
+</code></pre><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-r" data-lang="r"><span style="display:flex;"><span><span style="color:#a6e22e">meanFirstPassageTime</span>(disc_trans)
+</span></span></code></pre></div><pre tabindex="0"><code>##       Pepsi     Coke
+## Pepsi     0 3.333333
+## Coke     10 0.000000
+</code></pre><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-r" data-lang="r"><span style="display:flex;"><span><span style="color:#a6e22e">meanRecurrenceTime</span>(disc_trans)
+</span></span></code></pre></div><pre tabindex="0"><code>##    Pepsi     Coke 
+## 4.000000 1.333333
+</code></pre><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-r" data-lang="r"><span style="display:flex;"><span><span style="color:#a6e22e">hittingProbabilities</span>(disc_trans)
+</span></span></code></pre></div><pre tabindex="0"><code>##       Pepsi Coke
+## Pepsi     1    1
+## Coke      1    1
+</code></pre><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-r" data-lang="r"><span style="display:flex;"><span><span style="color:#a6e22e">meanAbsorptionTime</span>(disc_trans)
+</span></span></code></pre></div><pre tabindex="0"><code>## named numeric(0)
+</code></pre><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-r" data-lang="r"><span style="display:flex;"><span><span style="color:#75715e">#absorptionProbabilities(disc_trans)</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">period</span>(disc_trans)
+</span></span></code></pre></div><pre tabindex="0"><code>## [1] 1
+</code></pre><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-r" data-lang="r"><span style="display:flex;"><span><span style="color:#a6e22e">summary</span>(disc_trans)
+</span></span></code></pre></div><pre tabindex="0"><code>## MC 1  Markov chain that is composed by: 
+## Closed classes: 
+## Pepsi Coke 
+## Recurrent classes: 
+## {Pepsi,Coke}
+## Transient classes: 
+## NONE 
+## The Markov chain is irreducible 
+## The absorbing states are: NONE
+</code></pre><h2 id="manually-calculating-markov-chains">Manually Calculating Markov Chains</h2>
+<p><a href="https://www.probabilitycourse.com/chapter11/11_2_1_introduction.php">https://www.probabilitycourse.com/chapter11/11_2_1_introduction.php</a></p>
+<p>Chapman-Kolmogorov Equation:</p>
+<p>P^(n) = P^n
+p_ij^(m+n) = P(X_m+n = j | X_0 = i) = sum(p_ik^(m)*p_kj^(n))</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-r" data-lang="r"><span style="display:flex;"><span><span style="color:#75715e">#Probabilty Space after 5 steps</span>
+</span></span><span style="display:flex;"><span>steps <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">5</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Current_state<span style="color:#f92672">%*%</span>(trans_mat<span style="color:#f92672">%^%</span>steps)
+</span></span></code></pre></div><pre tabindex="0"><code>##          [,1]     [,2]
+## [1,] 0.273328 0.726672
+</code></pre><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-r" data-lang="r"><span style="display:flex;"><span><span style="color:#75715e">#Mean Return and Mean Hitting Times using Recursive Equations</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#r_l = 1 + sum(t_k*p_lk)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#t_l = 0; t_k = 1 + sum(t_j*p_kj)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#Given X_0 = Coke time until pepsi first time, t_pepsi = 0</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># t_coke = 1 + 1/10*t_pepsi + 9/10t_coke</span>
+</span></span><span style="display:flex;"><span>t_coke <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">solve</span>(<span style="color:#ae81ff">1</span><span style="color:#f92672">/</span><span style="color:#ae81ff">10</span>,<span style="color:#ae81ff">1</span>)
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#r_pepsi = 1 + 7/10*t_pepsi + 3/10*t_coke</span>
+</span></span><span style="display:flex;"><span>r_pepsi <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">1</span> <span style="color:#f92672">+</span> <span style="color:#ae81ff">3</span><span style="color:#f92672">/</span><span style="color:#ae81ff">10</span><span style="color:#f92672">*</span>t_coke
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">meanFirstPassageTime</span>(disc_trans)
+</span></span></code></pre></div><pre tabindex="0"><code>##       Pepsi     Coke
+## Pepsi     0 3.333333
+## Coke     10 0.000000
+</code></pre><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-r" data-lang="r"><span style="display:flex;"><span>t_coke
+</span></span></code></pre></div><pre tabindex="0"><code>## [1] 10
+</code></pre><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-r" data-lang="r"><span style="display:flex;"><span><span style="color:#a6e22e">meanRecurrenceTime</span>(disc_trans)
+</span></span></code></pre></div><pre tabindex="0"><code>##    Pepsi     Coke 
+## 4.000000 1.333333
+</code></pre><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-r" data-lang="r"><span style="display:flex;"><span>r_pepsi
+</span></span></code></pre></div><pre tabindex="0"><code>## [1] 4
+</code></pre><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-r" data-lang="r"><span style="display:flex;"><span><span style="color:#75715e">#Steady State</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#Stationary Distribtution pi = pi*P, sum(pi) = 1 and if irreducible and aperiodic pi_j = lim(n&gt;inf)P(X_n =j | X_0 = i)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#pi_p = 7/10pi_p+1/10pi_c; pi_c = 3/10pi_p + 9/10pi_c, pi_c+pi_p =1</span>
+</span></span><span style="display:flex;"><span>A <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">matrix</span>(<span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">-3</span><span style="color:#f92672">/</span><span style="color:#ae81ff">10</span>,<span style="color:#ae81ff">1</span><span style="color:#f92672">/</span><span style="color:#ae81ff">10</span>,<span style="color:#ae81ff">3</span><span style="color:#f92672">/</span><span style="color:#ae81ff">10</span>,<span style="color:#ae81ff">-1</span><span style="color:#f92672">/</span><span style="color:#ae81ff">10</span>,<span style="color:#ae81ff">1</span>,<span style="color:#ae81ff">1</span>), nrow <span style="color:#f92672">=</span><span style="color:#ae81ff">3</span>, byrow <span style="color:#f92672">=</span> <span style="color:#66d9ef">TRUE</span> )
+</span></span><span style="display:flex;"><span>B <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">1</span>)
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">steadyStates</span>(disc_trans)
+</span></span></code></pre></div><pre tabindex="0"><code>##      Pepsi Coke
+## [1,]  0.25 0.75
+</code></pre><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-r" data-lang="r"><span style="display:flex;"><span><span style="color:#75715e"># Solve(A,B)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#rm(Current_state, disc_trans, finalState,steps,trans_mat)</span>
+</span></span></code></pre></div><h2 id="continous-time-markov-chains">Continous Time Markov Chains</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-r" data-lang="r"><span style="display:flex;"><span>energyStates <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">c</span>(<span style="color:#e6db74">&#34;sigma&#34;</span>, <span style="color:#e6db74">&#34;sigma_star&#34;</span>)
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#Must produce generator matrix from a transistion probablity matrix</span>
+</span></span><span style="display:flex;"><span>Q <span style="color:#f92672">&lt;-</span> expm<span style="color:#f92672">::</span><span style="color:#a6e22e">logm</span>(disc_trans<span style="color:#f92672">@</span>transitionMatrix,method<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;Eigen&#39;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>gen <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">matrix</span>(data <span style="color:#f92672">=</span> <span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">-3</span>, <span style="color:#ae81ff">3</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">-1</span>), nrow <span style="color:#f92672">=</span> <span style="color:#ae81ff">2</span>, byrow <span style="color:#f92672">=</span> <span style="color:#66d9ef">TRUE</span>, dimnames <span style="color:#f92672">=</span> <span style="color:#a6e22e">list</span>(energyStates, energyStates))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>molecularCTMC <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">new</span>(<span style="color:#e6db74">&#34;ctmc&#34;</span>, states <span style="color:#f92672">=</span> energyStates, byrow <span style="color:#f92672">=</span> <span style="color:#66d9ef">TRUE</span>, generator <span style="color:#f92672">=</span> gen, name <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;Molecular Transition Model&#34;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>statesDist <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">0.8</span>, <span style="color:#ae81ff">0.2</span>)
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">rctmc</span>(n <span style="color:#f92672">=</span> <span style="color:#ae81ff">3</span>, ctmc <span style="color:#f92672">=</span> molecularCTMC, initDist <span style="color:#f92672">=</span> statesDist, out.type <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;df&#34;</span>, include.T0 <span style="color:#f92672">=</span> <span style="color:#66d9ef">FALSE</span>, T <span style="color:#f92672">=</span> <span style="color:#ae81ff">4</span>)
+</span></span></code></pre></div><pre tabindex="0"><code>##       states              time
+## 1 sigma_star 0.450251907717093
+## 2      sigma  2.81869318570598
+## 3 sigma_star  2.87532378315582
+</code></pre><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-r" data-lang="r"><span style="display:flex;"><span><span style="color:#a6e22e">steadyStates</span>(molecularCTMC)
+</span></span></code></pre></div><pre tabindex="0"><code>##      sigma sigma_star
+## [1,]  0.25       0.75
+</code></pre><h2 id="q-learning-with-liars-dice">Q-Learning with Liars Dice</h2>
+<p><a href="http://gradientdescending.com/q-learning-example-with-liars-dice-in-r/">http://gradientdescending.com/q-learning-example-with-liars-dice-in-r/</a></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-r" data-lang="r"><span style="display:flex;"><span><span style="color:#75715e"># play a round of liars dice</span>
+</span></span><span style="display:flex;"><span>liars.dice.round <span style="color:#f92672">&lt;-</span> <span style="color:#66d9ef">function</span>(players, control, player.dice.count, agents, game.states, reward, Q.mat, a <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>, verbose <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>){
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e"># set array for recording results</span>
+</span></span><span style="display:flex;"><span>  y.ctrl <span style="color:#f92672">=</span> <span style="color:#a6e22e">c</span>(); y.state <span style="color:#f92672">=</span> <span style="color:#a6e22e">c</span>(); y.action <span style="color:#f92672">=</span> <span style="color:#a6e22e">c</span>()
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e"># roll the dice for each player</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span>(verbose <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">0</span>) <span style="color:#a6e22e">cat</span>(<span style="color:#e6db74">&#34;\n\n&#34;</span>)
+</span></span><span style="display:flex;"><span>  rolls <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">lapply</span>(<span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>players, <span style="color:#66d9ef">function</span>(x) <span style="color:#a6e22e">sort</span>(<span style="color:#a6e22e">sample</span>(<span style="color:#ae81ff">1</span><span style="color:#f92672">:</span><span style="color:#ae81ff">6</span>, player.dice.count[[x]], replace <span style="color:#f92672">=</span> <span style="color:#66d9ef">TRUE</span>)))
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span>(verbose <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">1</span>) <span style="color:#a6e22e">lapply</span>(rolls, <span style="color:#66d9ef">function</span>(x) <span style="color:#a6e22e">cat</span>(<span style="color:#e6db74">&#34;dice: &#34;</span>, x, <span style="color:#e6db74">&#34;\n&#34;</span>))
+</span></span><span style="display:flex;"><span>  total.dice <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">sum</span>(<span style="color:#a6e22e">unlist</span>(player.dice.count))
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e"># set penalty</span>
+</span></span><span style="display:flex;"><span>  penalty <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">sapply</span>(<span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>players, <span style="color:#66d9ef">function</span>(x) <span style="color:#ae81ff">0</span>, simplify <span style="color:#f92672">=</span> <span style="color:#66d9ef">FALSE</span>)
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e"># print dice blocks</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span>(verbose <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">0</span>) <span style="color:#a6e22e">Dice</span>(rolls[[1]])
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e"># set up roll table</span>
+</span></span><span style="display:flex;"><span>  roll.table <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">roll.table.fn</span>(rolls)
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e"># initial bid</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span>(verbose <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">0</span>) <span style="color:#a6e22e">cat</span>(<span style="color:#e6db74">&#34;place first bid\nPlayer&#34;</span>, control, <span style="color:#e6db74">&#34;has control\n&#34;</span>)
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span>(control <span style="color:#f92672">==</span> a){
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    dice.value <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">set.dice.value</span>(<span style="color:#e6db74">&#34;dice value: &#34;</span>, <span style="color:#ae81ff">6</span>)
+</span></span><span style="display:flex;"><span>    dice.quantity <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">set.dice.value</span>(<span style="color:#e6db74">&#34;quantity; &#34;</span>, <span style="color:#a6e22e">sum</span>(roll.table))
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>  }<span style="color:#66d9ef">else</span>{
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># agent plays</span>
+</span></span><span style="display:flex;"><span>    p1.state <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">which</span>(game.states<span style="color:#f92672">$</span>total <span style="color:#f92672">==</span> total.dice <span style="color:#f92672">&amp;</span> game.states<span style="color:#f92672">$</span>p1 <span style="color:#f92672">==</span> player.dice.count[[1]] <span style="color:#f92672">&amp;</span> game.states<span style="color:#f92672">$</span>prob_cat <span style="color:#f92672">==</span> total.dice)
+</span></span><span style="display:flex;"><span>    pars <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">list</span>(dice <span style="color:#f92672">=</span> rolls[[control]], total.dice <span style="color:#f92672">=</span> total.dice, dice.value <span style="color:#f92672">=</span> <span style="color:#66d9ef">NULL</span>, dice.quantity <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>, p1.state <span style="color:#f92672">=</span> p1.state)
+</span></span><span style="display:flex;"><span>    agent.action <span style="color:#f92672">&lt;-</span> agents[[control]<span style="color:#a6e22e">]</span>(pars <span style="color:#f92672">=</span> pars, Q.mat <span style="color:#f92672">=</span> Q.mat)
+</span></span><span style="display:flex;"><span>    dice.value <span style="color:#f92672">&lt;-</span> agent.action<span style="color:#f92672">$</span>dice.value
+</span></span><span style="display:flex;"><span>    dice.quantity <span style="color:#f92672">&lt;-</span> agent.action<span style="color:#f92672">$</span>dice.quantity
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e"># calculate probability cat and determine the game state</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e"># action set to raise because you can&#39;t call without an initial bid</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e"># this could be a 3rd action (initial bid) but it&#39;s not really necessary</span>
+</span></span><span style="display:flex;"><span>  player.dice.qty <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">table</span>(rolls[[1]])<span style="color:#a6e22e">[as.character</span>(dice.value)]
+</span></span><span style="display:flex;"><span>  player.dice.qty <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">ifelse</span>(<span style="color:#a6e22e">is.na</span>(player.dice.qty), <span style="color:#ae81ff">0</span>, player.dice.qty) <span style="color:#f92672">%&gt;%</span> unname
+</span></span><span style="display:flex;"><span>  prob.cat <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">calc.prob</span>(<span style="color:#a6e22e">c</span>(total.dice, player.dice.count[[1]], dice.quantity, player.dice.qty))
+</span></span><span style="display:flex;"><span>  p1.state <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">which</span>(game.states<span style="color:#f92672">$</span>total <span style="color:#f92672">==</span> total.dice <span style="color:#f92672">&amp;</span> game.states<span style="color:#f92672">$</span>p1 <span style="color:#f92672">==</span> player.dice.count[[1]] <span style="color:#f92672">&amp;</span> game.states<span style="color:#f92672">$</span>prob_cat <span style="color:#f92672">==</span> prob.cat)
+</span></span><span style="display:flex;"><span>  p1.action <span style="color:#f92672">&lt;-</span> <span style="color:#e6db74">&#34;raise&#34;</span>
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e"># storing states for Q iteration</span>
+</span></span><span style="display:flex;"><span>  y.ctrl <span style="color:#f92672">=</span> <span style="color:#a6e22e">c</span>(); y.state <span style="color:#f92672">=</span> <span style="color:#a6e22e">c</span>(); y.action <span style="color:#f92672">=</span> <span style="color:#a6e22e">c</span>()
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e"># moving control to the next player</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e"># storing the previous player since if the next player calls the previous player could lose a die</span>
+</span></span><span style="display:flex;"><span>  prev <span style="color:#f92672">&lt;-</span> control
+</span></span><span style="display:flex;"><span>  control <span style="color:#f92672">&lt;-</span> control <span style="color:#f92672">%%</span> players <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span>(verbose <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">0</span>) <span style="color:#a6e22e">cat</span>(<span style="color:#e6db74">&#34;dice value &#34;</span>, dice.value, <span style="color:#e6db74">&#34;; dice quantity &#34;</span>, dice.quantity, <span style="color:#e6db74">&#34;\n&#34;</span>)
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e"># loop through each player and continue until there is a winner and loser</span>
+</span></span><span style="display:flex;"><span>  called <span style="color:#f92672">&lt;-</span> <span style="color:#66d9ef">FALSE</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">while</span>(<span style="color:#f92672">!</span>called){
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># check if the player with control is still in the game - if not skip</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span>(player.dice.count[[control]] <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">0</span>){
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">if</span>(control <span style="color:#f92672">==</span> a){
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>        action <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">readline</span>(<span style="color:#e6db74">&#34;raise or call (r/c)? &#34;</span>)
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>      }<span style="color:#66d9ef">else</span>{
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e"># the agent makes a decision</span>
+</span></span><span style="display:flex;"><span>        pars <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">list</span>(dice <span style="color:#f92672">=</span> rolls[[control]], total.dice <span style="color:#f92672">=</span> total.dice, dice.value <span style="color:#f92672">=</span> dice.value, dice.quantity <span style="color:#f92672">=</span> dice.quantity, p1.state <span style="color:#f92672">=</span> p1.state)
+</span></span><span style="display:flex;"><span>        agent.action <span style="color:#f92672">&lt;-</span> agents[[control]<span style="color:#a6e22e">]</span>(pars <span style="color:#f92672">=</span> pars, Q.mat <span style="color:#f92672">=</span> Q.mat)
+</span></span><span style="display:flex;"><span>        action <span style="color:#f92672">&lt;-</span> agent.action<span style="color:#f92672">$</span>action
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>      }
+</span></span><span style="display:flex;"><span>      
+</span></span><span style="display:flex;"><span>      
+</span></span><span style="display:flex;"><span>      <span style="color:#75715e"># storing states for reward iteration</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">if</span>(control <span style="color:#f92672">==</span> <span style="color:#ae81ff">1</span> <span style="color:#f92672">&amp;</span> <span style="color:#f92672">!</span><span style="color:#a6e22e">is.null</span>(agent.action<span style="color:#f92672">$</span>action)){
+</span></span><span style="display:flex;"><span>        player.dice.qty <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">table</span>(rolls[[1]])<span style="color:#a6e22e">[as.character</span>(dice.value)]
+</span></span><span style="display:flex;"><span>        player.dice.qty <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">ifelse</span>(<span style="color:#a6e22e">is.na</span>(player.dice.qty), <span style="color:#ae81ff">0</span>, player.dice.qty) <span style="color:#f92672">%&gt;%</span> unname
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>        p1.action <span style="color:#f92672">&lt;-</span> agent.action<span style="color:#f92672">$</span>action
+</span></span><span style="display:flex;"><span>        prob.cat <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">calc.prob</span>(<span style="color:#a6e22e">c</span>(total.dice, player.dice.count[[1]], dice.quantity, player.dice.qty))
+</span></span><span style="display:flex;"><span>        p1.state <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">which</span>(game.states<span style="color:#f92672">$</span>total <span style="color:#f92672">==</span> total.dice <span style="color:#f92672">&amp;</span> game.states<span style="color:#f92672">$</span>p1 <span style="color:#f92672">==</span> player.dice.count[[1]] <span style="color:#f92672">&amp;</span> game.states<span style="color:#f92672">$</span>prob_cat <span style="color:#f92672">==</span> prob.cat)
+</span></span><span style="display:flex;"><span>      }
+</span></span><span style="display:flex;"><span>      
+</span></span><span style="display:flex;"><span>      
+</span></span><span style="display:flex;"><span>      <span style="color:#75715e"># called</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">if</span>(action <span style="color:#f92672">%in%</span> <span style="color:#a6e22e">c</span>(<span style="color:#e6db74">&#34;call&#34;</span>, <span style="color:#e6db74">&#34;c&#34;</span>)){
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span>(verbose <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">0</span>) {
+</span></span><span style="display:flex;"><span>          <span style="color:#a6e22e">cat</span>(<span style="color:#e6db74">&#34;player&#34;</span>, control, <span style="color:#e6db74">&#34;called\nRoll table\n&#34;</span>)
+</span></span><span style="display:flex;"><span>          <span style="color:#a6e22e">print</span>(roll.table)
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e"># dice are reavealed</span>
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e"># check if the quantity of dice value is less or more than the total in the pool</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e"># if more control loses otherwise control-1 win</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span>(dice.quantity <span style="color:#f92672">&gt;</span> roll.table[dice.value]){
+</span></span><span style="display:flex;"><span>          
+</span></span><span style="display:flex;"><span>          penalty[[prev]] <span style="color:#f92672">&lt;-</span> penalty[[prev]] <span style="color:#f92672">-</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>          <span style="color:#66d9ef">if</span>(verbose <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">0</span>) <span style="color:#a6e22e">cat</span>(<span style="color:#e6db74">&#34;player&#34;</span>, prev, <span style="color:#e6db74">&#34;lost a die\n&#34;</span>)
+</span></span><span style="display:flex;"><span>          
+</span></span><span style="display:flex;"><span>        }<span style="color:#66d9ef">else</span>{
+</span></span><span style="display:flex;"><span>          
+</span></span><span style="display:flex;"><span>          penalty[[control]] <span style="color:#f92672">&lt;-</span> penalty[[control]] <span style="color:#f92672">-</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>          <span style="color:#66d9ef">if</span>(verbose <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">0</span>) <span style="color:#a6e22e">cat</span>(<span style="color:#e6db74">&#34;player&#34;</span>, control, <span style="color:#e6db74">&#34;lost a die\n&#34;</span>)
+</span></span><span style="display:flex;"><span>          
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e"># for Q iteration</span>
+</span></span><span style="display:flex;"><span>        y.ctrl <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">c</span>(y.ctrl, control); y.state <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">c</span>(y.state, p1.state); y.action <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">c</span>(y.action, p1.action)
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e"># if called use the penalty array to change states</span>
+</span></span><span style="display:flex;"><span>        prob.cat <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">calc.prob</span>(<span style="color:#a6e22e">c</span>(total.dice, player.dice.count[[1]], dice.quantity, player.dice.qty))
+</span></span><span style="display:flex;"><span>        p1.state <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">which</span>(game.states<span style="color:#f92672">$</span>total <span style="color:#f92672">==</span> total.dice<span style="color:#ae81ff">-1</span> <span style="color:#f92672">&amp;</span> game.states<span style="color:#f92672">$</span>p1 <span style="color:#f92672">==</span> player.dice.count[[1]]<span style="color:#f92672">+</span>penalty[[1]] <span style="color:#f92672">&amp;</span> game.states<span style="color:#f92672">$</span>prob_cat <span style="color:#f92672">==</span> prob.cat)
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e"># break the loop</span>
+</span></span><span style="display:flex;"><span>        called <span style="color:#f92672">&lt;-</span> <span style="color:#66d9ef">TRUE</span>
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>      }<span style="color:#66d9ef">else</span>{
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span>(verbose <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">0</span>) <span style="color:#a6e22e">cat</span>(<span style="color:#e6db74">&#34;player&#34;</span>, control, <span style="color:#e6db74">&#34;raised\n&#34;</span>)
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span>(control <span style="color:#f92672">==</span> a){
+</span></span><span style="display:flex;"><span>          
+</span></span><span style="display:flex;"><span>          <span style="color:#75715e"># player sets next dice value</span>
+</span></span><span style="display:flex;"><span>          dice.value <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">set.dice.value</span>(<span style="color:#e6db74">&#34;dice value: &#34;</span>, <span style="color:#ae81ff">6</span>)
+</span></span><span style="display:flex;"><span>          dice.quantity <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">set.dice.value</span>(<span style="color:#e6db74">&#34;quantity; &#34;</span>, <span style="color:#a6e22e">sum</span>(roll.table))
+</span></span><span style="display:flex;"><span>          
+</span></span><span style="display:flex;"><span>        }<span style="color:#66d9ef">else</span>{
+</span></span><span style="display:flex;"><span>          
+</span></span><span style="display:flex;"><span>          dice.value <span style="color:#f92672">&lt;-</span> agent.action<span style="color:#f92672">$</span>dice.value
+</span></span><span style="display:flex;"><span>          dice.quantity <span style="color:#f92672">&lt;-</span> agent.action<span style="color:#f92672">$</span>dice.quantity
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e"># p1 state after the raise</span>
+</span></span><span style="display:flex;"><span>        prob.cat <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">calc.prob</span>(<span style="color:#a6e22e">c</span>(total.dice, player.dice.count[[1]], dice.quantity, player.dice.qty))
+</span></span><span style="display:flex;"><span>        p1.state <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">which</span>(game.states<span style="color:#f92672">$</span>total <span style="color:#f92672">==</span> total.dice <span style="color:#f92672">&amp;</span> game.states<span style="color:#f92672">$</span>p1 <span style="color:#f92672">==</span> player.dice.count[[1]] <span style="color:#f92672">&amp;</span> game.states<span style="color:#f92672">$</span>prob_cat <span style="color:#f92672">==</span> prob.cat)
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span>(verbose <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">0</span>) <span style="color:#a6e22e">cat</span>(<span style="color:#e6db74">&#34;dice value&#34;</span>, dice.value, <span style="color:#e6db74">&#34;; dice quantity&#34;</span>, dice.quantity, <span style="color:#e6db74">&#34;\n&#34;</span>)
+</span></span><span style="display:flex;"><span>      }
+</span></span><span style="display:flex;"><span>      
+</span></span><span style="display:flex;"><span>      <span style="color:#75715e"># store info for Q update</span>
+</span></span><span style="display:flex;"><span>      y.ctrl <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">c</span>(y.ctrl, control); y.state <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">c</span>(y.state, p1.state); y.action <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">c</span>(y.action, p1.action)
+</span></span><span style="display:flex;"><span>      
+</span></span><span style="display:flex;"><span>      <span style="color:#75715e"># set the control player to now be the previous player</span>
+</span></span><span style="display:flex;"><span>      prev <span style="color:#f92672">&lt;-</span> control
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># next player has control</span>
+</span></span><span style="display:flex;"><span>    control <span style="color:#f92672">&lt;-</span> control <span style="color:#f92672">%%</span> players <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e"># play results and return</span>
+</span></span><span style="display:flex;"><span>  play <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">data.frame</span>(y.ctrl, y.state, y.action)
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span>(<span style="color:#a6e22e">list</span>(penalty <span style="color:#f92672">=</span> penalty, play <span style="color:#f92672">=</span> play))
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># play a full game of liars dice</span>
+</span></span><span style="display:flex;"><span>play.liars.dice <span style="color:#f92672">&lt;-</span> <span style="color:#66d9ef">function</span>(players <span style="color:#f92672">=</span> <span style="color:#ae81ff">4</span>, num.dice <span style="color:#f92672">=</span> <span style="color:#ae81ff">6</span>, auto <span style="color:#f92672">=</span> <span style="color:#66d9ef">FALSE</span>, verbose <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>, agents, Q.mat <span style="color:#f92672">=</span> <span style="color:#66d9ef">NULL</span>, train <span style="color:#f92672">=</span> <span style="color:#66d9ef">FALSE</span>, print.trans <span style="color:#f92672">=</span> <span style="color:#66d9ef">FALSE</span>){
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e"># begin!</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span>(verbose <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">0</span>) <span style="color:#a6e22e">liars.dice.title</span>()
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e"># setting the number of dice each player has</span>
+</span></span><span style="display:flex;"><span>  ndice <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">sapply</span>(<span style="color:#a6e22e">rep</span>(num.dice, players), <span style="color:#66d9ef">function</span>(x) x, simplify <span style="color:#f92672">=</span> <span style="color:#66d9ef">FALSE</span>)
+</span></span><span style="display:flex;"><span>  players.left <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">sum</span>(<span style="color:#a6e22e">unlist</span>(ndice) <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">0</span>)
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e"># setting game states matrix</span>
+</span></span><span style="display:flex;"><span>  game.states <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">generate.game.states</span>(players, num.dice)
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e"># set up reward matrix</span>
+</span></span><span style="display:flex;"><span>  reward <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">generate.reward.matrix</span>(game.states)
+</span></span><span style="display:flex;"><span>  reward <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">list</span>(raise <span style="color:#f92672">=</span> reward, call <span style="color:#f92672">=</span> reward)
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e"># set Q matrix if null</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span>(<span style="color:#a6e22e">is.null</span>(Q.mat)) Q.mat <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">matrix</span>(<span style="color:#ae81ff">0</span>, nrow <span style="color:#f92672">=</span> <span style="color:#a6e22e">nrow</span>(reward<span style="color:#f92672">$</span>raise), ncol <span style="color:#f92672">=</span> <span style="color:#a6e22e">length</span>(reward), dimnames <span style="color:#f92672">=</span> <span style="color:#a6e22e">list</span>(<span style="color:#a6e22e">c</span>(), <span style="color:#a6e22e">names</span>(reward)))
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e"># while there is at least 2 left in the game</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e"># who has control</span>
+</span></span><span style="display:flex;"><span>  ctrl <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">sample</span>(<span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>players, <span style="color:#ae81ff">1</span>)
+</span></span><span style="display:flex;"><span>  play.df <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">data.frame</span>()
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">while</span>(players.left <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">1</span>){
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># play a round</span>
+</span></span><span style="display:flex;"><span>    results <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">liars.dice.round</span>(
+</span></span><span style="display:flex;"><span>      players <span style="color:#f92672">=</span> players, 
+</span></span><span style="display:flex;"><span>      control <span style="color:#f92672">=</span> ctrl,
+</span></span><span style="display:flex;"><span>      player.dice.count <span style="color:#f92672">=</span> ndice, 
+</span></span><span style="display:flex;"><span>      game.states <span style="color:#f92672">=</span> game.states,
+</span></span><span style="display:flex;"><span>      reward <span style="color:#f92672">=</span> reward,
+</span></span><span style="display:flex;"><span>      Q.mat <span style="color:#f92672">=</span> Q.mat,
+</span></span><span style="display:flex;"><span>      agents <span style="color:#f92672">=</span> agents,
+</span></span><span style="display:flex;"><span>      a <span style="color:#f92672">=</span> <span style="color:#a6e22e">as.numeric</span>(<span style="color:#f92672">!</span>auto),
+</span></span><span style="display:flex;"><span>      verbose <span style="color:#f92672">=</span> verbose
+</span></span><span style="display:flex;"><span>    )
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># update how many dice the players are left with given the </span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># outcomes of the round</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span>(k <span style="color:#66d9ef">in</span> <span style="color:#a6e22e">seq_along</span>(ndice)){
+</span></span><span style="display:flex;"><span>      ndice[[k]] <span style="color:#f92672">&lt;-</span> ndice[[k]] <span style="color:#f92672">+</span> results<span style="color:#f92672">$</span>penalty[[k]]
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">if</span>(ndice[[k]] <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span> <span style="color:#f92672">&amp;</span> results<span style="color:#f92672">$</span>penalty[[k]] <span style="color:#f92672">==</span> <span style="color:#ae81ff">-1</span>){
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span>(verbose <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">0</span>) <span style="color:#a6e22e">cat</span>(<span style="color:#e6db74">&#34;player&#34;</span>, k, <span style="color:#e6db74">&#34;is out of the game\n&#34;</span>)
+</span></span><span style="display:flex;"><span>      }
+</span></span><span style="display:flex;"><span>      
+</span></span><span style="display:flex;"><span>      <span style="color:#75715e"># update who has control so they can start the bidding</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">if</span>(results<span style="color:#f92672">$</span>penalty[[k]] <span style="color:#f92672">==</span> <span style="color:#ae81ff">-1</span>){
+</span></span><span style="display:flex;"><span>        ctrl <span style="color:#f92672">&lt;-</span> k
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">while</span>(ndice[[ctrl]] <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>){
+</span></span><span style="display:flex;"><span>          ctrl <span style="color:#f92672">&lt;-</span> ctrl <span style="color:#f92672">%%</span> players <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>      }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># checking how many are left and if anyone won the game</span>
+</span></span><span style="display:flex;"><span>    players.left <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">sum</span>(<span style="color:#a6e22e">unlist</span>(ndice) <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">0</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span>(players.left <span style="color:#f92672">==</span> <span style="color:#ae81ff">1</span>){
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">if</span>(verbose <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">0</span>) <span style="color:#a6e22e">cat</span>(<span style="color:#e6db74">&#34;player&#34;</span>, <span style="color:#a6e22e">which</span>(<span style="color:#a6e22e">unlist</span>(ndice) <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">0</span>), <span style="color:#e6db74">&#34;won the game\n&#34;</span>)
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># appending play</span>
+</span></span><span style="display:flex;"><span>    play.df <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">rbind</span>(play.df, results<span style="color:#f92672">$</span>play)
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span>(print.trans) <span style="color:#a6e22e">print</span>(play.df)
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e"># update Q</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e"># rather than training after each action, training at the </span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e"># end of each game in bulk</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e"># just easier this way</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span>(train) Q.mat <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">update.Q</span>(play.df, Q.mat, reward)
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e"># return the winner and Q matrix</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span>(<span style="color:#a6e22e">list</span>(winner <span style="color:#f92672">=</span> <span style="color:#a6e22e">which</span>(<span style="color:#a6e22e">unlist</span>(ndice) <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">0</span>), Q.mat <span style="color:#f92672">=</span> Q.mat))
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h2 id="other-stochastic-processes">Other Stochastic Processes</h2>
+<p>Martingales <a href="http://gradientdescending.com/martingale-strategies-dont-work-but-we-knew-that-simulation-analysis-in-r/">http://gradientdescending.com/martingale-strategies-dont-work-but-we-knew-that-simulation-analysis-in-r/</a>
+<a href="https://github.com/doehm/martingale">https://github.com/doehm/martingale</a></p>
+<p>Bayesian Networks <a href="http://gradientdescending.com/simulating-data-with-bayesian-networks/">http://gradientdescending.com/simulating-data-with-bayesian-networks/</a></p>
+<p>Other Q Learning <a href="https://www.r-bloggers.com/a-simple-intro-to-q-learning-in-r-floor-plan-navigation/">https://www.r-bloggers.com/a-simple-intro-to-q-learning-in-r-floor-plan-navigation/</a>
+<a href="https://dataaspirant.com/2018/02/05/reinforcement-learning-r/">https://dataaspirant.com/2018/02/05/reinforcement-learning-r/</a></p>
+
+</article>
+
+</main>
+<footer class="site-footer">
+  <p>
+    <a href="mailto:erick.jones@uta.edu">erick.jones@uta.edu</a> ·
+    <a href="https://scholar.google.com/citations?hl=en&user=03RL76wAAAAJ">Google Scholar</a> ·
+    <a href="https://www.linkedin.com/in/erickjones2/">LinkedIn</a> ·
+    <a href="https://github.com/yamierick">GitHub</a>
+  </p>
+  <p class="constellation">Professional site · <a href="https://engineerliving.com">Engineer Living (ideas &amp; writing)</a> · <em>The Friction Deficit</em> (fiction, coming soon)</p>
+</footer>
+</body>
+</html>

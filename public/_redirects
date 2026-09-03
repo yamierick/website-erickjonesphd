@@ -1,0 +1,13 @@
+# Old Wowchemy/Academic site URLs -> new pages
+/authors/admin/*      /about/          301
+/author/*             /about/          301
+/publication/*        /publications/   301
+/project/*            /research/       301
+/blog/Class_Projects/* /resources/     301
+/blog/ORIE/*          /resources/      301
+/blog/*               /resources/      301
+/courses/*            /teaching/       301
+/lab/*                /labs/           301
+/about_org/*          /about/          301
+/talk/*               /publications/   301
+/home/*               /                301

@@ -1,21 +1,0 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?>
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
-  <channel>
-    <title>Markov Chains on Erick C. Jones Jr.</title>
-    <link>/tags/markov-chains/</link>
-    <description>Recent content in Markov Chains on Erick C. Jones Jr.</description>
-    <generator>Hugo -- gohugo.io</generator>
-    <language>en</language>
-    <lastBuildDate>Sat, 04 Jan 2020 00:00:00 +0000</lastBuildDate><atom:link href="/tags/markov-chains/index.xml" rel="self" type="application/rss+xml" />
-    <item>
-      <title>Basics of Markov Chains</title>
-      <link>/blog/orie/markov-chains/markovchains/</link>
-      <pubDate>Sat, 04 Jan 2020 00:00:00 +0000</pubDate>
-      
-      <guid>/blog/orie/markov-chains/markovchains/</guid>
-      <description>BackgroundThis post explores how to markov chains work and how to visulaize them in R. I use a R package specifically designed to visualize markov chains. I also represent these markov chains using tables. This is a reproducible example if you have R Studio just make sure you have installed the correct packages.
-library(markovchain) ## Warning: package &#39;markovchain&#39; was built under R version 4.1.2library(diagram) #Allows the use of exponential operators in matrix library(expm) ## Warning: package &#39;expm&#39; was built under R version 4.</description>
-    </item>
-    
-  </channel>
-</rss>

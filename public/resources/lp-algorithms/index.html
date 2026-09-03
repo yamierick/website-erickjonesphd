@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Linear Programming Examples and Applications · Erick C. Jones Jr., Ph.D.</title>
+<meta name="description" content="Assistant Professor, Industrial, Manufacturing, and Systems Engineering, UT Arlington. Building the future of energy and critical mineral systems — end to end and back.">
+<link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+<header class="site-header">
+  <a class="site-title" href="/">Erick C. Jones Jr.</a>
+  <nav>
+    <a href="/about/">About</a><a href="/research/">Research</a><a href="/labs/">Labs</a><a href="/publications/">Publications</a><a href="/teaching/">Teaching</a><a href="/resources/">Resources</a><a href="/beyond/">Beyond</a>
+  </nav>
+</header>
+<main>
+
+<article>
+  <h1>Linear Programming Examples and Applications</h1>
+  <p class="meta"><time>January 3, 2020</time> · ORIE Basics</p>
+  <h2 id="background">Background</h2>
+<p>This post explores how to use the fundamental algorithms to solve LPs.
+I have written these using Gurobi as a solver and as the mathematical formulation software.
+This is a reproducible example if you have R Studio just  make sure you have installed the correct packages.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-r" data-lang="r"><span style="display:flex;"><span><span style="color:#a6e22e">library</span>(gurobi)
+</span></span></code></pre></div><pre tabindex="0"><code>## Warning: package &#39;slam&#39; was built under R version 4.1.2
+</code></pre><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-r" data-lang="r"><span style="display:flex;"><span><span style="color:#a6e22e">library</span>(tictoc)
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">library</span>(Matrix)
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">library</span>(ggplot2)
+</span></span></code></pre></div><pre tabindex="0"><code>## Warning: package &#39;ggplot2&#39; was built under R version 4.1.2
+</code></pre><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-r" data-lang="r"><span style="display:flex;"><span><span style="color:#a6e22e">library</span>(MASS)
+</span></span></code></pre></div><h2 id="problem-1">Problem 1</h2>
+<p><code>\(max: 2x_1 + 3x_2\)</code>
+s.t.
+<code>\(-x_1 + x_2 \leq 5\)</code>
+<code>\(x_1+3x_2 &lt;= 35; x_1 \leq 20\)</code></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-r" data-lang="r"><span style="display:flex;"><span><span style="color:#75715e">#library(matlib)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#https://cran.r-project.org/web/packages/matlib/vignettes/linear-equations.html</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#another method using outer function https://stackoverflow.com/questions/10199547/plotting-curves-given-by-equations-in-r</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>A <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">matrix</span>(<span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">-1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">3</span>, <span style="color:#ae81ff">0</span>), <span style="color:#ae81ff">3</span>, <span style="color:#ae81ff">2</span>)
+</span></span><span style="display:flex;"><span>b <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">5</span>,<span style="color:#ae81ff">35</span>, <span style="color:#ae81ff">20</span>)
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#showEqn(A, b)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#c( R(A), R(cbind(A,b)) )          # show ranks</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#all.equal( R(A), R(cbind(A,b)) )  # consistent?</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#plotEqn(A,b, xlim = c(0,60), ylim = c(0,60))</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">rm</span>(A,b)
+</span></span></code></pre></div><h2 id="linear-program-example">Linear Program Example</h2>
+<p>From: <a href="http://lpsolve.sourceforge.net/5.5/formulate.htm">http://lpsolve.sourceforge.net/5.5/formulate.htm</a>
+In this script, we don&rsquo;t solve the linear program but plot it in 2-d space for visualization purposes.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-r" data-lang="r"><span style="display:flex;"><span><span style="color:#75715e">### set up some functions to define the constraints and the profit</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># money constraint</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#-x_1 + x_2 &lt;= 5;</span>
+</span></span><span style="display:flex;"><span>constraint1 <span style="color:#f92672">=</span> <span style="color:#66d9ef">function</span>(x1){
+</span></span><span style="display:flex;"><span>  x2 <span style="color:#f92672">=</span> (<span style="color:#ae81ff">5</span> <span style="color:#f92672">+</span> x1)
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span>(x2)
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># storage constraint</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#x_1+3x_2 &lt;= 35; </span>
+</span></span><span style="display:flex;"><span>constraint2 <span style="color:#f92672">=</span> <span style="color:#66d9ef">function</span>(x1){
+</span></span><span style="display:flex;"><span>  x2 <span style="color:#f92672">=</span> (<span style="color:#ae81ff">35</span> <span style="color:#f92672">-</span> x1)<span style="color:#f92672">/</span><span style="color:#ae81ff">3</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span>(x2)
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># acreage constraint</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#x_1 &lt;= 20</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#constraint3 = function(x1){</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#  x2 = 20 - x1</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#  return(x2)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># profit contours - returns barley given wheat and profit. i.e. gives us the information needed to plot a line of (wheat, barley) combinations that yield a given amount of profit</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#max z = 2x_1 + 3x_2</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>profitContour <span style="color:#f92672">=</span> <span style="color:#66d9ef">function</span>(x1Array, z){
+</span></span><span style="display:flex;"><span>  x2 <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">numeric</span>(<span style="color:#a6e22e">length</span>(x1Array))
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">for</span> (i <span style="color:#66d9ef">in</span> <span style="color:#ae81ff">0</span><span style="color:#f92672">:</span><span style="color:#a6e22e">length</span>(x1)){
+</span></span><span style="display:flex;"><span>    x2[i] <span style="color:#f92672">=</span> (z <span style="color:#f92672">-</span> <span style="color:#ae81ff">2</span><span style="color:#f92672">*</span>x1[i]) <span style="color:#f92672">/</span> <span style="color:#ae81ff">3</span>
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span>(x2)
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">### set up data frame for plotting. Data frame will put barley in terms of wheat. Wheat will be our x axis, and barley will be our y axis.</span>
+</span></span><span style="display:flex;"><span>x1 <span style="color:#f92672">=</span> <span style="color:#a6e22e">seq</span>(<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">20</span>)
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># add data for plotting the constraints. I.e. how much barley we can have in each constraint given an amount of wheat.</span>
+</span></span><span style="display:flex;"><span>plotDF <span style="color:#f92672">=</span> <span style="color:#a6e22e">data.frame</span>(x1, <span style="color:#a6e22e">constraint1</span>(x1), <span style="color:#a6e22e">constraint2</span>(x1))
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">names</span>(plotDF) <span style="color:#f92672">=</span> <span style="color:#a6e22e">c</span>(<span style="color:#e6db74">&#39;x1&#39;</span>,<span style="color:#e6db74">&#39;con1&#39;</span>,<span style="color:#e6db74">&#39;con2&#39;</span>)
+</span></span><span style="display:flex;"><span>plotDF<span style="color:#f92672">$</span>zero <span style="color:#f92672">=</span> <span style="color:#a6e22e">rep</span>(<span style="color:#ae81ff">0</span>,<span style="color:#a6e22e">length</span>(x1))
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># add data for plotting the profit contours. I.e. how much barlet do we need to make a certain profit given a certain amount of wheat.</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span> (z <span style="color:#66d9ef">in</span> <span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">25</span>, <span style="color:#ae81ff">40</span>, <span style="color:#ae81ff">55</span>, <span style="color:#ae81ff">70</span>, <span style="color:#ae81ff">85</span>)){
+</span></span><span style="display:flex;"><span>  x2 <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">data.frame</span>(<span style="color:#a6e22e">profitContour</span>(x1, z))
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">names</span>(x2) <span style="color:#f92672">=</span> <span style="color:#a6e22e">paste</span>(<span style="color:#e6db74">&#39;z&#39;</span>, z, sep<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;&#34;</span>)
+</span></span><span style="display:flex;"><span>  plotDF <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">cbind</span>(plotDF, x2)
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#set all negatives to zero, since you can&#39;t have negative x2</span>
+</span></span><span style="display:flex;"><span>plotDF <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">replace</span>(plotDF, plotDF<span style="color:#f92672">&lt;</span><span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">0</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">### set up and view the charts</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># plot the constraint lines</span>
+</span></span><span style="display:flex;"><span>p0 <span style="color:#f92672">=</span> <span style="color:#a6e22e">ggplot</span>(plotDF, <span style="color:#a6e22e">aes</span>(x <span style="color:#f92672">=</span> x1)) <span style="color:#f92672">+</span> 
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">coord_cartesian</span>(ylim<span style="color:#f92672">=</span><span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">25</span>),xlim <span style="color:#f92672">=</span> <span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">25</span>))<span style="color:#f92672">+</span>                      
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">geom_line</span>(<span style="color:#a6e22e">aes</span>(y <span style="color:#f92672">=</span> con1), colour <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;red&#39;</span>, linetype <span style="color:#f92672">=</span> <span style="color:#ae81ff">2</span>) <span style="color:#f92672">+</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">geom_line</span>(<span style="color:#a6e22e">aes</span>(y <span style="color:#f92672">=</span> con2), colour <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;green&#39;</span>, linetype <span style="color:#f92672">=</span> <span style="color:#ae81ff">2</span>) <span style="color:#f92672">+</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">xlab</span>(<span style="color:#e6db74">&#39;x1&#39;</span>) <span style="color:#f92672">+</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">ylab</span>(<span style="color:#e6db74">&#39;x2&#39;</span>) 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># add an area plot underneath the constraint lines. This is the feasible solution space.</span>
+</span></span><span style="display:flex;"><span>p1 <span style="color:#f92672">&lt;-</span> p0 <span style="color:#f92672">+</span>  <span style="color:#a6e22e">geom_area</span>(<span style="color:#a6e22e">aes</span>(y <span style="color:#f92672">=</span> <span style="color:#a6e22e">pmin</span>(con1,con2)), fill <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;gray40&#39;</span>)
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># view the constraints and feasible solution space</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># add the profit contour lines</span>
+</span></span><span style="display:flex;"><span>p2 <span style="color:#f92672">&lt;-</span> p1 <span style="color:#f92672">+</span>                    
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">geom_line</span>(<span style="color:#a6e22e">aes</span>(y <span style="color:#f92672">=</span> z25), colour <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;blue&#39;</span>, linetype <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>) <span style="color:#f92672">+</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">geom_line</span>(<span style="color:#a6e22e">aes</span>(y <span style="color:#f92672">=</span> z40), colour <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;blue&#39;</span>, linetype <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>) <span style="color:#f92672">+</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">geom_line</span>(<span style="color:#a6e22e">aes</span>(y <span style="color:#f92672">=</span> z55), colour <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;blue&#39;</span>, linetype <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>) <span style="color:#f92672">+</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">geom_line</span>(<span style="color:#a6e22e">aes</span>(y <span style="color:#f92672">=</span> z70), colour <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;blue&#39;</span>, linetype <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>) <span style="color:#f92672">+</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">geom_line</span>(<span style="color:#a6e22e">aes</span>(y <span style="color:#f92672">=</span> z85), colour <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;blue&#39;</span>, linetype <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>)
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># view the whole chart</span>
+</span></span><span style="display:flex;"><span>plotDF
+</span></span></code></pre></div><pre tabindex="0"><code>##    x1 con1      con2 zero       z25        z40       z55      z70      z85
+## 1   0    5 11.666667    0 8.3333333 13.3333333 18.333333 23.33333 28.33333
+## 2   1    6 11.333333    0 7.6666667 12.6666667 17.666667 22.66667 27.66667
+## 3   2    7 11.000000    0 7.0000000 12.0000000 17.000000 22.00000 27.00000
+## 4   3    8 10.666667    0 6.3333333 11.3333333 16.333333 21.33333 26.33333
+## 5   4    9 10.333333    0 5.6666667 10.6666667 15.666667 20.66667 25.66667
+## 6   5   10 10.000000    0 5.0000000 10.0000000 15.000000 20.00000 25.00000
+## 7   6   11  9.666667    0 4.3333333  9.3333333 14.333333 19.33333 24.33333
+## 8   7   12  9.333333    0 3.6666667  8.6666667 13.666667 18.66667 23.66667
+## 9   8   13  9.000000    0 3.0000000  8.0000000 13.000000 18.00000 23.00000
+## 10  9   14  8.666667    0 2.3333333  7.3333333 12.333333 17.33333 22.33333
+## 11 10   15  8.333333    0 1.6666667  6.6666667 11.666667 16.66667 21.66667
+## 12 11   16  8.000000    0 1.0000000  6.0000000 11.000000 16.00000 21.00000
+## 13 12   17  7.666667    0 0.3333333  5.3333333 10.333333 15.33333 20.33333
+## 14 13   18  7.333333    0 0.0000000  4.6666667  9.666667 14.66667 19.66667
+## 15 14   19  7.000000    0 0.0000000  4.0000000  9.000000 14.00000 19.00000
+## 16 15   20  6.666667    0 0.0000000  3.3333333  8.333333 13.33333 18.33333
+## 17 16   21  6.333333    0 0.0000000  2.6666667  7.666667 12.66667 17.66667
+## 18 17   22  6.000000    0 0.0000000  2.0000000  7.000000 12.00000 17.00000
+## 19 18   23  5.666667    0 0.0000000  1.3333333  6.333333 11.33333 16.33333
+## 20 19   24  5.333333    0 0.0000000  0.6666667  5.666667 10.66667 15.66667
+## 21 20   25  5.000000    0 0.0000000  0.0000000  5.000000 10.00000 15.00000
+</code></pre><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-r" data-lang="r"><span style="display:flex;"><span>p2
+</span></span></code></pre></div><img src="/blog/ORIE/LP Algorithms/LP_algorithms_files/figure-html/unnamed-chunk-3-1.png" width="672" />
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-r" data-lang="r"><span style="display:flex;"><span><span style="color:#a6e22e">rm</span>(x1,x2,p0,p1,p2, constraint1, constraint2, plotDF, profitContour,z )
+</span></span></code></pre></div><h2 id="simplex-algorithm">Simplex Algorithm</h2>
+<p>primal simplex tableu reformulation
+<code>\(max: z;\: z - 2x_1 - 3x_2 = 0\)</code>
+s.t.
+<code>\(-x_1 + x_2 + x_3 = 5\)</code>
+<code>\(x_1+ 3x_2 + x_4 = 35\)</code>
+<code>\(x_1 + x_5 = 20\)</code></p>
+<p>where <code>\(x_3, x_4, \text{ and } x_5\)</code> are slack variables. Giving 3 basic variables for 3 equations. The &ldquo;4th&rdquo; constraint describes how z changes with the decision variables
+For less than or equal constraints adding the slack variables define a basic feasible solution which we use to initialize the algorithm (note use <code>\(x+1\)</code> as basic variable instead of <code>\(x_5\)</code> for iteration reasons)</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-r" data-lang="r"><span style="display:flex;"><span><span style="color:#a6e22e">tic</span>(<span style="color:#e6db74">&#39;Simplex&#39;</span>)
+</span></span><span style="display:flex;"><span>initial_tableau <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">data.frame</span>(row <span style="color:#f92672">=</span> <span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">1</span>,<span style="color:#ae81ff">2</span>,<span style="color:#ae81ff">3</span>), basic <span style="color:#f92672">=</span> (<span style="color:#a6e22e">c</span>(<span style="color:#e6db74">&#39;z&#39;</span>, <span style="color:#e6db74">&#39;x3&#39;</span>, <span style="color:#e6db74">&#39;x4&#39;</span>, <span style="color:#e6db74">&#39;x5&#39;</span>)), z <span style="color:#f92672">=</span> <span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">1</span>,<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">0</span>), x1 <span style="color:#f92672">=</span> <span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">-2</span>,<span style="color:#ae81ff">-1</span>,<span style="color:#ae81ff">1</span>,<span style="color:#ae81ff">1</span>), x2 <span style="color:#f92672">=</span> <span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">-3</span>,<span style="color:#ae81ff">1</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">0</span>), x3 <span style="color:#f92672">=</span> <span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">1</span>,<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">0</span>), x4 <span style="color:#f92672">=</span> <span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">1</span>,<span style="color:#ae81ff">0</span>), x5 <span style="color:#f92672">=</span> <span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">1</span>),   RHS <span style="color:#f92672">=</span> <span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">5</span>,<span style="color:#ae81ff">35</span>,<span style="color:#ae81ff">20</span>), ratio <span style="color:#f92672">=</span> <span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">0</span>))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>initial_tableau<span style="color:#f92672">$</span>basic <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">as.character</span>(initial_tableau<span style="color:#f92672">$</span>basic)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>nvars <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">5</span>
+</span></span><span style="display:flex;"><span>nrows <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">3</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>tableau <span style="color:#f92672">&lt;-</span> initial_tableau
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>iters <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#loop iterate until you have no negative coefficients in the first row of the tableau</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>maxiters <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">10</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">while</span>(iters <span style="color:#f92672">&lt;</span> maxiters){
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#create a and RHS matrixes for easy calculations</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>ma <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">as.matrix</span>(tableau[,<span style="color:#ae81ff">4</span><span style="color:#f92672">:</span>(<span style="color:#ae81ff">4</span><span style="color:#f92672">+</span>nvars<span style="color:#ae81ff">-1</span>)])
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#Run this only if there is a negative reduced cost</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span>(<span style="color:#a6e22e">min</span>(ma[1,]) <span style="color:#f92672">&lt;</span> <span style="color:#ae81ff">0</span>){
+</span></span><span style="display:flex;"><span>mrhs <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">as.matrix</span>(tableau[,(<span style="color:#ae81ff">4</span><span style="color:#f92672">+</span>nvars)])
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">print</span>(<span style="color:#a6e22e">paste</span>(<span style="color:#e6db74">&#39;iteration:&#39;</span>,iters))
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">print</span>(tableau)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#use steepest ascent to find the most negative reduced cost and that is the variable that enters the basis (sa) as seen in row 0, caluclate the rations, then determine the pivot row index (pri)</span>
+</span></span><span style="display:flex;"><span>sa <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">which.min</span>(ma[1,])
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>ratios <span style="color:#f92672">&lt;-</span> mrhs[2<span style="color:#f92672">:</span>(nrows<span style="color:#ae81ff">+1</span>)]<span style="color:#f92672">/</span>ma[2<span style="color:#f92672">:</span>(nrows<span style="color:#ae81ff">+1</span>),sa]
+</span></span><span style="display:flex;"><span>ratios[ratios<span style="color:#f92672">&lt;=</span><span style="color:#ae81ff">0</span>] <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">9999</span>
+</span></span><span style="display:flex;"><span>pri <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">which.min</span>(ratios)<span style="color:#ae81ff">+1</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#change pivot row by pivot element (pe) using Gauss Jordan elimination (substition)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#by simply divide the row and rhs by the pe to get a new pivot row (npr) and new rhs (nrhs)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#https://www.coursera.org/lecture/solving-algorithms-discrete-optimization/3-3-1-linear-programming-rzHVE</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>pe <span style="color:#f92672">&lt;-</span> ma[pri,sa]
+</span></span><span style="display:flex;"><span>npr <span style="color:#f92672">&lt;-</span> ma[pri,]<span style="color:#f92672">/</span>pe
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>nrhs <span style="color:#f92672">&lt;-</span> mrhs[pri]<span style="color:#f92672">/</span>pe
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#take that row and muliply by the negative of the pivot variable&#39;s coefficent in that row column and add the result to that row for both the rhs matrix and the A matrix</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span>(i <span style="color:#66d9ef">in</span> <span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>(nrows<span style="color:#ae81ff">+1</span>)){
+</span></span><span style="display:flex;"><span>  mrhs[i] <span style="color:#f92672">&lt;-</span> <span style="color:#f92672">-</span>ma[i,sa]<span style="color:#f92672">*</span>nrhs<span style="color:#f92672">+</span>mrhs[i]
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>mrhs[pri] <span style="color:#f92672">&lt;-</span> nrhs
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span>(i <span style="color:#66d9ef">in</span> <span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>(nrows<span style="color:#ae81ff">+1</span>)){
+</span></span><span style="display:flex;"><span>  ma[i,] <span style="color:#f92672">&lt;-</span> <span style="color:#f92672">-</span>ma[i,sa]<span style="color:#f92672">*</span>npr<span style="color:#f92672">+</span>ma[i,]
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>ma[pri,] <span style="color:#f92672">&lt;-</span> npr
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#rewrite the new A and RHS matricies to the tableau </span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>tableau[,<span style="color:#ae81ff">4</span><span style="color:#f92672">:</span>(<span style="color:#ae81ff">4</span><span style="color:#f92672">+</span>nvars<span style="color:#ae81ff">-1</span>)] <span style="color:#f92672">&lt;-</span> ma
+</span></span><span style="display:flex;"><span>tableau[,(<span style="color:#ae81ff">4</span><span style="color:#f92672">+</span>nvars)] <span style="color:#f92672">&lt;-</span> mrhs
+</span></span><span style="display:flex;"><span>tableau[2<span style="color:#f92672">:</span>(nrows<span style="color:#ae81ff">+1</span>),(<span style="color:#ae81ff">4</span><span style="color:#f92672">+</span>nvars<span style="color:#ae81ff">+1</span>)] <span style="color:#f92672">&lt;-</span> ratios
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">print</span>(<span style="color:#a6e22e">paste</span>(<span style="color:#e6db74">&#39;pivot row:&#39;</span>,(pri<span style="color:#ae81ff">-1</span>)))
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">print</span>(<span style="color:#a6e22e">paste</span>(<span style="color:#e6db74">&#39;new basis:&#39;</span>, sa))
+</span></span><span style="display:flex;"><span>tableau[pri,<span style="color:#ae81ff">2</span>] <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">paste0</span>(<span style="color:#e6db74">&#39;x&#39;</span>,sa)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>iters <span style="color:#f92672">&lt;-</span> iters <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">else</span>{
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">print</span>(<span style="color:#a6e22e">paste</span>(<span style="color:#e6db74">&#39;Final Tableau; iteration:&#39;</span>,iters))
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">print</span>(tableau[1<span style="color:#f92672">:</span>(<span style="color:#a6e22e">length</span>(tableau)<span style="color:#ae81ff">-1</span>)])
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">print</span>(<span style="color:#a6e22e">paste0</span>(<span style="color:#e6db74">&#39;objective value:&#39;</span>, mrhs[1]))
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">for</span>(j <span style="color:#66d9ef">in</span> <span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>nrows<span style="color:#ae81ff">+1</span>){
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">print</span>(<span style="color:#a6e22e">paste</span>(tableau[j,<span style="color:#ae81ff">2</span>], <span style="color:#e6db74">&#39;=&#39;</span>, tableau[j,(<span style="color:#ae81ff">4</span><span style="color:#f92672">+</span>nvars)]))}
+</span></span><span style="display:flex;"><span>  iters <span style="color:#f92672">&lt;-</span> maxiters}
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><pre tabindex="0"><code>## [1] &#34;iteration: 1&#34;
+##   row basic z x1 x2 x3 x4 x5 RHS ratio
+## 1   0     z 1 -2 -3  0  0  0   0     0
+## 2   1    x3 0 -1  1  1  0  0   5     0
+## 3   2    x4 0  1  3  0  1  0  35     0
+## 4   3    x5 0  1  0  0  0  1  20     0
+## [1] &#34;pivot row: 1&#34;
+## [1] &#34;new basis: 2&#34;
+## [1] &#34;iteration: 2&#34;
+##   row basic z x1 x2 x3 x4 x5 RHS    ratio
+## 1   0     z 1 -5  0  3  0  0  15  0.00000
+## 2   1    x2 0 -1  1  1  0  0   5  5.00000
+## 3   2    x4 0  4  0 -3  1  0  20 11.66667
+## 4   3    x5 0  1  0  0  0  1  20      Inf
+## [1] &#34;pivot row: 2&#34;
+## [1] &#34;new basis: 1&#34;
+## [1] &#34;iteration: 3&#34;
+##   row basic z x1 x2    x3    x4 x5 RHS ratio
+## 1   0     z 1  0  0 -0.75  1.25  0  40     0
+## 2   1    x2 0  0  1  0.25  0.25  0  10  9999
+## 3   2    x1 0  1  0 -0.75  0.25  0   5     5
+## 4   3    x5 0  0  0  0.75 -0.25  1  15    20
+## [1] &#34;pivot row: 3&#34;
+## [1] &#34;new basis: 3&#34;
+## [1] &#34;Final Tableau; iteration: 4&#34;
+##   row basic z x1 x2 x3         x4         x5 RHS
+## 1   0     z 1  0  0  0  1.0000000  1.0000000  55
+## 2   1    x2 0  0  1  0  0.3333333 -0.3333333   5
+## 3   2    x1 0  1  0  0  0.0000000  1.0000000  20
+## 4   3    x3 0  0  0  1 -0.3333333  1.3333333  20
+## [1] &#34;objective value:55&#34;
+## [1] &#34;x2 = 5&#34;
+## [1] &#34;x1 = 20&#34;
+## [1] &#34;x3 = 20&#34;
+</code></pre><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-r" data-lang="r"><span style="display:flex;"><span><span style="color:#a6e22e">toc</span>()
+</span></span></code></pre></div><pre tabindex="0"><code>## Simplex: 0.05 sec elapsed
+</code></pre><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-r" data-lang="r"><span style="display:flex;"><span><span style="color:#a6e22e">rm</span>(pri,sa,npr,iters,maxiters,ma,mrhs,nrhs,nrows,nvars,pe,ratios,i,j)
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">rm</span>(initial_tableau, tableau)
+</span></span></code></pre></div><h2 id="dual-simplex-algorithm">Dual Simplex Algorithm</h2>
+<p>The dual of the previous problem is
+<code>\(min 5y_1+35y_2+20y_3\)</code>
+s.t.
+<code>\(-y_1+y_2+y_3 \geq 2\)</code>
+<code>\(y_1+3y_2 \geq 3\)</code></p>
+<p>Switching to a max problem and adding slacks yields
+<code>\(z=-5y_1-35y_2-20y_3\)</code>
+s.t.
+<code>\(y_1-y_2-y_3+y_4 = -2\)</code>
+<code>\(-y_1-3y_2+y_5 = -3\)</code></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-r" data-lang="r"><span style="display:flex;"><span><span style="color:#a6e22e">tic</span>(<span style="color:#e6db74">&#39;Dual Simplex&#39;</span>)
+</span></span><span style="display:flex;"><span>initial_tableau <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">data.frame</span>(row <span style="color:#f92672">=</span> <span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">1</span>,<span style="color:#ae81ff">2</span>), basic <span style="color:#f92672">=</span> (<span style="color:#a6e22e">c</span>(<span style="color:#e6db74">&#39;z&#39;</span>, <span style="color:#e6db74">&#39;y4&#39;</span>, <span style="color:#e6db74">&#39;y5&#39;</span>)), z <span style="color:#f92672">=</span> <span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">1</span>,<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">0</span>), y1 <span style="color:#f92672">=</span> <span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">5</span>,<span style="color:#ae81ff">1</span>,<span style="color:#ae81ff">-1</span>), y2 <span style="color:#f92672">=</span> <span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">35</span>,<span style="color:#ae81ff">-1</span>,<span style="color:#ae81ff">-3</span>), y3 <span style="color:#f92672">=</span> <span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">20</span>,<span style="color:#ae81ff">-1</span>,<span style="color:#ae81ff">0</span>), y4 <span style="color:#f92672">=</span> <span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">1</span>,<span style="color:#ae81ff">0</span>), y5 <span style="color:#f92672">=</span> <span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">1</span>),   RHS <span style="color:#f92672">=</span> <span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">-2</span>,<span style="color:#ae81ff">-3</span>))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>initial_tableau<span style="color:#f92672">$</span>basic <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">as.character</span>(initial_tableau<span style="color:#f92672">$</span>basic)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>nvars <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">5</span>
+</span></span><span style="display:flex;"><span>nrows <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>tableau <span style="color:#f92672">&lt;-</span> initial_tableau
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>iters <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>maxiters <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">10</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">while</span>(iters <span style="color:#f92672">&lt;</span> maxiters){
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#create a and RHS matrixes for easy calculations</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>ma <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">as.matrix</span>(tableau[,<span style="color:#ae81ff">4</span><span style="color:#f92672">:</span>(<span style="color:#ae81ff">4</span><span style="color:#f92672">+</span>nvars<span style="color:#ae81ff">-1</span>)])
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#Check to see if a RHS value is negative</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span>(<span style="color:#a6e22e">min</span>(tableau[2<span style="color:#f92672">:</span>(nrows<span style="color:#ae81ff">+1</span>),(<span style="color:#ae81ff">4</span><span style="color:#f92672">+</span>nvars)]) <span style="color:#f92672">&lt;</span> <span style="color:#ae81ff">0</span>){
+</span></span><span style="display:flex;"><span>mrhs <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">as.matrix</span>(tableau[,(<span style="color:#ae81ff">4</span><span style="color:#f92672">+</span>nvars)])
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">print</span>(<span style="color:#a6e22e">paste</span>(<span style="color:#e6db74">&#39;iteration:&#39;</span>,iters))
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">print</span>(tableau)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#use steepest ascent to find the most negative RHS and that is the pivot row index (pri)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#then caluclate the ratios to determine the entering variable (ev)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>pri <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">which.min</span>(mrhs[2<span style="color:#f92672">:</span>(nrows<span style="color:#ae81ff">+1</span>),])<span style="color:#ae81ff">+1</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>ratios <span style="color:#f92672">&lt;-</span> <span style="color:#f92672">-</span>ma[1,]<span style="color:#f92672">/</span>ma[pri,]
+</span></span><span style="display:flex;"><span>ratios[ratios<span style="color:#f92672">&lt;=</span><span style="color:#ae81ff">0</span>] <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">9999</span>
+</span></span><span style="display:flex;"><span>ev <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">which.min</span>(ratios)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#identify the new pivot element, do the same matrix operations to make the new pivot row and the new rhs for that row</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#change pivot row by pivot element (pe) using Gauss Jordan elimination (substition)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#by simply divide the row and rhs by the pe to get a new pivot row (npr) and new rhs (nrhs)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#https://www.coursera.org/lecture/solving-algorithms-discrete-optimization/3-3-1-linear-programming-rzHVE</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>pe <span style="color:#f92672">&lt;-</span> ma[pri,ev]
+</span></span><span style="display:flex;"><span>npr <span style="color:#f92672">&lt;-</span> ma[pri,]<span style="color:#f92672">/</span>pe
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>nrhs <span style="color:#f92672">&lt;-</span> mrhs[pri]<span style="color:#f92672">/</span>pe
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#Do the matrix operations for the rest of the tableau</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#take that row and muliply by the negative of the pivot variable&#39;s coefficent in that row column and add the result to that row for both the rhs matrix and the A matrix</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span>(i <span style="color:#66d9ef">in</span> <span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>(nrows<span style="color:#ae81ff">+1</span>)){
+</span></span><span style="display:flex;"><span>  mrhs[i] <span style="color:#f92672">&lt;-</span> <span style="color:#f92672">-</span>ma[i,ev]<span style="color:#f92672">*</span>nrhs<span style="color:#f92672">+</span>mrhs[i]
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>mrhs[pri] <span style="color:#f92672">&lt;-</span> nrhs
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span>(i <span style="color:#66d9ef">in</span> <span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>(nrows<span style="color:#ae81ff">+1</span>)){
+</span></span><span style="display:flex;"><span>  ma[i,] <span style="color:#f92672">&lt;-</span> <span style="color:#f92672">-</span>ma[i,ev]<span style="color:#f92672">*</span>npr<span style="color:#f92672">+</span>ma[i,]
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>ma[pri,] <span style="color:#f92672">&lt;-</span> npr
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#rewrite the new A and RHS matricies to the tableau </span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>tableau[,<span style="color:#ae81ff">4</span><span style="color:#f92672">:</span>(<span style="color:#ae81ff">3</span><span style="color:#f92672">+</span>nvars)] <span style="color:#f92672">&lt;-</span> ma
+</span></span><span style="display:flex;"><span>tableau[,(<span style="color:#ae81ff">4</span><span style="color:#f92672">+</span>nvars)] <span style="color:#f92672">&lt;-</span> mrhs
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">print</span>(<span style="color:#a6e22e">paste</span>(<span style="color:#e6db74">&#39;pivot row:&#39;</span>,(pri<span style="color:#ae81ff">-1</span>)))
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">print</span>(<span style="color:#a6e22e">paste</span>(<span style="color:#e6db74">&#39;entering variable:&#39;</span>,ev))
+</span></span><span style="display:flex;"><span>tableau[pri,<span style="color:#ae81ff">2</span>] <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">paste0</span>(<span style="color:#e6db74">&#39;y&#39;</span>,ev)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>iters <span style="color:#f92672">&lt;-</span> iters <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">else</span>{
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">print</span>(tableau)
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">print</span>(<span style="color:#a6e22e">paste</span>(<span style="color:#e6db74">&#39;objective value:&#39;</span>, mrhs[1]))
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">for</span>(j <span style="color:#66d9ef">in</span> <span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>nrows<span style="color:#ae81ff">+1</span>){
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">print</span>(<span style="color:#a6e22e">paste</span>(tableau[j,<span style="color:#ae81ff">2</span>], <span style="color:#e6db74">&#39;=&#39;</span>, tableau[j,(<span style="color:#ae81ff">4</span><span style="color:#f92672">+</span>nvars)]))}
+</span></span><span style="display:flex;"><span>  iters <span style="color:#f92672">&lt;-</span> maxiters}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><pre tabindex="0"><code>## [1] &#34;iteration: 1&#34;
+##   row basic z y1 y2 y3 y4 y5 RHS
+## 1   0     z 1  5 35 20  0  0   0
+## 2   1    y4 0  1 -1 -1  1  0  -2
+## 3   2    y5 0 -1 -3  0  0  1  -3
+## [1] &#34;pivot row: 2&#34;
+## [1] &#34;entering variable: 1&#34;
+## [1] &#34;iteration: 2&#34;
+##   row basic z y1 y2 y3 y4 y5 RHS
+## 1   0     z 1  0 20 20  0  5 -15
+## 2   1    y4 0  0 -4 -1  1  1  -5
+## 3   2    y1 0  1  3  0  0 -1   3
+## [1] &#34;pivot row: 1&#34;
+## [1] &#34;entering variable: 2&#34;
+## [1] &#34;iteration: 3&#34;
+##   row basic z y1 y2    y3    y4    y5    RHS
+## 1   0     z 1  0  0 15.00  5.00 10.00 -40.00
+## 2   1    y2 0  0  1  0.25 -0.25 -0.25   1.25
+## 3   2    y1 0  1  0 -0.75  0.75 -0.25  -0.75
+## [1] &#34;pivot row: 2&#34;
+## [1] &#34;entering variable: 3&#34;
+##   row basic z         y1 y2 y3 y4         y5 RHS
+## 1   0     z 1 20.0000000  0  0 20  5.0000000 -55
+## 2   1    y2 0  0.3333333  1  0  0 -0.3333333   1
+## 3   2    y3 0 -1.3333333  0  1 -1  0.3333333   1
+## [1] &#34;objective value: -55&#34;
+## [1] &#34;y2 = 1&#34;
+## [1] &#34;y3 = 1&#34;
+</code></pre><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-r" data-lang="r"><span style="display:flex;"><span><span style="color:#a6e22e">toc</span>()
+</span></span></code></pre></div><pre tabindex="0"><code>## Dual Simplex: 0.03 sec elapsed
+</code></pre><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-r" data-lang="r"><span style="display:flex;"><span><span style="color:#a6e22e">rm</span>(pri,npr,iters,maxiters,ma,mrhs,nrhs,nrows,nvars,pe,ev,ratios,i,j)
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">rm</span>(initial_tableau, tableau)
+</span></span></code></pre></div><h2 id="interior-point-algorithm">Interior Point Algorithm</h2>
+<p>Source: <a href="http://fourier.eng.hmc.edu/e176/lectures/ch3/node19.html">http://fourier.eng.hmc.edu/e176/lectures/ch3/node19.html</a></p>
+<p>KKT (via interior points) vs Simplex
+<a href="https://math.stackexchange.com/questions/3422607/why-would-you-choose-simplex-over-lagrange-kkt-multipliers-methods">https://math.stackexchange.com/questions/3422607/why-would-you-choose-simplex-over-lagrange-kkt-multipliers-methods</a></p>
+<p>Standard form:</p>
+<p><code>\(max: z; z - 2x_1 - 3x_2 = 0\)</code>
+s.t.
+<code>\(-x_1 + x_2 + x_3 = 5\)</code>
+<code>\(x_1+ 3x_2 + x_4 = 35\)</code>
+<code>\(x_1 + x_5 = 20\)</code>
+Idea given A,b,c and intial value of x; find optimal x that minimizes c&rsquo;*x</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-r" data-lang="r"><span style="display:flex;"><span><span style="color:#a6e22e">tic</span>(<span style="color:#e6db74">&#39;Interior Point: Newton Raphson&#39;</span>)
+</span></span><span style="display:flex;"><span>constr1 <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">-1</span>,<span style="color:#ae81ff">1</span>,<span style="color:#ae81ff">1</span>,<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">0</span>)
+</span></span><span style="display:flex;"><span>constr2 <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">1</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">1</span>,<span style="color:#ae81ff">0</span>)
+</span></span><span style="display:flex;"><span>constr3 <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">1</span>,<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">1</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>A <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">rbind</span>(constr1,constr2, constr3)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>b <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">matrix</span>(<span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">5</span>,<span style="color:#ae81ff">35</span>,<span style="color:#ae81ff">20</span>),nrow <span style="color:#f92672">=</span><span style="color:#ae81ff">3</span>)
+</span></span><span style="display:flex;"><span>c <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">matrix</span>(<span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">-2</span>,<span style="color:#ae81ff">-3</span>,<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">0</span>), nrow <span style="color:#f92672">=</span> <span style="color:#ae81ff">5</span>)
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#inital x values (xi) just has to be a feasible solution, but give every x variable a value or there will be numerical instablity problems in the matricies</span>
+</span></span><span style="display:flex;"><span>xi <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">matrix</span>(<span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">1</span>,<span style="color:#ae81ff">1</span>,<span style="color:#ae81ff">5</span>,<span style="color:#ae81ff">31</span>,<span style="color:#ae81ff">19</span>), nrow <span style="color:#f92672">=</span><span style="color:#ae81ff">5</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>m <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">nrow</span>(A)
+</span></span><span style="display:flex;"><span>n <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">ncol</span>(A)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>I <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">diag</span>(n)
+</span></span><span style="display:flex;"><span>z1 <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">matrix</span>(<span style="color:#a6e22e">rep</span>(<span style="color:#ae81ff">0</span>,n<span style="color:#f92672">*</span>n), nrow <span style="color:#f92672">=</span> n)
+</span></span><span style="display:flex;"><span>z2 <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">matrix</span>(<span style="color:#a6e22e">rep</span>(<span style="color:#ae81ff">0</span>,m<span style="color:#f92672">*</span>m), nrow <span style="color:#f92672">=</span> m)
+</span></span><span style="display:flex;"><span>z3 <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">matrix</span>(<span style="color:#a6e22e">rep</span>(<span style="color:#ae81ff">0</span>,m<span style="color:#f92672">*</span>n), nrow <span style="color:#f92672">=</span> m)
+</span></span><span style="display:flex;"><span>y <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">matrix</span>(<span style="color:#a6e22e">rep</span>(<span style="color:#ae81ff">1</span>,<span style="color:#ae81ff">5</span>), nrow <span style="color:#f92672">=</span> <span style="color:#ae81ff">5</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#The complimentary slackness modifier 1/t eventually goes to 0 as t &gt;&gt;&gt;&gt; inf</span>
+</span></span><span style="display:flex;"><span>t <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">9</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#Step size pretty much make it up the higher the more the step changes, but it might be too quick.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#if its too quick it converges on negative values of x which is bad, </span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#for an example change this to 0.3 to see a slower convergance and then to 1 to see a divergence</span>
+</span></span><span style="display:flex;"><span>alpha <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">.5</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#mu*x = 0 in complemntariy slackness condition , mu &gt;0 is dual condition mu correspond to dual variables, </span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#using fancy vectors this gives Xd*mu = XM1 = 1/t where t &gt;&gt;&gt;&gt; inf </span>
+</span></span><span style="display:flex;"><span>x <span style="color:#f92672">&lt;-</span> xi
+</span></span><span style="display:flex;"><span>mu <span style="color:#f92672">&lt;-</span> x<span style="color:#f92672">/</span>t
+</span></span><span style="display:flex;"><span>mu_minus_c <span style="color:#f92672">&lt;-</span> mu <span style="color:#f92672">-</span> c
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#Gives lagrangian multipliers for constraints</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#Solving c+A*lamda-mu = 0 gives initial lambda</span>
+</span></span><span style="display:flex;"><span>lambda <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">ginv</span>(<span style="color:#a6e22e">t</span>(A))<span style="color:#f92672">%*%</span>(mu_minus_c)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#combined vector having values of x, lambda, and mu useful when adding the search direction</span>
+</span></span><span style="display:flex;"><span>w <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">rbind</span>(x, lambda, mu)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#This is the KKT condition stationarity, at optimality this derivative should  be 0,</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#Using the lagrangian cx+lambda*Ax-mu &gt;&gt; c+A*lambda-mu</span>
+</span></span><span style="display:flex;"><span>c_plus_tA <span style="color:#f92672">&lt;-</span> c<span style="color:#f92672">+</span><span style="color:#a6e22e">t</span>(A)<span style="color:#f92672">%*%</span>lambda<span style="color:#f92672">-</span>mu
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#This is the KKT condition primal feasiblity, this should always be 0 Ax-b=0 </span>
+</span></span><span style="display:flex;"><span>A_times_x_minus_b <span style="color:#f92672">&lt;-</span> A<span style="color:#f92672">%*%</span>x<span style="color:#f92672">-</span>b
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#This is the modfied complimentary condtion XM1 -1/t = 0 X is the diag(x) and M is diag(mu) 1/t &gt;&gt;&gt; 0 as t gets larger</span>
+</span></span><span style="display:flex;"><span>x_times_mu_minus_y_over_t <span style="color:#f92672">&lt;-</span> x<span style="color:#f92672">*</span>mu<span style="color:#f92672">-</span>y<span style="color:#f92672">/</span>t
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#The right hand side of the search direction iteration given from the Newton-Raphson Method</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#Combines the vectors above</span>
+</span></span><span style="display:flex;"><span>B <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">rbind</span>(c_plus_tA,A_times_x_minus_b,x_times_mu_minus_y_over_t)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>objective <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">t</span>(c)<span style="color:#f92672">%*%</span>x
+</span></span><span style="display:flex;"><span>error <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">norm</span>(B,<span style="color:#e6db74">&#39;2&#39;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>iteration_list <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">data.frame</span>(<span style="color:#e6db74">&#39;x1&#39;</span> <span style="color:#f92672">=</span> x[1], <span style="color:#e6db74">&#39;x2&#39;</span> <span style="color:#f92672">=</span> x[2], <span style="color:#e6db74">&#39;x3&#39;</span> <span style="color:#f92672">=</span> x[3], <span style="color:#e6db74">&#39;x4&#39;</span> <span style="color:#f92672">=</span> x[4], <span style="color:#e6db74">&#39;x5&#39;</span> <span style="color:#f92672">=</span> x[5], <span style="color:#e6db74">&#39;objective&#39;</span> <span style="color:#f92672">=</span> objective, <span style="color:#e6db74">&#39;error&#39;</span> <span style="color:#f92672">=</span> error)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#loop</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">while</span>(error <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">10</span>^<span style="color:#ae81ff">-7</span>){
+</span></span><span style="display:flex;"><span>t <span style="color:#f92672">&lt;-</span> t<span style="color:#f92672">*</span><span style="color:#ae81ff">9</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Xd <span style="color:#f92672">=</span> <span style="color:#a6e22e">Diagonal</span>(n <span style="color:#f92672">=</span> n, x)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Mud <span style="color:#f92672">=</span> <span style="color:#a6e22e">Diagonal</span>(n <span style="color:#f92672">=</span> n, mu) 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#The left hand side matrix of the search direction iteration, it containtes information from the A, x, and mu vectors and matricies of 1s or 0s to make the math make sense</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>C <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">rbind</span>(<span style="color:#a6e22e">cbind</span>(z1,<span style="color:#a6e22e">t</span>(A),<span style="color:#f92672">-</span>I),<span style="color:#a6e22e">cbind</span>(A,z2,z3), <span style="color:#a6e22e">cbind</span>(Mud,<span style="color:#a6e22e">t</span>(z3), Xd))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#The right hand side of the search direction iteration given from the Newton-Raphson Method</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#This contains the objective function costs, the RHS values, as well as the A, x, and mu vectors. </span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#It also has the complimentary condition represented by t</span>
+</span></span><span style="display:flex;"><span>B <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">rbind</span>(c<span style="color:#f92672">+</span><span style="color:#a6e22e">t</span>(A)<span style="color:#f92672">%*%</span>lambda<span style="color:#f92672">-</span>mu,A<span style="color:#f92672">%*%</span>x<span style="color:#f92672">-</span>b,x<span style="color:#f92672">*</span>mu<span style="color:#f92672">-</span>y<span style="color:#f92672">/</span>t)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#solving the systems of equations with C and B gives the search direction as you move closer and closer to solving the complimentary condition in the KKT conditions</span>
+</span></span><span style="display:flex;"><span>dw <span style="color:#f92672">=</span> <span style="color:#a6e22e">solve</span>(<span style="color:#f92672">-</span>C,B)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#update your w vector which is just a list of the x, mu, and lambda vectors using the search direction</span>
+</span></span><span style="display:flex;"><span>w <span style="color:#f92672">&lt;-</span> w <span style="color:#f92672">+</span> alpha<span style="color:#f92672">*</span>dw
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>x <span style="color:#f92672">&lt;-</span> w[1<span style="color:#f92672">:</span>n]
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>lambda <span style="color:#f92672">&lt;-</span> w<span style="color:#a6e22e">[</span>(n<span style="color:#ae81ff">+1</span>)<span style="color:#f92672">:</span>(n<span style="color:#f92672">+</span>m)]
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>mu <span style="color:#f92672">&lt;-</span> w<span style="color:#a6e22e">[</span>(n<span style="color:#f92672">+</span>m<span style="color:#ae81ff">+1</span>)<span style="color:#f92672">:</span><span style="color:#a6e22e">length</span>(w)]
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#calculate the objective function from the x values and the error. Remember if this satisifies all the KKT conditions then the B vector will be 0.</span>
+</span></span><span style="display:flex;"><span>objective <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">t</span>(c)<span style="color:#f92672">%*%</span>x
+</span></span><span style="display:flex;"><span>error <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">norm</span>(B,<span style="color:#e6db74">&#39;2&#39;</span>)
+</span></span><span style="display:flex;"><span>iteration_list <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">rbind</span>(iteration_list,<span style="color:#a6e22e">c</span>(x,objective,error))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">toc</span>()
+</span></span></code></pre></div><pre tabindex="0"><code>## Interior Point: Newton Raphson: 0.17 sec elapsed
+</code></pre><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-r" data-lang="r"><span style="display:flex;"><span><span style="color:#a6e22e">head</span>(iteration_list)
+</span></span></code></pre></div><pre tabindex="0"><code>##          x1       x2        x3        x4        x5 objective     error
+## 1  1.000000 1.000000  5.000000 31.000000 19.000000  -5.00000 113.97801
+## 2  2.815083 1.900809  5.914274 26.482489 17.184917 -11.33259 114.10755
+## 3 10.549002 1.617924 13.931079 19.597227  9.450998 -25.95178  62.76629
+## 4 13.970331 2.387418 16.582913 13.867413  6.029669 -35.10292  35.22695
+## 5 16.877593 3.136894 18.740699  8.711726  3.122407 -43.16587  19.61963
+## 6 18.419517 3.865645 19.553873  4.983549  1.580483 -48.43597  10.66207
+</code></pre><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-r" data-lang="r"><span style="display:flex;"><span><span style="color:#a6e22e">tail</span>(iteration_list)
+</span></span></code></pre></div><pre tabindex="0"><code>##    x1 x2 x3           x4           x5 objective        error
+## 28 20  5 20 1.386952e-06 3.808029e-07       -55 2.878188e-06
+## 29 20  5 20 6.934761e-07 1.904014e-07       -55 1.439094e-06
+## 30 20  5 20 3.467381e-07 9.520072e-08       -55 7.195471e-07
+## 31 20  5 20 1.733690e-07 4.760036e-08       -55 3.597735e-07
+## 32 20  5 20 8.668451e-08 2.380018e-08       -55 1.798868e-07
+## 33 20  5 20 4.334226e-08 1.190009e-08       -55 8.994339e-08
+</code></pre><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-r" data-lang="r"><span style="display:flex;"><span><span style="color:#a6e22e">rm</span>(x,lambda,mu,z1,z2,z3,y,xi,Xd,Mud,t,n,I,alpha,b,c,constr1,constr2,constr3,m)
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">rm</span>(c_plus_tA,mu_minus_c,A_times_x_minus_b,x_times_mu_minus_y_over_t, A,B,C,dw)
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">rm</span>(iteration_list,objective,error,w)
+</span></span></code></pre></div><h2 id="run-all-methods-with-gurobi">Run All Methods with Gurobi</h2>
+<p><code>\(max: z = 2x_1 + 3x_2\)</code></p>
+<p>s.t.</p>
+<p><code>\(-x_1 + x_2 \leq 5\)</code>
+<code>\(x_1+3x_2 \leq 35\)</code>
+<code>\(x_1 \leq 20\)</code></p>
+<p>This solver runs all the techniques above in paralel.
+The Simplex, Dual Simplex, and 3 versions of the interior point method (barrier method).
+This requires 5 cores. Whichever one solves the fastest produces the output.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-r" data-lang="r"><span style="display:flex;"><span><span style="color:#a6e22e">tic</span>(<span style="color:#e6db74">&#39;Gurobi Solver&#39;</span>)
+</span></span><span style="display:flex;"><span>model <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">list</span>()
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>A     <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">matrix</span>(<span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">-1</span>,<span style="color:#ae81ff">1</span>,
+</span></span><span style="display:flex;"><span>                        <span style="color:#ae81ff">1</span>,<span style="color:#ae81ff">3</span>,
+</span></span><span style="display:flex;"><span>                        <span style="color:#ae81ff">1</span>,<span style="color:#ae81ff">0</span>), nrow<span style="color:#f92672">=</span><span style="color:#ae81ff">3</span>, byrow<span style="color:#f92672">=</span>T)
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>obj   <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">2</span>,<span style="color:#ae81ff">3</span>)
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>rhs   <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">5</span>,
+</span></span><span style="display:flex;"><span>                 <span style="color:#ae81ff">35</span>,
+</span></span><span style="display:flex;"><span>                 <span style="color:#ae81ff">20</span>)
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>sense <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">c</span>(<span style="color:#e6db74">&#39;&lt;&#39;</span>,
+</span></span><span style="display:flex;"><span>                 <span style="color:#e6db74">&#39;&lt;&#39;</span>,
+</span></span><span style="display:flex;"><span>                 <span style="color:#e6db74">&#39;&lt;&#39;</span>)
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>modelsense <span style="color:#f92672">&lt;-</span> <span style="color:#e6db74">&#39;max&#39;</span>
+</span></span><span style="display:flex;"><span>result <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">gurobi</span>(model)
+</span></span></code></pre></div><pre tabindex="0"><code>## Gurobi Optimizer version 9.1.2 build v9.1.2rc0 (win64)
+## Thread count: 10 physical cores, 20 logical processors, using up to 20 threads
+## Optimize a model with 3 rows, 2 columns and 5 nonzeros
+## Model fingerprint: 0x7d34ce81
+## Coefficient statistics:
+##   Matrix range     [1e+00, 3e+00]
+##   Objective range  [2e+00, 3e+00]
+##   Bounds range     [0e+00, 0e+00]
+##   RHS range        [5e+00, 4e+01]
+## Presolve removed 1 rows and 0 columns
+## Presolve time: 0.00s
+## Presolved: 2 rows, 2 columns, 4 nonzeros
+## 
+## Iteration    Objective       Primal Inf.    Dual Inf.      Time
+##        0    7.0000000e+01   1.875000e+00   0.000000e+00      0s
+##        1    5.5000000e+01   0.000000e+00   0.000000e+00      0s
+## 
+## Solved in 1 iterations and 0.00 seconds
+## Optimal objective  5.500000000e+01
+</code></pre><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-r" data-lang="r"><span style="display:flex;"><span><span style="color:#75715e">#print(result$objval)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#print(result$x)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Clear space</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">rm</span>(model, result)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">toc</span>()
+</span></span></code></pre></div><pre tabindex="0"><code>## Gurobi Solver: 0.02 sec elapsed
+</code></pre>
+</article>
+
+</main>
+<footer class="site-footer">
+  <p>
+    <a href="mailto:erick.jones@uta.edu">erick.jones@uta.edu</a> ·
+    <a href="https://scholar.google.com/citations?hl=en&user=03RL76wAAAAJ">Google Scholar</a> ·
+    <a href="https://www.linkedin.com/in/erickjones2/">LinkedIn</a> ·
+    <a href="https://github.com/yamierick">GitHub</a>
+  </p>
+  <p class="constellation">Professional site · <a href="https://engineerliving.com">Engineer Living (ideas &amp; writing)</a> · <em>The Friction Deficit</em> (fiction, coming soon)</p>
+</footer>
+</body>
+</html>

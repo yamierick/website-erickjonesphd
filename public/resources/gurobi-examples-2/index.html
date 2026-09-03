@@ -1,0 +1,1090 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gurboi&#39;s R Examples 2 · Erick C. Jones Jr., Ph.D.</title>
+<meta name="description" content="Assistant Professor, Industrial, Manufacturing, and Systems Engineering, UT Arlington. Building the future of energy and critical mineral systems — end to end and back.">
+<link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+<header class="site-header">
+  <a class="site-title" href="/">Erick C. Jones Jr.</a>
+  <nav>
+    <a href="/about/">About</a><a href="/research/">Research</a><a href="/labs/">Labs</a><a href="/publications/">Publications</a><a href="/teaching/">Teaching</a><a href="/resources/">Resources</a><a href="/beyond/">Beyond</a>
+  </nav>
+</header>
+<main>
+
+<article>
+  <h1>Gurboi&#39;s R Examples 2</h1>
+  <p class="meta"><time>January 6, 2020</time> · ORIE Techniques</p>
+  <p>This post explores how to use Gurobi to solve more advanced LPs, MIPs, and QPs.
+I have written these using Gurobi as a solver and as the mathematical formulation software.
+This is a reproducible example if you have R Studio just  make sure you have installed the correct packages.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-r" data-lang="r"><span style="display:flex;"><span><span style="color:#a6e22e">library</span>(gurobi)
+</span></span></code></pre></div><pre tabindex="0"><code>## Warning: package &#39;slam&#39; was built under R version 4.1.2
+</code></pre><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-r" data-lang="r"><span style="display:flex;"><span><span style="color:#a6e22e">library</span>(Matrix)
+</span></span></code></pre></div><p>This example formulates and solves the following simple QP model:</p>
+<p><code>\(min:     x^2 + xy + y^2 + yz + z^2 + 2 x\)</code></p>
+<p>subject to</p>
+<pre><code>   `\(x + 2 y + 3z \geq 4\)`
+   
+   `\(x +   y      \geq 1\)`
+   x, y, z non-negative
+</code></pre>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-r" data-lang="r"><span style="display:flex;"><span>model <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">list</span>()
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>A     <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">matrix</span>(<span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">1</span>,<span style="color:#ae81ff">2</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">1</span>,<span style="color:#ae81ff">1</span>,<span style="color:#ae81ff">0</span>), nrow<span style="color:#f92672">=</span><span style="color:#ae81ff">2</span>, byrow<span style="color:#f92672">=</span>T)
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>Q     <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">matrix</span>(<span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">1</span>,<span style="color:#ae81ff">0.5</span>,<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">0.5</span>,<span style="color:#ae81ff">1</span>,<span style="color:#ae81ff">0.5</span>,<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">0.5</span>,<span style="color:#ae81ff">1</span>), nrow<span style="color:#f92672">=</span><span style="color:#ae81ff">3</span>, byrow<span style="color:#f92672">=</span>T)
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>obj   <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">2</span>,<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">0</span>)
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>rhs   <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">4</span>,<span style="color:#ae81ff">1</span>)
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>sense <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">c</span>(<span style="color:#e6db74">&#39;&gt;&#39;</span>, <span style="color:#e6db74">&#39;&gt;&#39;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>result <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">gurobi</span>(model)
+</span></span></code></pre></div><pre tabindex="0"><code>## Gurobi Optimizer version 9.1.2 build v9.1.2rc0 (win64)
+## Thread count: 10 physical cores, 20 logical processors, using up to 20 threads
+## Optimize a model with 2 rows, 3 columns and 5 nonzeros
+## Model fingerprint: 0xe6f007c4
+## Model has 5 quadratic objective terms
+## Coefficient statistics:
+##   Matrix range     [1e+00, 3e+00]
+##   Objective range  [2e+00, 2e+00]
+##   QObjective range [2e+00, 2e+00]
+##   Bounds range     [0e+00, 0e+00]
+##   RHS range        [1e+00, 4e+00]
+## Presolve time: 0.00s
+## Presolved: 2 rows, 3 columns, 5 nonzeros
+## Presolved model has 5 quadratic objective terms
+## Ordering time: 0.00s
+## 
+## Barrier statistics:
+##  Free vars  : 2
+##  AA&#39; NZ     : 6.000e+00
+##  Factor NZ  : 1.000e+01
+##  Factor Ops : 3.000e+01 (less than 1 second per iteration)
+##  Threads    : 1
+## 
+##                   Objective                Residual
+## Iter       Primal          Dual         Primal    Dual     Compl     Time
+##    0   1.68862999e+05 -1.66862803e+05  1.50e+03 4.63e-07  9.99e+05     0s
+##    1   3.32288030e+05 -3.31121401e+05  1.50e-03 4.55e-13  1.33e+05     0s
+##    2   4.88215027e+04 -4.83744738e+04  1.50e-09 2.84e-14  1.94e+04     0s
+##    3   7.20552197e+03 -7.03403484e+03  3.55e-14 1.42e-14  2.85e+03     0s
+##    4   1.07582166e+03 -1.00982226e+03  1.78e-14 1.07e-14  4.17e+02     0s
+##    5   1.65319400e+02 -1.39657698e+02  3.55e-15 3.55e-15  6.10e+01     0s
+##    6   2.72141305e+01 -1.68504217e+01  1.33e-15 4.44e-16  8.81e+00     0s
+##    7   5.34776479e+00 -4.13214640e-01  2.22e-16 2.22e-16  1.15e+00     0s
+##    8   2.27046251e+00  2.04615758e+00  2.22e-16 4.44e-16  4.49e-02     0s
+##    9   2.11217859e+00  2.11101837e+00  7.77e-15 1.67e-16  2.32e-04     0s
+##   10   2.11111218e+00  2.11111102e+00  5.55e-16 3.29e-16  2.32e-07     0s
+##   11   2.11111111e+00  2.11111111e+00  3.33e-15 3.33e-16  2.32e-10     0s
+## 
+## Barrier solved model in 11 iterations and 0.00 seconds
+## Optimal objective 2.11111111e+00
+</code></pre><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-r" data-lang="r"><span style="display:flex;"><span><span style="color:#a6e22e">print</span>(result<span style="color:#f92672">$</span>objval)
+</span></span></code></pre></div><pre tabindex="0"><code>## [1] 2.111111
+</code></pre><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-r" data-lang="r"><span style="display:flex;"><span><span style="color:#a6e22e">print</span>(result<span style="color:#f92672">$</span>x)
+</span></span></code></pre></div><pre tabindex="0"><code>## [1] 3.584007e-10 1.000000e+00 6.666667e-01
+</code></pre><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-r" data-lang="r"><span style="display:flex;"><span>model<span style="color:#f92672">$</span>vtype <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">c</span>(<span style="color:#e6db74">&#39;I&#39;</span>, <span style="color:#e6db74">&#39;I&#39;</span>, <span style="color:#e6db74">&#39;I&#39;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>result <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">gurobi</span>(model)
+</span></span></code></pre></div><pre tabindex="0"><code>## Gurobi Optimizer version 9.1.2 build v9.1.2rc0 (win64)
+## Thread count: 10 physical cores, 20 logical processors, using up to 20 threads
+## Optimize a model with 2 rows, 3 columns and 5 nonzeros
+## Model fingerprint: 0x2458258b
+## Model has 5 quadratic objective terms
+## Variable types: 0 continuous, 3 integer (0 binary)
+## Coefficient statistics:
+##   Matrix range     [1e+00, 3e+00]
+##   Objective range  [2e+00, 2e+00]
+##   QObjective range [2e+00, 2e+00]
+##   Bounds range     [0e+00, 0e+00]
+##   RHS range        [1e+00, 4e+00]
+## Found heuristic solution: objective 2.000000e+19
+## Presolve time: 0.00s
+## Presolved: 2 rows, 3 columns, 5 nonzeros
+## Presolved model has 5 quadratic objective terms
+## Variable types: 0 continuous, 3 integer (0 binary)
+## 
+## Root relaxation: objective 2.111111e+00, 5 iterations, 0.00 seconds
+## 
+##     Nodes    |    Current Node    |     Objective Bounds      |     Work
+##  Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+## 
+##      0     0    2.11111    0    1 2.0000e+19    2.11111   100%     -    0s
+## H    0     0                       3.0000000    2.11111  29.6%     -    0s
+##      0     0    2.11111    0    1    3.00000    2.11111  29.6%     -    0s
+## 
+## Explored 1 nodes (5 simplex iterations) in 0.00 seconds
+## Thread count was 20 (of 20 available processors)
+## 
+## Solution count 2: 3 2e+19 
+## 
+## Optimal solution found (tolerance 1.00e-04)
+## Best objective 3.000000000000e+00, best bound 3.000000000000e+00, gap 0.0000%
+</code></pre><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-r" data-lang="r"><span style="display:flex;"><span><span style="color:#a6e22e">print</span>(result<span style="color:#f92672">$</span>objval)
+</span></span></code></pre></div><pre tabindex="0"><code>## [1] 3
+</code></pre><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-r" data-lang="r"><span style="display:flex;"><span><span style="color:#a6e22e">print</span>(result<span style="color:#f92672">$</span>x)
+</span></span></code></pre></div><pre tabindex="0"><code>## [1] 0 1 1
+</code></pre><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-r" data-lang="r"><span style="display:flex;"><span><span style="color:#75715e"># Clear space</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">rm</span>(model, result)
+</span></span></code></pre></div><p>This example formulates and solves the following simple QCP model:
+<code>\(max: x\)</code></p>
+<p>subject to</p>
+<p><code>\(x + y + z   =  1\)</code></p>
+<p><code>\(x^2 + y^2 \leq z^2\)</code>  (second-order cone)
+$ x^2 \leq yz$         (rotated second-order cone)
+x, y, z non-negative</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-r" data-lang="r"><span style="display:flex;"><span>model <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">list</span>()
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>A          <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">matrix</span>(<span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">1</span>,<span style="color:#ae81ff">1</span>,<span style="color:#ae81ff">1</span>), nrow<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span>, byrow<span style="color:#f92672">=</span>T)
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>modelsense <span style="color:#f92672">&lt;-</span> <span style="color:#e6db74">&#39;max&#39;</span>
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>obj        <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">1</span>,<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">0</span>)
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>rhs        <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">1</span>)
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>sense      <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">c</span>(<span style="color:#e6db74">&#39;=&#39;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># First quadratic constraint: x^2 + y^2 - z^2 &lt;= 0</span>
+</span></span><span style="display:flex;"><span>qc1 <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">list</span>()
+</span></span><span style="display:flex;"><span>qc1<span style="color:#f92672">$</span>Qc <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">spMatrix</span>(<span style="color:#ae81ff">3</span>, <span style="color:#ae81ff">3</span>, <span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">2</span>, <span style="color:#ae81ff">3</span>), <span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">2</span>, <span style="color:#ae81ff">3</span>), <span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">1.0</span>, <span style="color:#ae81ff">1.0</span>, <span style="color:#ae81ff">-1.0</span>))
+</span></span><span style="display:flex;"><span>qc1<span style="color:#f92672">$</span>rhs <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">0.0</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Second quadratic constraint: x^2 - yz &lt;= 0</span>
+</span></span><span style="display:flex;"><span>qc2 <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">list</span>()
+</span></span><span style="display:flex;"><span>qc2<span style="color:#f92672">$</span>Qc <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">spMatrix</span>(<span style="color:#ae81ff">3</span>, <span style="color:#ae81ff">3</span>, <span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">2</span>), <span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">3</span>), <span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">1.0</span>, <span style="color:#ae81ff">-1.0</span>))
+</span></span><span style="display:flex;"><span>qc2<span style="color:#f92672">$</span>rhs <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">0.0</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>quadcon <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">list</span>(qc1, qc2)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>result <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">gurobi</span>(model)
+</span></span></code></pre></div><pre tabindex="0"><code>## Gurobi Optimizer version 9.1.2 build v9.1.2rc0 (win64)
+## Thread count: 10 physical cores, 20 logical processors, using up to 20 threads
+## Optimize a model with 1 rows, 3 columns and 3 nonzeros
+## Model fingerprint: 0xc90fd276
+## Model has 2 quadratic constraints
+## Coefficient statistics:
+##   Matrix range     [1e+00, 1e+00]
+##   QMatrix range    [1e+00, 1e+00]
+##   Objective range  [1e+00, 1e+00]
+##   Bounds range     [0e+00, 0e+00]
+##   RHS range        [1e+00, 1e+00]
+## Presolve time: 0.00s
+## Presolved: 6 rows, 6 columns, 13 nonzeros
+## Presolved model has 2 second-order cone constraints
+## Ordering time: 0.00s
+## 
+## Barrier statistics:
+##  AA&#39; NZ     : 1.500e+01
+##  Factor NZ  : 2.100e+01
+##  Factor Ops : 9.100e+01 (less than 1 second per iteration)
+##  Threads    : 1
+## 
+##                   Objective                Residual
+## Iter       Primal          Dual         Primal    Dual     Compl     Time
+##    0   2.38095238e-01  2.38095238e-01  1.11e-16 4.33e-01  9.23e-02     0s
+##    1   3.20481543e-01  3.62123302e-01  5.55e-17 1.39e-02  7.95e-03     0s
+##    2   3.26649101e-01  3.28651430e-01  1.15e-14 5.44e-04  3.46e-04     0s
+##    3   3.26797051e-01  3.27019441e-01  1.37e-13 5.98e-10  2.78e-05     0s
+##    4   3.26990986e-01  3.26994814e-01  6.54e-13 3.46e-13  4.78e-07     0s
+##    5   3.26992304e-01  3.26992876e-01  3.23e-11 1.94e-14  7.15e-08     0s
+## 
+## Barrier solved model in 5 iterations and 0.00 seconds
+## Optimal objective 3.26992304e-01
+## 
+## Warning: to get QCP duals, please set parameter QCPDual to 1
+</code></pre><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-r" data-lang="r"><span style="display:flex;"><span><span style="color:#a6e22e">print</span>(result<span style="color:#f92672">$</span>objval)
+</span></span></code></pre></div><pre tabindex="0"><code>## [1] 0.3269923
+</code></pre><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-r" data-lang="r"><span style="display:flex;"><span><span style="color:#a6e22e">print</span>(result<span style="color:#f92672">$</span>x)
+</span></span></code></pre></div><pre tabindex="0"><code>## [1] 0.3269923 0.2570664 0.4159413
+</code></pre><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-r" data-lang="r"><span style="display:flex;"><span><span style="color:#75715e"># Clear space</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">rm</span>(model, result)
+</span></span></code></pre></div><p>This example considers the following separable, convex problem:</p>
+<p><code>\(min:  f(x) - y + g(z)\)</code></p>
+<p>subject to</p>
+<p><code>\(x + 2 y + 3 z   \leq 4\)</code>
+<code>\(x +   y         \geq 1\)</code>
+<code>\(x,    y,    z \geq 0\)</code></p>
+<p>where <code>\(f(u) = e^{-u} \text{ and} \: g(u) = 2 u^2 - 4u\: \forall \text{ real}\: u\)</code></p>
+<p>It formulates and solves a simpler LP model by approximating f and
+g with piecewise-linear functions.  Then it transforms the model
+into a MIP by negating the approximation for f, which gives
+a non-convex piecewise-linear function, and solves it again.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-r" data-lang="r"><span style="display:flex;"><span><span style="color:#a6e22e">library</span>(gurobi)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>model <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">list</span>()
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>A     <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">matrix</span>(<span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">1</span>,<span style="color:#ae81ff">2</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">1</span>,<span style="color:#ae81ff">1</span>,<span style="color:#ae81ff">0</span>), nrow<span style="color:#f92672">=</span><span style="color:#ae81ff">2</span>, byrow<span style="color:#f92672">=</span>T)
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>obj   <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">-1</span>,<span style="color:#ae81ff">0</span>)
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>ub    <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">1</span>,<span style="color:#ae81ff">1</span>,<span style="color:#ae81ff">1</span>)
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>rhs   <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">4</span>,<span style="color:#ae81ff">1</span>)
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>sense <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">c</span>(<span style="color:#e6db74">&#39;&lt;&#39;</span>, <span style="color:#e6db74">&#39;&gt;&#39;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Uniformly spaced points in [0.0, 1.0]</span>
+</span></span><span style="display:flex;"><span>u <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">seq</span>(from<span style="color:#f92672">=</span><span style="color:#ae81ff">0</span>, to<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span>, by<span style="color:#f92672">=</span><span style="color:#ae81ff">0.01</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># First piecewise-linear function: f(x) = exp(-x)</span>
+</span></span><span style="display:flex;"><span>pwl1     <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">list</span>()
+</span></span><span style="display:flex;"><span>pwl1<span style="color:#f92672">$</span>var <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>pwl1<span style="color:#f92672">$</span>x   <span style="color:#f92672">&lt;-</span> u
+</span></span><span style="display:flex;"><span>pwl1<span style="color:#f92672">$</span>y   <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">sapply</span>(u, <span style="color:#66d9ef">function</span>(x) <span style="color:#a6e22e">exp</span>(<span style="color:#f92672">-</span>x))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Second piecewise-linear function: g(z) = 2 z^2 - 4 z</span>
+</span></span><span style="display:flex;"><span>pwl2     <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">list</span>()
+</span></span><span style="display:flex;"><span>pwl2<span style="color:#f92672">$</span>var <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">3</span>
+</span></span><span style="display:flex;"><span>pwl2<span style="color:#f92672">$</span>x   <span style="color:#f92672">&lt;-</span> u
+</span></span><span style="display:flex;"><span>pwl2<span style="color:#f92672">$</span>y   <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">sapply</span>(u, <span style="color:#66d9ef">function</span>(z) <span style="color:#ae81ff">2</span> <span style="color:#f92672">*</span> z <span style="color:#f92672">*</span> z <span style="color:#f92672">-</span> <span style="color:#ae81ff">4</span> <span style="color:#f92672">*</span> z)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>pwlobj <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">list</span>(pwl1, pwl2)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>result <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">gurobi</span>(model)
+</span></span></code></pre></div><pre tabindex="0"><code>## Gurobi Optimizer version 9.1.2 build v9.1.2rc0 (win64)
+## Thread count: 10 physical cores, 20 logical processors, using up to 20 threads
+## Optimize a model with 2 rows, 3 columns and 5 nonzeros
+## Model fingerprint: 0xc12b5aad
+## Model has 2 piecewise-linear objective terms
+## Coefficient statistics:
+##   Matrix range     [1e+00, 3e+00]
+##   Objective range  [1e+00, 1e+00]
+##   Bounds range     [1e+00, 1e+00]
+##   RHS range        [1e+00, 4e+00]
+## Presolve time: 0.00s
+## Presolved: 2 rows, 3 columns, 5 nonzeros
+## 
+## Iteration    Objective       Primal Inf.    Dual Inf.      Time
+##        0   -2.6321206e+00   5.000000e-01   0.000000e+00      0s
+##        2   -1.9346239e+00   0.000000e+00   0.000000e+00      0s
+## 
+## Solved in 2 iterations and 0.00 seconds
+## Optimal objective -1.934623931e+00
+</code></pre><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-r" data-lang="r"><span style="display:flex;"><span><span style="color:#a6e22e">print</span>(result<span style="color:#f92672">$</span>objval)
+</span></span></code></pre></div><pre tabindex="0"><code>## [1] -1.934624
+</code></pre><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-r" data-lang="r"><span style="display:flex;"><span><span style="color:#a6e22e">print</span>(result<span style="color:#f92672">$</span>x)
+</span></span></code></pre></div><pre tabindex="0"><code>## [1] 0.690 0.725 0.620
+</code></pre><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-r" data-lang="r"><span style="display:flex;"><span><span style="color:#75715e"># Negate piecewise-linear function on x, making it non-convex</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>pwlobj[[1]]<span style="color:#f92672">$</span>y <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">sapply</span>(u, <span style="color:#66d9ef">function</span>(x) <span style="color:#f92672">-</span><span style="color:#a6e22e">exp</span>(<span style="color:#f92672">-</span>x))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>result <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">gurobi</span>(model)
+</span></span></code></pre></div><pre tabindex="0"><code>## Gurobi Optimizer version 9.1.2 build v9.1.2rc0 (win64)
+## Thread count: 10 physical cores, 20 logical processors, using up to 20 threads
+## Optimize a model with 2 rows, 3 columns and 5 nonzeros
+## Model fingerprint: 0x3229e670
+## Model has 2 piecewise-linear objective terms
+## Variable types: 3 continuous, 0 integer (0 binary)
+## Coefficient statistics:
+##   Matrix range     [1e+00, 3e+00]
+##   Objective range  [1e+00, 1e+00]
+##   Bounds range     [1e+00, 1e+00]
+##   RHS range        [1e+00, 4e+00]
+## Found heuristic solution: objective -1.3678794
+## Presolve time: 0.00s
+## Presolved: 202 rows, 302 columns, 603 nonzeros
+## Variable types: 203 continuous, 99 integer (99 binary)
+## 
+## Root relaxation: objective -3.777733e+00, 1 iterations, 0.00 seconds
+## 
+##     Nodes    |    Current Node    |     Objective Bounds      |     Work
+##  Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+## 
+## *    0     0               0      -3.7777333   -3.77773  0.00%     -    0s
+## 
+## Explored 0 nodes (1 simplex iterations) in 0.00 seconds
+## Thread count was 20 (of 20 available processors)
+## 
+## Solution count 2: -3.77773 -1.36788 
+## No other solutions better than -3.77773
+## 
+## Optimal solution found (tolerance 1.00e-04)
+## Best objective -3.777733333333e+00, best bound -3.777733333333e+00, gap 0.0000%
+</code></pre><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-r" data-lang="r"><span style="display:flex;"><span><span style="color:#a6e22e">gurobi_write</span>(model, <span style="color:#e6db74">&#34;pwl.lp&#34;</span>)
+</span></span></code></pre></div><pre tabindex="0"><code>## NULL
+</code></pre><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-r" data-lang="r"><span style="display:flex;"><span><span style="color:#a6e22e">print</span>(result<span style="color:#f92672">$</span>objval)
+</span></span></code></pre></div><pre tabindex="0"><code>## [1] -3.777733
+</code></pre><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-r" data-lang="r"><span style="display:flex;"><span><span style="color:#a6e22e">print</span>(result<span style="color:#f92672">$</span>x)
+</span></span></code></pre></div><pre tabindex="0"><code>## [1] 0.0000000 1.0000000 0.6666667
+</code></pre><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-r" data-lang="r"><span style="display:flex;"><span><span style="color:#75715e"># Clear space</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">rm</span>(model, pwl1, pwl2, result)
+</span></span></code></pre></div><p>Want to cover three different sets but subject to a common budget of
+elements allowed to be used. However, the sets have different priorities to
+be covered; and we tackle this by using multi-objective optimization.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-r" data-lang="r"><span style="display:flex;"><span><span style="color:#75715e"># define primitive data</span>
+</span></span><span style="display:flex;"><span>groundSetSize     <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">20</span>
+</span></span><span style="display:flex;"><span>nSubSets          <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">4</span>
+</span></span><span style="display:flex;"><span>Budget            <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">12</span>
+</span></span><span style="display:flex;"><span>Set               <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">list</span>(
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">c</span>( <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">0</span> ),
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">c</span>( <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span> ),
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">c</span>( <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">0</span> ),
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">c</span>( <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">0</span> ) )
+</span></span><span style="display:flex;"><span>SetObjPriority    <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">3</span>, <span style="color:#ae81ff">2</span>, <span style="color:#ae81ff">2</span>, <span style="color:#ae81ff">1</span>)
+</span></span><span style="display:flex;"><span>SetObjWeight      <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">1.0</span>, <span style="color:#ae81ff">0.25</span>, <span style="color:#ae81ff">1.25</span>, <span style="color:#ae81ff">1.0</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Initialize model</span>
+</span></span><span style="display:flex;"><span>model             <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">list</span>()
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>modelsense  <span style="color:#f92672">&lt;-</span> <span style="color:#e6db74">&#39;max&#39;</span>
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>modelname   <span style="color:#f92672">&lt;-</span> <span style="color:#e6db74">&#39;multiobj&#39;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Set variables, all of them are binary, with 0,1 bounds.</span>
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>vtype       <span style="color:#f92672">&lt;-</span> <span style="color:#e6db74">&#39;B&#39;</span>
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>lb          <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>ub          <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>varnames    <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">paste</span>(<span style="color:#a6e22e">rep</span>(<span style="color:#e6db74">&#39;El&#39;</span>, groundSetSize), <span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>groundSetSize, sep<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;&#39;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Build constraint matrix</span>
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>A           <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">spMatrix</span>(<span style="color:#ae81ff">1</span>, groundSetSize,
+</span></span><span style="display:flex;"><span>                              i <span style="color:#f92672">=</span> <span style="color:#a6e22e">rep</span>(<span style="color:#ae81ff">1</span>,groundSetSize),
+</span></span><span style="display:flex;"><span>                              j <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>groundSetSize,
+</span></span><span style="display:flex;"><span>                              x <span style="color:#f92672">=</span> <span style="color:#a6e22e">rep</span>(<span style="color:#ae81ff">1</span>,groundSetSize))
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>rhs         <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">c</span>(Budget)
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>sense       <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">c</span>(<span style="color:#e6db74">&#39;&lt;&#39;</span>)
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>constrnames <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">c</span>(<span style="color:#e6db74">&#39;Budget&#39;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Set multi-objectives</span>
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>multiobj          <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">list</span>()
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span> (m <span style="color:#66d9ef">in</span> <span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>nSubSets) {
+</span></span><span style="display:flex;"><span>  model<span style="color:#f92672">$</span>multiobj[[m]]          <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">list</span>()
+</span></span><span style="display:flex;"><span>  model<span style="color:#f92672">$</span>multiobj[[m]]<span style="color:#f92672">$</span>objn     <span style="color:#f92672">&lt;-</span> Set[[m]]
+</span></span><span style="display:flex;"><span>  model<span style="color:#f92672">$</span>multiobj[[m]]<span style="color:#f92672">$</span>priority <span style="color:#f92672">&lt;-</span> SetObjPriority[m]
+</span></span><span style="display:flex;"><span>  model<span style="color:#f92672">$</span>multiobj[[m]]<span style="color:#f92672">$</span>weight   <span style="color:#f92672">&lt;-</span> SetObjWeight[m]
+</span></span><span style="display:flex;"><span>  model<span style="color:#f92672">$</span>multiobj[[m]]<span style="color:#f92672">$</span>abstol   <span style="color:#f92672">&lt;-</span> m
+</span></span><span style="display:flex;"><span>  model<span style="color:#f92672">$</span>multiobj[[m]]<span style="color:#f92672">$</span>reltol   <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">0.01</span>
+</span></span><span style="display:flex;"><span>  model<span style="color:#f92672">$</span>multiobj[[m]]<span style="color:#f92672">$</span>name     <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">sprintf</span>(<span style="color:#e6db74">&#39;Set%d&#39;</span>, m)
+</span></span><span style="display:flex;"><span>  model<span style="color:#f92672">$</span>multiobj[[m]]<span style="color:#f92672">$</span>con      <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">0.0</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Save model</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">gurobi_write</span>(model,<span style="color:#e6db74">&#39;multiobj_R.lp&#39;</span>)
+</span></span></code></pre></div><pre tabindex="0"><code>## NULL
+</code></pre><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-r" data-lang="r"><span style="display:flex;"><span><span style="color:#75715e"># Set parameters</span>
+</span></span><span style="display:flex;"><span>params               <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">list</span>()
+</span></span><span style="display:flex;"><span>params<span style="color:#f92672">$</span>PoolSolutions <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">100</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Optimize</span>
+</span></span><span style="display:flex;"><span>result <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">gurobi</span>(model, params)
+</span></span></code></pre></div><pre tabindex="0"><code>## Gurobi Optimizer version 9.1.2 build v9.1.2rc0 (win64)
+## Thread count: 10 physical cores, 20 logical processors, using up to 20 threads
+## Optimize a model with 1 rows, 20 columns and 20 nonzeros
+## Model fingerprint: 0x82f8d485
+## Variable types: 0 continuous, 20 integer (20 binary)
+## Coefficient statistics:
+##   Matrix range     [1e+00, 1e+00]
+##   Objective range  [1e+00, 1e+00]
+##   Bounds range     [1e+00, 1e+00]
+##   RHS range        [1e+01, 1e+01]
+## 
+## ---------------------------------------------------------------------------
+## Multi-objectives: starting optimization with 4 objectives (3 combined) ...
+## ---------------------------------------------------------------------------
+## 
+## Multi-objectives: applying initial presolve ...
+## ---------------------------------------------------------------------------
+## 
+## Presolve time: 0.00s
+## Presolved: 1 rows and 20 columns
+## ---------------------------------------------------------------------------
+## 
+## Multi-objectives: optimize objective 1 (Set1) ...
+## ---------------------------------------------------------------------------
+## 
+## Found heuristic solution: objective 10.0000000
+## 
+## Explored 0 nodes (0 simplex iterations) in 0.00 seconds
+## Thread count was 1 (of 20 available processors)
+## 
+## Solution count 1: 10 
+## 
+## Optimal solution found (tolerance 1.00e-04)
+## Best objective 1.000000000000e+01, best bound 1.000000000000e+01, gap 0.0000%
+## ---------------------------------------------------------------------------
+## 
+## Multi-objectives: optimize objective 2 (weighted) ...
+## ---------------------------------------------------------------------------
+## 
+## 
+## Loaded user MIP start with objective 6.25
+## 
+## Presolve removed 2 rows and 20 columns
+## Presolve time: 0.00s
+## Presolve: All rows and columns removed
+## 
+## Explored 0 nodes (0 simplex iterations) in 0.00 seconds
+## Thread count was 1 (of 20 available processors)
+## 
+## Solution count 2: 10.5 6.25 
+## 
+## Optimal solution found (tolerance 1.00e-04)
+## Best objective 1.050000000000e+01, best bound 1.050000000000e+01, gap 0.0000%
+## ---------------------------------------------------------------------------
+## 
+## Multi-objectives: optimize objective 3 (Set4) ...
+## ---------------------------------------------------------------------------
+## 
+## 
+## Loaded user MIP start with objective 6
+## 
+## Presolve removed 3 rows and 20 columns
+## Presolve time: 0.00s
+## Presolve: All rows and columns removed
+## 
+## Explored 0 nodes (0 simplex iterations) in 0.00 seconds
+## Thread count was 1 (of 20 available processors)
+## 
+## Solution count 2: 7 6 
+## 
+## Optimal solution found (tolerance 1.00e-04)
+## Best objective 7.000000000000e+00, best bound 7.000000000000e+00, gap 0.0000%
+## 
+## ---------------------------------------------------------------------------
+## Multi-objectives: solved in 0.00 seconds, solution count 3
+</code></pre><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-r" data-lang="r"><span style="display:flex;"><span><span style="color:#75715e"># Capture solution information</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> (result<span style="color:#f92672">$</span>status <span style="color:#f92672">!=</span> <span style="color:#e6db74">&#39;OPTIMAL&#39;</span>) {
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">cat</span>(<span style="color:#e6db74">&#39;Optimization finished with status&#39;</span>, result<span style="color:#f92672">$</span>status, <span style="color:#e6db74">&#39;\n&#39;</span>)
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">stop</span>(<span style="color:#e6db74">&#39;Stop now\n&#39;</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Print best solution</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">cat</span>(<span style="color:#e6db74">&#39;Selected elements in best solution:\n&#39;</span>)
+</span></span></code></pre></div><pre tabindex="0"><code>## Selected elements in best solution:
+</code></pre><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-r" data-lang="r"><span style="display:flex;"><span><span style="color:#66d9ef">for</span> (e <span style="color:#66d9ef">in</span> <span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>groundSetSize) {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span>(result<span style="color:#f92672">$</span>x[e] <span style="color:#f92672">&lt;</span> <span style="color:#ae81ff">0.9</span>) <span style="color:#66d9ef">next</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">cat</span>(<span style="color:#e6db74">&#39; El&#39;</span>,e,sep<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;&#39;</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><pre tabindex="0"><code>##  El2 El3 El4 El5 El6 El7 El8 El9 El10 El11 El12 El17
+</code></pre><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-r" data-lang="r"><span style="display:flex;"><span><span style="color:#a6e22e">cat</span>(<span style="color:#e6db74">&#39;\n&#39;</span>)
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-r" data-lang="r"><span style="display:flex;"><span><span style="color:#75715e"># Iterate over the best 10 solutions</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> (<span style="color:#e6db74">&#39;pool&#39;</span> <span style="color:#f92672">%in%</span> <span style="color:#a6e22e">names</span>(result)) {
+</span></span><span style="display:flex;"><span>  solcount <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">length</span>(result<span style="color:#f92672">$</span>pool)
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">cat</span>(<span style="color:#e6db74">&#39;Number of solutions found:&#39;</span>, solcount, <span style="color:#e6db74">&#39;\n&#39;</span>)
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (solcount <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">10</span>) {
+</span></span><span style="display:flex;"><span>    solcount <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">10</span>
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">cat</span>(<span style="color:#e6db74">&#39;Objective values for first&#39;</span>, solcount, <span style="color:#e6db74">&#39;solutions:\n&#39;</span>)
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">for</span> (k <span style="color:#66d9ef">in</span> <span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>solcount) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">cat</span>(<span style="color:#e6db74">&#39;Solution&#39;</span>, k, <span style="color:#e6db74">&#39;has objective:&#39;</span>, result<span style="color:#f92672">$</span>pool[[k]]<span style="color:#f92672">$</span>objval[1], <span style="color:#e6db74">&#39;\n&#39;</span>)
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>} <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>  solcount <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">cat</span>(<span style="color:#e6db74">&#39;Number of solutions found:&#39;</span>, solcount, <span style="color:#e6db74">&#39;\n&#39;</span>)
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">cat</span>(<span style="color:#e6db74">&#39;Solution 1 has objective:&#39;</span>, result<span style="color:#f92672">$</span>objval, <span style="color:#e6db74">&#39;\n&#39;</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><pre tabindex="0"><code>## Number of solutions found: 3 
+## Objective values for first 3 solutions:
+## Solution 1 has objective: 9 
+## Solution 2 has objective: 9 
+## Solution 3 has objective: 10
+</code></pre><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-r" data-lang="r"><span style="display:flex;"><span><span style="color:#75715e"># Clean up</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">rm</span>(model, params, result)
+</span></span></code></pre></div><p>Assign workers to shifts; each worker may or may not be available on a
+particular day.  We use Pareto optimization to solve the model:
+first, we minimize the linear sum of the slacks. Then, we constrain
+the sum of the slacks, and we minimize a quadratic objective that
+tries to balance the workload among the workers.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-r" data-lang="r"><span style="display:flex;"><span><span style="color:#75715e"># define data</span>
+</span></span><span style="display:flex;"><span>nShifts       <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">14</span>
+</span></span><span style="display:flex;"><span>nWorkers      <span style="color:#f92672">&lt;-</span>  <span style="color:#ae81ff">7</span>
+</span></span><span style="display:flex;"><span>nVars         <span style="color:#f92672">&lt;-</span> (nShifts <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>) <span style="color:#f92672">*</span> (nWorkers <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>) <span style="color:#f92672">+</span> nWorkers <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>varIdx        <span style="color:#f92672">&lt;-</span> <span style="color:#66d9ef">function</span>(w,s) {s<span style="color:#f92672">+</span>(w<span style="color:#ae81ff">-1</span>)<span style="color:#f92672">*</span>nShifts}
+</span></span><span style="display:flex;"><span>shiftSlackIdx <span style="color:#f92672">&lt;-</span> <span style="color:#66d9ef">function</span>(s) {s<span style="color:#f92672">+</span>nShifts<span style="color:#f92672">*</span>nWorkers}
+</span></span><span style="display:flex;"><span>totShiftIdx   <span style="color:#f92672">&lt;-</span> <span style="color:#66d9ef">function</span>(w) {w <span style="color:#f92672">+</span> nShifts <span style="color:#f92672">*</span> (nWorkers<span style="color:#ae81ff">+1</span>)}
+</span></span><span style="display:flex;"><span>avgShiftIdx   <span style="color:#f92672">&lt;-</span> ((nShifts<span style="color:#ae81ff">+1</span>)<span style="color:#f92672">*</span>(nWorkers<span style="color:#ae81ff">+1</span>))
+</span></span><span style="display:flex;"><span>diffShiftIdx  <span style="color:#f92672">&lt;-</span> <span style="color:#66d9ef">function</span>(w) {w <span style="color:#f92672">+</span> avgShiftIdx}
+</span></span><span style="display:flex;"><span>totalSlackIdx <span style="color:#f92672">&lt;-</span> nVars
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Shifts  <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">c</span>(<span style="color:#e6db74">&#39;Mon1&#39;</span>, <span style="color:#e6db74">&#39;Tue2&#39;</span>, <span style="color:#e6db74">&#39;Wed3&#39;</span>, <span style="color:#e6db74">&#39;Thu4&#39;</span>, <span style="color:#e6db74">&#39;Fri5&#39;</span>, <span style="color:#e6db74">&#39;Sat6&#39;</span>, <span style="color:#e6db74">&#39;Sun7&#39;</span>,
+</span></span><span style="display:flex;"><span>             <span style="color:#e6db74">&#39;Mon8&#39;</span>, <span style="color:#e6db74">&#39;Tue9&#39;</span>, <span style="color:#e6db74">&#39;Wed10&#39;</span>, <span style="color:#e6db74">&#39;Thu11&#39;</span>, <span style="color:#e6db74">&#39;Fri12&#39;</span>, <span style="color:#e6db74">&#39;Sat13&#39;</span>, <span style="color:#e6db74">&#39;Sun14&#39;</span>)
+</span></span><span style="display:flex;"><span>Workers <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">c</span>( <span style="color:#e6db74">&#39;Amy&#39;</span>, <span style="color:#e6db74">&#39;Bob&#39;</span>, <span style="color:#e6db74">&#39;Cathy&#39;</span>, <span style="color:#e6db74">&#39;Dan&#39;</span>, <span style="color:#e6db74">&#39;Ed&#39;</span>, <span style="color:#e6db74">&#39;Fred&#39;</span>, <span style="color:#e6db74">&#39;Gu&#39;</span> )
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>shiftRequirements <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">3</span>, <span style="color:#ae81ff">2</span>, <span style="color:#ae81ff">4</span>, <span style="color:#ae81ff">4</span>, <span style="color:#ae81ff">5</span>, <span style="color:#ae81ff">6</span>, <span style="color:#ae81ff">5</span>, <span style="color:#ae81ff">2</span>, <span style="color:#ae81ff">2</span>, <span style="color:#ae81ff">3</span>, <span style="color:#ae81ff">4</span>, <span style="color:#ae81ff">6</span>, <span style="color:#ae81ff">7</span>, <span style="color:#ae81ff">5</span> )
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>availability <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">list</span>( <span style="color:#a6e22e">c</span>( <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span> ),
+</span></span><span style="display:flex;"><span>                      <span style="color:#a6e22e">c</span>( <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">0</span> ),
+</span></span><span style="display:flex;"><span>                      <span style="color:#a6e22e">c</span>( <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span> ),
+</span></span><span style="display:flex;"><span>                      <span style="color:#a6e22e">c</span>( <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span> ),
+</span></span><span style="display:flex;"><span>                      <span style="color:#a6e22e">c</span>( <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span> ),
+</span></span><span style="display:flex;"><span>                      <span style="color:#a6e22e">c</span>( <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span> ),
+</span></span><span style="display:flex;"><span>                      <span style="color:#a6e22e">c</span>( <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span> ) )
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Function to display results</span>
+</span></span><span style="display:flex;"><span>solveandprint <span style="color:#f92672">&lt;-</span> <span style="color:#66d9ef">function</span>(model, env) {
+</span></span><span style="display:flex;"><span>  result <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">gurobi</span>(model, env <span style="color:#f92672">=</span> env)
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span>(result<span style="color:#f92672">$</span>status <span style="color:#f92672">==</span> <span style="color:#e6db74">&#39;OPTIMAL&#39;</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">cat</span>(<span style="color:#e6db74">&#39;The optimal objective is&#39;</span>,result<span style="color:#f92672">$</span>objval,<span style="color:#e6db74">&#39;\n&#39;</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">cat</span>(<span style="color:#e6db74">&#39;Schedule:\n&#39;</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> (s <span style="color:#66d9ef">in</span> <span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>nShifts) {
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">cat</span>(<span style="color:#e6db74">&#39;\t&#39;</span>,Shifts[s],<span style="color:#e6db74">&#39;:&#39;</span>)
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">for</span> (w <span style="color:#66d9ef">in</span> <span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>nWorkers) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> (result<span style="color:#f92672">$</span>x<span style="color:#a6e22e">[varIdx</span>(w,s)] <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">0.9</span>) <span style="color:#a6e22e">cat</span>(Workers[w],<span style="color:#e6db74">&#39; &#39;</span>)
+</span></span><span style="display:flex;"><span>      }
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">cat</span>(<span style="color:#e6db74">&#39;\n&#39;</span>)
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">cat</span>(<span style="color:#e6db74">&#39;Workload:\n&#39;</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> (w <span style="color:#66d9ef">in</span> <span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>nWorkers) {
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">cat</span>(<span style="color:#e6db74">&#39;\t&#39;</span>,Workers[w],<span style="color:#e6db74">&#39;:&#39;</span>,result<span style="color:#f92672">$</span>x<span style="color:#a6e22e">[totShiftIdx</span>(w)],<span style="color:#e6db74">&#39;\n&#39;</span>)
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>  } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">cat</span>(<span style="color:#e6db74">&#39;Optimization finished with status&#39;</span>,result<span style="color:#f92672">$</span>status)
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>  result
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Set-up environment</span>
+</span></span><span style="display:flex;"><span>env <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">list</span>()
+</span></span><span style="display:flex;"><span>env<span style="color:#f92672">$</span>logfile <span style="color:#f92672">&lt;-</span> <span style="color:#e6db74">&#39;workforce4.log&#39;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Build model</span>
+</span></span><span style="display:flex;"><span>model            <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">list</span>()
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>modelname  <span style="color:#f92672">&lt;-</span> <span style="color:#e6db74">&#39;workforce4&#39;</span>
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>modelsense <span style="color:#f92672">&lt;-</span> <span style="color:#e6db74">&#39;min&#39;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Initialize assignment decision variables:</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#    x[w][s] == 1 if worker w is assigned to shift s.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#    This is no longer a pure assignment model, so we must</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#    use binary variables.</span>
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>vtype    <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">rep</span>(<span style="color:#e6db74">&#39;C&#39;</span>, nVars)
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>lb       <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">rep</span>(<span style="color:#ae81ff">0</span>, nVars)
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>ub       <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">rep</span>(<span style="color:#ae81ff">1</span>, nVars)
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>obj      <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">rep</span>(<span style="color:#ae81ff">0</span>, nVars)
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>varnames <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">rep</span>(<span style="color:#e6db74">&#39;&#39;</span>,nVars)
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span> (w <span style="color:#66d9ef">in</span> <span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>nWorkers) {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">for</span> (s <span style="color:#66d9ef">in</span> <span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>nShifts) {
+</span></span><span style="display:flex;"><span>    model<span style="color:#f92672">$</span>vtype<span style="color:#a6e22e">[varIdx</span>(w,s)]    <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;B&#39;</span>
+</span></span><span style="display:flex;"><span>    model<span style="color:#f92672">$</span>varnames<span style="color:#a6e22e">[varIdx</span>(w,s)] <span style="color:#f92672">=</span> <span style="color:#a6e22e">paste0</span>(Workers[w],<span style="color:#e6db74">&#39;.&#39;</span>,Shifts[s])
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (availability[[w]][s] <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>) model<span style="color:#f92672">$</span>ub<span style="color:#a6e22e">[varIdx</span>(w,s)] <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Initialize shift slack variables</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span> (s <span style="color:#66d9ef">in</span> <span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>nShifts) {
+</span></span><span style="display:flex;"><span>  model<span style="color:#f92672">$</span>varnames<span style="color:#a6e22e">[shiftSlackIdx</span>(s)] <span style="color:#f92672">=</span> <span style="color:#a6e22e">paste0</span>(<span style="color:#e6db74">&#39;ShiftSlack&#39;</span>,Shifts[s])
+</span></span><span style="display:flex;"><span>  model<span style="color:#f92672">$</span>ub<span style="color:#a6e22e">[shiftSlackIdx</span>(s)] <span style="color:#f92672">=</span> <span style="color:#66d9ef">Inf</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Initialize worker slack and diff variables</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span> (w <span style="color:#66d9ef">in</span> <span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>nWorkers) {
+</span></span><span style="display:flex;"><span>  model<span style="color:#f92672">$</span>varnames<span style="color:#a6e22e">[totShiftIdx</span>(w)] <span style="color:#f92672">=</span> <span style="color:#a6e22e">paste0</span>(<span style="color:#e6db74">&#39;TotalShifts&#39;</span>,Workers[w])
+</span></span><span style="display:flex;"><span>  model<span style="color:#f92672">$</span>ub<span style="color:#a6e22e">[totShiftIdx</span>(w)]       <span style="color:#f92672">=</span> <span style="color:#66d9ef">Inf</span>
+</span></span><span style="display:flex;"><span>  model<span style="color:#f92672">$</span>varnames<span style="color:#a6e22e">[diffShiftIdx</span>(w)]  <span style="color:#f92672">=</span> <span style="color:#a6e22e">paste0</span>(<span style="color:#e6db74">&#39;DiffShifts&#39;</span>,Workers[w])
+</span></span><span style="display:flex;"><span>  model<span style="color:#f92672">$</span>ub<span style="color:#a6e22e">[diffShiftIdx</span>(w)]        <span style="color:#f92672">=</span> <span style="color:#66d9ef">Inf</span>
+</span></span><span style="display:flex;"><span>  model<span style="color:#f92672">$</span>lb<span style="color:#a6e22e">[diffShiftIdx</span>(w)]        <span style="color:#f92672">=</span> <span style="color:#f92672">-</span><span style="color:#66d9ef">Inf</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#Initialize average shift variable</span>
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>ub[avgShiftIdx]      <span style="color:#f92672">=</span> <span style="color:#66d9ef">Inf</span>
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>varnames[avgShiftIdx] <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;AvgShift&#39;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#Initialize total slack variable</span>
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>ub[totalSlackIdx]      <span style="color:#f92672">=</span> <span style="color:#66d9ef">Inf</span>
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>varnames[totalSlackIdx] <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;TotalSlack&#39;</span>
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>obj[totalSlackIdx]     <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Set-up shift-requirements constraints</span>
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>A           <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">spMatrix</span>(nShifts,nVars,
+</span></span><span style="display:flex;"><span>                      i <span style="color:#f92672">=</span> <span style="color:#a6e22e">c</span>(<span style="color:#a6e22e">c</span>(<span style="color:#a6e22e">mapply</span>(rep,<span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>nShifts,nWorkers)),
+</span></span><span style="display:flex;"><span>                            <span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>nShifts)),
+</span></span><span style="display:flex;"><span>                      j <span style="color:#f92672">=</span> <span style="color:#a6e22e">c</span>(<span style="color:#a6e22e">mapply</span>(varIdx,<span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>nWorkers,
+</span></span><span style="display:flex;"><span>                                 <span style="color:#a6e22e">mapply</span>(rep,<span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>nShifts,nWorkers)),
+</span></span><span style="display:flex;"><span>                            <span style="color:#a6e22e">shiftSlackIdx</span>(<span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>nShifts)),
+</span></span><span style="display:flex;"><span>                      x <span style="color:#f92672">=</span> <span style="color:#a6e22e">rep</span>(<span style="color:#ae81ff">1</span>,nShifts <span style="color:#f92672">*</span> (nWorkers<span style="color:#ae81ff">+1</span>)))
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>sense       <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">rep</span>(<span style="color:#e6db74">&#39;=&#39;</span>,nShifts)
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>rhs         <span style="color:#f92672">&lt;-</span> shiftRequirements
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>constrnames <span style="color:#f92672">&lt;-</span> Shifts
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Set TotalSlack equal to the sum of each shift slack</span>
+</span></span><span style="display:flex;"><span>B <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">spMatrix</span>(<span style="color:#ae81ff">1</span>, nVars,
+</span></span><span style="display:flex;"><span>        i <span style="color:#f92672">=</span> <span style="color:#a6e22e">rep</span>(<span style="color:#ae81ff">1</span>,nShifts<span style="color:#ae81ff">+1</span>),
+</span></span><span style="display:flex;"><span>        j <span style="color:#f92672">=</span> <span style="color:#a6e22e">c</span>(<span style="color:#a6e22e">shiftSlackIdx</span>(<span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>nShifts),totalSlackIdx),
+</span></span><span style="display:flex;"><span>        x <span style="color:#f92672">=</span> <span style="color:#a6e22e">c</span>(<span style="color:#a6e22e">rep</span>(<span style="color:#ae81ff">1</span>,nShifts),<span style="color:#ae81ff">-1</span>))
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>A           <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">rbind</span>(model<span style="color:#f92672">$</span>A, B)
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>rhs         <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">c</span>(model<span style="color:#f92672">$</span>rhs,<span style="color:#ae81ff">0</span>)
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>sense       <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">c</span>(model<span style="color:#f92672">$</span>sense,<span style="color:#e6db74">&#39;=&#39;</span>)
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>constrnames <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">c</span>(model<span style="color:#f92672">$</span>constrnames, <span style="color:#e6db74">&#39;TotalSlack&#39;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Set total number of shifts for each worker</span>
+</span></span><span style="display:flex;"><span>B <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">spMatrix</span>(nWorkers, nVars,
+</span></span><span style="display:flex;"><span>          i <span style="color:#f92672">=</span> <span style="color:#a6e22e">c</span>(<span style="color:#a6e22e">mapply</span>(rep,<span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>nWorkers,nShifts),
+</span></span><span style="display:flex;"><span>                <span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>nWorkers),
+</span></span><span style="display:flex;"><span>          j <span style="color:#f92672">=</span> <span style="color:#a6e22e">c</span>(<span style="color:#a6e22e">mapply</span>(varIdx,<span style="color:#a6e22e">c</span>(<span style="color:#a6e22e">mapply</span>(rep,<span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>nWorkers,nShifts)),<span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>nShifts),
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">totShiftIdx</span>(<span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>nWorkers)),
+</span></span><span style="display:flex;"><span>          x <span style="color:#f92672">=</span> <span style="color:#a6e22e">c</span>(<span style="color:#a6e22e">rep</span>(<span style="color:#ae81ff">1</span>,nShifts<span style="color:#f92672">*</span>nWorkers),<span style="color:#a6e22e">rep</span>(<span style="color:#ae81ff">-1</span>,nWorkers)))
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>A           <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">rbind</span>(model<span style="color:#f92672">$</span>A, B)
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>rhs         <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">c</span>(model<span style="color:#f92672">$</span>rhs,<span style="color:#a6e22e">rep</span>(<span style="color:#ae81ff">0</span>,nWorkers))
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>sense       <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">c</span>(model<span style="color:#f92672">$</span>sense,<span style="color:#a6e22e">rep</span>(<span style="color:#e6db74">&#39;=&#39;</span>,nWorkers))
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>constrnames <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">c</span>(model<span style="color:#f92672">$</span>constrnames, <span style="color:#a6e22e">sprintf</span>(<span style="color:#e6db74">&#39;TotalShifts%s&#39;</span>,Workers[1<span style="color:#f92672">:</span>nWorkers]))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Save initial model</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">gurobi_write</span>(model,<span style="color:#e6db74">&#39;workforce4.lp&#39;</span>, env)
+</span></span></code></pre></div><pre tabindex="0"><code>## NULL
+</code></pre><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-r" data-lang="r"><span style="display:flex;"><span><span style="color:#75715e"># Optimize</span>
+</span></span><span style="display:flex;"><span>result <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">solveandprint</span>(model, env)
+</span></span></code></pre></div><pre tabindex="0"><code>## Gurobi Optimizer version 9.1.2 build v9.1.2rc0 (win64)
+## Thread count: 10 physical cores, 20 logical processors, using up to 20 threads
+## Optimize a model with 22 rows, 128 columns and 232 nonzeros
+## Model fingerprint: 0x829a1cb8
+## Variable types: 30 continuous, 98 integer (98 binary)
+## Coefficient statistics:
+##   Matrix range     [1e+00, 1e+00]
+##   Objective range  [1e+00, 1e+00]
+##   Bounds range     [1e+00, 1e+00]
+##   RHS range        [2e+00, 7e+00]
+## Found heuristic solution: objective 58.0000000
+## Presolve removed 22 rows and 128 columns
+## Presolve time: 0.00s
+## Presolve: All rows and columns removed
+## 
+## Explored 0 nodes (0 simplex iterations) in 0.00 seconds
+## Thread count was 1 (of 20 available processors)
+## 
+## Solution count 2: 6 58 
+## 
+## Optimal solution found (tolerance 1.00e-04)
+## Best objective 6.000000000000e+00, best bound 6.000000000000e+00, gap 0.0000%
+## The optimal objective is 6 
+## Schedule:
+## 	 Mon1 :Bob  Fred  Gu  
+## 	 Tue2 :Amy  Ed  
+## 	 Wed3 :Amy  Cathy  Fred  Gu  
+## 	 Thu4 :Cathy  Ed  
+## 	 Fri5 :Amy  Bob  Cathy  Ed  Gu  
+## 	 Sat6 :Bob  Dan  Fred  Gu  
+## 	 Sun7 :Amy  Cathy  Ed  Gu  
+## 	 Mon8 :Fred  Gu  
+## 	 Tue9 :Amy  Ed  
+## 	 Wed10 :Amy  Cathy  Gu  
+## 	 Thu11 :Amy  Dan  Ed  Gu  
+## 	 Fri12 :Amy  Cathy  Dan  Fred  Gu  
+## 	 Sat13 :Amy  Bob  Cathy  Dan  Ed  Fred  Gu  
+## 	 Sun14 :Amy  Cathy  Dan  Fred  Gu  
+## Workload:
+## 	 Amy : 10 
+## 	 Bob : 4 
+## 	 Cathy : 8 
+## 	 Dan : 5 
+## 	 Ed : 7 
+## 	 Fred : 7 
+## 	 Gu : 11
+</code></pre><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-r" data-lang="r"><span style="display:flex;"><span><span style="color:#66d9ef">if</span> (result<span style="color:#f92672">$</span>status <span style="color:#f92672">!=</span> <span style="color:#e6db74">&#39;OPTIMAL&#39;</span>) <span style="color:#a6e22e">stop</span>(<span style="color:#e6db74">&#39;Stop now\n&#39;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Constraint the slack by setting its upper and lower bounds</span>
+</span></span><span style="display:flex;"><span>totalSlack <span style="color:#f92672">&lt;-</span> result<span style="color:#f92672">$</span>x[totalSlackIdx]
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>lb[totalSlackIdx] <span style="color:#f92672">=</span> totalSlack
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>ub[totalSlackIdx] <span style="color:#f92672">=</span> totalSlack
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Link average number of shifts worked and difference with average</span>
+</span></span><span style="display:flex;"><span>B <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">spMatrix</span>(nWorkers<span style="color:#ae81ff">+1</span>, nVars,
+</span></span><span style="display:flex;"><span>        i <span style="color:#f92672">=</span> <span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>nWorkers,
+</span></span><span style="display:flex;"><span>              <span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>nWorkers,
+</span></span><span style="display:flex;"><span>              <span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>nWorkers,
+</span></span><span style="display:flex;"><span>              <span style="color:#a6e22e">rep</span>(nWorkers<span style="color:#ae81ff">+1</span>,nWorkers<span style="color:#ae81ff">+1</span>)),
+</span></span><span style="display:flex;"><span>        j <span style="color:#f92672">=</span> <span style="color:#a6e22e">c</span>(<span style="color:#a6e22e">totShiftIdx</span>(<span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>nWorkers),
+</span></span><span style="display:flex;"><span>              <span style="color:#a6e22e">diffShiftIdx</span>(<span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>nWorkers),
+</span></span><span style="display:flex;"><span>              <span style="color:#a6e22e">rep</span>(avgShiftIdx,nWorkers),
+</span></span><span style="display:flex;"><span>              <span style="color:#a6e22e">totShiftIdx</span>(<span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>nWorkers),avgShiftIdx),
+</span></span><span style="display:flex;"><span>        x <span style="color:#f92672">=</span> <span style="color:#a6e22e">c</span>(<span style="color:#a6e22e">rep</span>(<span style="color:#ae81ff">1</span>, nWorkers),
+</span></span><span style="display:flex;"><span>              <span style="color:#a6e22e">rep</span>(<span style="color:#ae81ff">-1</span>,nWorkers),
+</span></span><span style="display:flex;"><span>              <span style="color:#a6e22e">rep</span>(<span style="color:#ae81ff">-1</span>,nWorkers),
+</span></span><span style="display:flex;"><span>              <span style="color:#a6e22e">rep</span>(<span style="color:#ae81ff">1</span>,nWorkers),<span style="color:#f92672">-</span>nWorkers))
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>A           <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">rbind</span>(model<span style="color:#f92672">$</span>A, B)
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>rhs         <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">c</span>(model<span style="color:#f92672">$</span>rhs,<span style="color:#a6e22e">rep</span>(<span style="color:#ae81ff">0</span>,nWorkers<span style="color:#ae81ff">+1</span>))
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>sense       <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">c</span>(model<span style="color:#f92672">$</span>sense,<span style="color:#a6e22e">rep</span>(<span style="color:#e6db74">&#39;=&#39;</span>,nWorkers<span style="color:#ae81ff">+1</span>))
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>constrnames <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">c</span>(model<span style="color:#f92672">$</span>constrnames,
+</span></span><span style="display:flex;"><span>                       <span style="color:#a6e22e">sprintf</span>(<span style="color:#e6db74">&#39;DiffShifts%s&#39;</span>,Workers[1<span style="color:#f92672">:</span>nWorkers]),
+</span></span><span style="display:flex;"><span>                       <span style="color:#e6db74">&#39;AvgShift&#39;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Objective: minimize the sum of the square of the difference from the</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># average number of shifts worked</span>
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>obj <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>Q   <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">spMatrix</span>(nVars,nVars,
+</span></span><span style="display:flex;"><span>                i <span style="color:#f92672">=</span> <span style="color:#a6e22e">c</span>(<span style="color:#a6e22e">diffShiftIdx</span>(<span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>nWorkers)),
+</span></span><span style="display:flex;"><span>                j <span style="color:#f92672">=</span> <span style="color:#a6e22e">c</span>(<span style="color:#a6e22e">diffShiftIdx</span>(<span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>nWorkers)),
+</span></span><span style="display:flex;"><span>                x <span style="color:#f92672">=</span> <span style="color:#a6e22e">rep</span>(<span style="color:#ae81ff">1</span>,nWorkers))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Save modified model</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">gurobi_write</span>(model,<span style="color:#e6db74">&#39;workforce4b.lp&#39;</span>, env)
+</span></span></code></pre></div><pre tabindex="0"><code>## NULL
+</code></pre><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-r" data-lang="r"><span style="display:flex;"><span><span style="color:#75715e"># Optimize</span>
+</span></span><span style="display:flex;"><span>result <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">solveandprint</span>(model, env)
+</span></span></code></pre></div><pre tabindex="0"><code>## Gurobi Optimizer version 9.1.2 build v9.1.2rc0 (win64)
+## Thread count: 10 physical cores, 20 logical processors, using up to 20 threads
+## Optimize a model with 30 rows, 128 columns and 261 nonzeros
+## Model fingerprint: 0x377bf6f1
+## Model has 7 quadratic objective terms
+## Variable types: 30 continuous, 98 integer (98 binary)
+## Coefficient statistics:
+##   Matrix range     [1e+00, 7e+00]
+##   Objective range  [0e+00, 0e+00]
+##   QObjective range [2e+00, 2e+00]
+##   Bounds range     [1e+00, 6e+00]
+##   RHS range        [2e+00, 7e+00]
+## Found heuristic solution: objective 37.7142857
+## Presolve removed 6 rows and 63 columns
+## Presolve time: 0.00s
+## Presolved: 24 rows, 65 columns, 136 nonzeros
+## Presolved model has 7 quadratic objective terms
+## Variable types: 7 continuous, 58 integer (50 binary)
+## 
+## Root relaxation: objective 2.142857e-01, 221 iterations, 0.00 seconds
+## 
+##     Nodes    |    Current Node    |     Objective Bounds      |     Work
+##  Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+## 
+## H    0     0                      25.7142857    0.00000   100%     -    0s
+##      0     0    0.21429    0   12   25.71429    0.21429  99.2%     -    0s
+## H    0     0                       7.7142857    0.21429  97.2%     -    0s
+## H    0     0                       1.7142857    0.21429  87.5%     -    0s
+##      0     0    0.21429    0   12    1.71429    0.21429  87.5%     -    0s
+##      0     2    0.21429    0   12    1.71429    0.21429  87.5%     -    0s
+## 
+## Explored 19 nodes (275 simplex iterations) in 0.02 seconds
+## Thread count was 20 (of 20 available processors)
+## 
+## Solution count 4: 1.71429 7.71429 25.7143 37.7143 
+## 
+## Optimal solution found (tolerance 1.00e-04)
+## Best objective 1.714285714285e+00, best bound 1.714285714285e+00, gap 0.0000%
+## The optimal objective is 1.714286 
+## Schedule:
+## 	 Mon1 :Bob  Ed  Fred  
+## 	 Tue2 :Bob  Fred  
+## 	 Wed3 :Amy  Cathy  Dan  Ed  
+## 	 Thu4 :Cathy  Ed  
+## 	 Fri5 :Amy  Bob  Cathy  Dan  Gu  
+## 	 Sat6 :Bob  Dan  Fred  Gu  
+## 	 Sun7 :Amy  Cathy  Ed  Gu  
+## 	 Mon8 :Bob  Cathy  
+## 	 Tue9 :Dan  Fred  
+## 	 Wed10 :Amy  Dan  Gu  
+## 	 Thu11 :Bob  Dan  Ed  Gu  
+## 	 Fri12 :Amy  Cathy  Dan  Fred  Gu  
+## 	 Sat13 :Amy  Bob  Cathy  Dan  Ed  Fred  Gu  
+## 	 Sun14 :Amy  Cathy  Ed  Fred  Gu  
+## Workload:
+## 	 Amy : 7 
+## 	 Bob : 7 
+## 	 Cathy : 8 
+## 	 Dan : 8 
+## 	 Ed : 7 
+## 	 Fred : 7 
+## 	 Gu : 8
+</code></pre><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-r" data-lang="r"><span style="display:flex;"><span><span style="color:#66d9ef">if</span> (result<span style="color:#f92672">$</span>status <span style="color:#f92672">!=</span> <span style="color:#e6db74">&#39;OPTIMAL&#39;</span>) <span style="color:#a6e22e">stop</span>(<span style="color:#e6db74">&#39;Stop now\n&#39;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#Clear space</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">rm</span>(model, env, availability, Shifts, Workers, shiftRequirements, result)
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-r" data-lang="r"><span style="display:flex;"><span><span style="color:#75715e"># Assign workers to shifts; each worker may or may not be available on a</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># particular day. We use multi-objective optimization to solve the model.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># The highest-priority objective minimizes the sum of the slacks</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># (i.e., the total number of uncovered shifts). The secondary objective</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># minimizes the difference between the maximum and minimum number of</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># shifts worked among all workers.  The second optimization is allowed</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># to degrade the first objective by up to the smaller value of 10% and 2</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># define data</span>
+</span></span><span style="display:flex;"><span>nShifts       <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">14</span>
+</span></span><span style="display:flex;"><span>nWorkers      <span style="color:#f92672">&lt;-</span>  <span style="color:#ae81ff">8</span>
+</span></span><span style="display:flex;"><span>nVars         <span style="color:#f92672">&lt;-</span> (nShifts <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>) <span style="color:#f92672">*</span> (nWorkers <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>) <span style="color:#f92672">+</span> <span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span>varIdx        <span style="color:#f92672">&lt;-</span> <span style="color:#66d9ef">function</span>(w,s) {s<span style="color:#f92672">+</span>(w<span style="color:#ae81ff">-1</span>)<span style="color:#f92672">*</span>nShifts}
+</span></span><span style="display:flex;"><span>shiftSlackIdx <span style="color:#f92672">&lt;-</span> <span style="color:#66d9ef">function</span>(s) {s<span style="color:#f92672">+</span>nShifts<span style="color:#f92672">*</span>nWorkers}
+</span></span><span style="display:flex;"><span>totShiftIdx   <span style="color:#f92672">&lt;-</span> <span style="color:#66d9ef">function</span>(w) {w <span style="color:#f92672">+</span> nShifts <span style="color:#f92672">*</span> (nWorkers<span style="color:#ae81ff">+1</span>)}
+</span></span><span style="display:flex;"><span>minShiftIdx   <span style="color:#f92672">&lt;-</span> ((nShifts<span style="color:#ae81ff">+1</span>)<span style="color:#f92672">*</span>(nWorkers<span style="color:#ae81ff">+1</span>))
+</span></span><span style="display:flex;"><span>maxShiftIdx   <span style="color:#f92672">&lt;-</span> (minShiftIdx<span style="color:#ae81ff">+1</span>)
+</span></span><span style="display:flex;"><span>totalSlackIdx <span style="color:#f92672">&lt;-</span> nVars
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Shifts  <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">c</span>(<span style="color:#e6db74">&#39;Mon1&#39;</span>, <span style="color:#e6db74">&#39;Tue2&#39;</span>, <span style="color:#e6db74">&#39;Wed3&#39;</span>, <span style="color:#e6db74">&#39;Thu4&#39;</span>, <span style="color:#e6db74">&#39;Fri5&#39;</span>, <span style="color:#e6db74">&#39;Sat6&#39;</span>, <span style="color:#e6db74">&#39;Sun7&#39;</span>,
+</span></span><span style="display:flex;"><span>             <span style="color:#e6db74">&#39;Mon8&#39;</span>, <span style="color:#e6db74">&#39;Tue9&#39;</span>, <span style="color:#e6db74">&#39;Wed10&#39;</span>, <span style="color:#e6db74">&#39;Thu11&#39;</span>, <span style="color:#e6db74">&#39;Fri12&#39;</span>, <span style="color:#e6db74">&#39;Sat13&#39;</span>, <span style="color:#e6db74">&#39;Sun14&#39;</span>)
+</span></span><span style="display:flex;"><span>Workers <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">c</span>( <span style="color:#e6db74">&#39;Amy&#39;</span>, <span style="color:#e6db74">&#39;Bob&#39;</span>, <span style="color:#e6db74">&#39;Cathy&#39;</span>, <span style="color:#e6db74">&#39;Dan&#39;</span>, <span style="color:#e6db74">&#39;Ed&#39;</span>, <span style="color:#e6db74">&#39;Fred&#39;</span>, <span style="color:#e6db74">&#39;Gu&#39;</span>, <span style="color:#e6db74">&#39;Tobi&#39;</span> )
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>shiftRequirements <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">3</span>, <span style="color:#ae81ff">2</span>, <span style="color:#ae81ff">4</span>, <span style="color:#ae81ff">4</span>, <span style="color:#ae81ff">5</span>, <span style="color:#ae81ff">6</span>, <span style="color:#ae81ff">5</span>, <span style="color:#ae81ff">2</span>, <span style="color:#ae81ff">2</span>, <span style="color:#ae81ff">3</span>, <span style="color:#ae81ff">4</span>, <span style="color:#ae81ff">6</span>, <span style="color:#ae81ff">7</span>, <span style="color:#ae81ff">5</span> )
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>availability <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">list</span>( <span style="color:#a6e22e">c</span>( <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span> ),
+</span></span><span style="display:flex;"><span>                      <span style="color:#a6e22e">c</span>( <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">0</span> ),
+</span></span><span style="display:flex;"><span>                      <span style="color:#a6e22e">c</span>( <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span> ),
+</span></span><span style="display:flex;"><span>                      <span style="color:#a6e22e">c</span>( <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span> ),
+</span></span><span style="display:flex;"><span>                      <span style="color:#a6e22e">c</span>( <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span> ),
+</span></span><span style="display:flex;"><span>                      <span style="color:#a6e22e">c</span>( <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span> ),
+</span></span><span style="display:flex;"><span>                      <span style="color:#a6e22e">c</span>( <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span> ),
+</span></span><span style="display:flex;"><span>                      <span style="color:#a6e22e">c</span>( <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span> ) )
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Function to display results</span>
+</span></span><span style="display:flex;"><span>solveandprint <span style="color:#f92672">&lt;-</span> <span style="color:#66d9ef">function</span>(model, env) {
+</span></span><span style="display:flex;"><span>  result <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">gurobi</span>(model, env <span style="color:#f92672">=</span> env)
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span>(result<span style="color:#f92672">$</span>status <span style="color:#f92672">==</span> <span style="color:#e6db74">&#39;OPTIMAL&#39;</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">cat</span>(<span style="color:#e6db74">&#39;The optimal objective is&#39;</span>,result<span style="color:#f92672">$</span>objval,<span style="color:#e6db74">&#39;\n&#39;</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">cat</span>(<span style="color:#e6db74">&#39;Schedule:\n&#39;</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> (s <span style="color:#66d9ef">in</span> <span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>nShifts) {
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">cat</span>(<span style="color:#e6db74">&#39;\t&#39;</span>,Shifts[s],<span style="color:#e6db74">&#39;:&#39;</span>)
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">for</span> (w <span style="color:#66d9ef">in</span> <span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>nWorkers) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> (result<span style="color:#f92672">$</span>x<span style="color:#a6e22e">[varIdx</span>(w,s)] <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">0.9</span>) <span style="color:#a6e22e">cat</span>(Workers[w],<span style="color:#e6db74">&#39; &#39;</span>)
+</span></span><span style="display:flex;"><span>      }
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">cat</span>(<span style="color:#e6db74">&#39;\n&#39;</span>)
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">cat</span>(<span style="color:#e6db74">&#39;Workload:\n&#39;</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> (w <span style="color:#66d9ef">in</span> <span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>nWorkers) {
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">cat</span>(<span style="color:#e6db74">&#39;\t&#39;</span>,Workers[w],<span style="color:#e6db74">&#39;:&#39;</span>,result<span style="color:#f92672">$</span>x<span style="color:#a6e22e">[totShiftIdx</span>(w)],<span style="color:#e6db74">&#39;\n&#39;</span>)
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>  } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">cat</span>(<span style="color:#e6db74">&#39;Optimization finished with status&#39;</span>,result<span style="color:#f92672">$</span>status)
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>  result
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Set-up environment</span>
+</span></span><span style="display:flex;"><span>env <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">list</span>()
+</span></span><span style="display:flex;"><span>env<span style="color:#f92672">$</span>logfile <span style="color:#f92672">&lt;-</span> <span style="color:#e6db74">&#39;workforce5.log&#39;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Build model</span>
+</span></span><span style="display:flex;"><span>model            <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">list</span>()
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>modelname  <span style="color:#f92672">&lt;-</span> <span style="color:#e6db74">&#39;workforce5&#39;</span>
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>modelsense <span style="color:#f92672">&lt;-</span> <span style="color:#e6db74">&#39;min&#39;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Initialize assignment decision variables:</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#    x[w][s] == 1 if worker w is assigned to shift s.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#    This is no longer a pure assignment model, so we must</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#    use binary variables.</span>
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>vtype    <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">rep</span>(<span style="color:#e6db74">&#39;C&#39;</span>, nVars)
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>lb       <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">rep</span>(<span style="color:#ae81ff">0</span>, nVars)
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>ub       <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">rep</span>(<span style="color:#ae81ff">1</span>, nVars)
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>varnames <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">rep</span>(<span style="color:#e6db74">&#39;&#39;</span>,nVars)
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span> (w <span style="color:#66d9ef">in</span> <span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>nWorkers) {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">for</span> (s <span style="color:#66d9ef">in</span> <span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>nShifts) {
+</span></span><span style="display:flex;"><span>    model<span style="color:#f92672">$</span>vtype<span style="color:#a6e22e">[varIdx</span>(w,s)]    <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;B&#39;</span>
+</span></span><span style="display:flex;"><span>    model<span style="color:#f92672">$</span>varnames<span style="color:#a6e22e">[varIdx</span>(w,s)] <span style="color:#f92672">=</span> <span style="color:#a6e22e">paste0</span>(Workers[w],<span style="color:#e6db74">&#39;.&#39;</span>,Shifts[s])
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (availability[[w]][s] <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>) model<span style="color:#f92672">$</span>ub<span style="color:#a6e22e">[varIdx</span>(w,s)] <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Initialize shift slack variables</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span> (s <span style="color:#66d9ef">in</span> <span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>nShifts) {
+</span></span><span style="display:flex;"><span>  model<span style="color:#f92672">$</span>varnames<span style="color:#a6e22e">[shiftSlackIdx</span>(s)] <span style="color:#f92672">=</span> <span style="color:#a6e22e">paste0</span>(<span style="color:#e6db74">&#39;ShiftSlack&#39;</span>,Shifts[s])
+</span></span><span style="display:flex;"><span>  model<span style="color:#f92672">$</span>ub<span style="color:#a6e22e">[shiftSlackIdx</span>(s)] <span style="color:#f92672">=</span> <span style="color:#66d9ef">Inf</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Initialize worker slack and diff variables</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span> (w <span style="color:#66d9ef">in</span> <span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>nWorkers) {
+</span></span><span style="display:flex;"><span>  model<span style="color:#f92672">$</span>varnames<span style="color:#a6e22e">[totShiftIdx</span>(w)] <span style="color:#f92672">=</span> <span style="color:#a6e22e">paste0</span>(<span style="color:#e6db74">&#39;TotalShifts&#39;</span>,Workers[w])
+</span></span><span style="display:flex;"><span>  model<span style="color:#f92672">$</span>ub<span style="color:#a6e22e">[totShiftIdx</span>(w)]       <span style="color:#f92672">=</span> <span style="color:#66d9ef">Inf</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#Initialize min/max shift variables</span>
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>ub[minShiftIdx]       <span style="color:#f92672">=</span> <span style="color:#66d9ef">Inf</span>
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>varnames[minShiftIdx] <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;MinShift&#39;</span>
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>ub[maxShiftIdx]       <span style="color:#f92672">=</span> <span style="color:#66d9ef">Inf</span>
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>varnames[maxShiftIdx] <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;MaxShift&#39;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#Initialize total slack variable</span>
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>ub[totalSlackIdx]      <span style="color:#f92672">=</span> <span style="color:#66d9ef">Inf</span>
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>varnames[totalSlackIdx] <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;TotalSlack&#39;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Set-up shift-requirements constraints</span>
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>A           <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">spMatrix</span>(nShifts,nVars,
+</span></span><span style="display:flex;"><span>                      i <span style="color:#f92672">=</span> <span style="color:#a6e22e">c</span>(<span style="color:#a6e22e">c</span>(<span style="color:#a6e22e">mapply</span>(rep,<span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>nShifts,nWorkers)),
+</span></span><span style="display:flex;"><span>                            <span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>nShifts)),
+</span></span><span style="display:flex;"><span>                      j <span style="color:#f92672">=</span> <span style="color:#a6e22e">c</span>(<span style="color:#a6e22e">mapply</span>(varIdx,<span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>nWorkers,
+</span></span><span style="display:flex;"><span>                                 <span style="color:#a6e22e">mapply</span>(rep,<span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>nShifts,nWorkers)),
+</span></span><span style="display:flex;"><span>                            <span style="color:#a6e22e">shiftSlackIdx</span>(<span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>nShifts)),
+</span></span><span style="display:flex;"><span>                      x <span style="color:#f92672">=</span> <span style="color:#a6e22e">rep</span>(<span style="color:#ae81ff">1</span>,nShifts <span style="color:#f92672">*</span> (nWorkers<span style="color:#ae81ff">+1</span>)))
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>sense       <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">rep</span>(<span style="color:#e6db74">&#39;=&#39;</span>,nShifts)
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>rhs         <span style="color:#f92672">&lt;-</span> shiftRequirements
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>constrnames <span style="color:#f92672">&lt;-</span> Shifts
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Set TotalSlack equal to the sum of each shift slack</span>
+</span></span><span style="display:flex;"><span>B <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">spMatrix</span>(<span style="color:#ae81ff">1</span>, nVars,
+</span></span><span style="display:flex;"><span>        i <span style="color:#f92672">=</span> <span style="color:#a6e22e">rep</span>(<span style="color:#ae81ff">1</span>,nShifts<span style="color:#ae81ff">+1</span>),
+</span></span><span style="display:flex;"><span>        j <span style="color:#f92672">=</span> <span style="color:#a6e22e">c</span>(<span style="color:#a6e22e">shiftSlackIdx</span>(<span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>nShifts),totalSlackIdx),
+</span></span><span style="display:flex;"><span>        x <span style="color:#f92672">=</span> <span style="color:#a6e22e">c</span>(<span style="color:#a6e22e">rep</span>(<span style="color:#ae81ff">1</span>,nShifts),<span style="color:#ae81ff">-1</span>))
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>A           <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">rbind</span>(model<span style="color:#f92672">$</span>A, B)
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>rhs         <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">c</span>(model<span style="color:#f92672">$</span>rhs,<span style="color:#ae81ff">0</span>)
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>sense       <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">c</span>(model<span style="color:#f92672">$</span>sense,<span style="color:#e6db74">&#39;=&#39;</span>)
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>constrnames <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">c</span>(model<span style="color:#f92672">$</span>constrnames, <span style="color:#e6db74">&#39;TotalSlack&#39;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Set total number of shifts for each worker</span>
+</span></span><span style="display:flex;"><span>B <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">spMatrix</span>(nWorkers, nVars,
+</span></span><span style="display:flex;"><span>          i <span style="color:#f92672">=</span> <span style="color:#a6e22e">c</span>(<span style="color:#a6e22e">mapply</span>(rep,<span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>nWorkers,nShifts),
+</span></span><span style="display:flex;"><span>                <span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>nWorkers),
+</span></span><span style="display:flex;"><span>          j <span style="color:#f92672">=</span> <span style="color:#a6e22e">c</span>(<span style="color:#a6e22e">mapply</span>(varIdx,<span style="color:#a6e22e">c</span>(<span style="color:#a6e22e">mapply</span>(rep,<span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>nWorkers,nShifts)),<span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>nShifts),
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">totShiftIdx</span>(<span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>nWorkers)),
+</span></span><span style="display:flex;"><span>          x <span style="color:#f92672">=</span> <span style="color:#a6e22e">c</span>(<span style="color:#a6e22e">rep</span>(<span style="color:#ae81ff">1</span>,nShifts<span style="color:#f92672">*</span>nWorkers),<span style="color:#a6e22e">rep</span>(<span style="color:#ae81ff">-1</span>,nWorkers)))
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>A           <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">rbind</span>(model<span style="color:#f92672">$</span>A, B)
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>rhs         <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">c</span>(model<span style="color:#f92672">$</span>rhs,<span style="color:#a6e22e">rep</span>(<span style="color:#ae81ff">0</span>,nWorkers))
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>sense       <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">c</span>(model<span style="color:#f92672">$</span>sense,<span style="color:#a6e22e">rep</span>(<span style="color:#e6db74">&#39;=&#39;</span>,nWorkers))
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>constrnames <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">c</span>(model<span style="color:#f92672">$</span>constrnames, <span style="color:#a6e22e">sprintf</span>(<span style="color:#e6db74">&#39;TotalShifts%s&#39;</span>,Workers[1<span style="color:#f92672">:</span>nWorkers]))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Set minShift / maxShift general constraints</span>
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>genconmin <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">list</span>(<span style="color:#a6e22e">list</span>(resvar <span style="color:#f92672">=</span> minShiftIdx,
+</span></span><span style="display:flex;"><span>                             vars   <span style="color:#f92672">=</span> <span style="color:#a6e22e">c</span>(<span style="color:#a6e22e">totShiftIdx</span>(<span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>nWorkers)),
+</span></span><span style="display:flex;"><span>                             name   <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;MinShift&#39;</span>))
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>genconmax <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">list</span>(<span style="color:#a6e22e">list</span>(resvar <span style="color:#f92672">=</span> maxShiftIdx,
+</span></span><span style="display:flex;"><span>                             vars   <span style="color:#f92672">=</span> <span style="color:#a6e22e">c</span>(<span style="color:#a6e22e">totShiftIdx</span>(<span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>nWorkers)),
+</span></span><span style="display:flex;"><span>                             name   <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;MaxShift&#39;</span>))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Set multiobjective</span>
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>multiobj <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">list</span>(<span style="color:#ae81ff">1</span><span style="color:#f92672">:</span><span style="color:#ae81ff">2</span>)
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>multiobj[[1]]          <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">list</span>()
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>multiobj[[1]]<span style="color:#f92672">$</span>objn     <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">c</span>(<span style="color:#a6e22e">rep</span>(<span style="color:#ae81ff">0</span>,nVars))
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>multiobj[[1]]<span style="color:#f92672">$</span>objn[totalSlackIdx] <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>multiobj[[1]]<span style="color:#f92672">$</span>priority <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>multiobj[[1]]<span style="color:#f92672">$</span>weight   <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>multiobj[[1]]<span style="color:#f92672">$</span>abstol   <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>multiobj[[1]]<span style="color:#f92672">$</span>reltol   <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">0.1</span>
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>multiobj[[1]]<span style="color:#f92672">$</span>name     <span style="color:#f92672">&lt;-</span> <span style="color:#e6db74">&#39;TotalSlack&#39;</span>
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>multiobj[[1]]<span style="color:#f92672">$</span>con      <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">0.0</span>
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>multiobj[[2]]          <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">list</span>()
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>multiobj[[2]]<span style="color:#f92672">$</span>objn     <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">c</span>(<span style="color:#a6e22e">rep</span>(<span style="color:#ae81ff">0</span>,nVars))
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>multiobj[[2]]<span style="color:#f92672">$</span>objn[minShiftIdx] <span style="color:#f92672">=</span> <span style="color:#ae81ff">-1</span>
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>multiobj[[2]]<span style="color:#f92672">$</span>objn[maxShiftIdx] <span style="color:#f92672">=</span>  <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>multiobj[[2]]<span style="color:#f92672">$</span>priority <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>multiobj[[2]]<span style="color:#f92672">$</span>weight   <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>multiobj[[2]]<span style="color:#f92672">$</span>abstol   <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>multiobj[[2]]<span style="color:#f92672">$</span>reltol   <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>multiobj[[2]]<span style="color:#f92672">$</span>name     <span style="color:#f92672">&lt;-</span> <span style="color:#e6db74">&#39;Fairness&#39;</span>
+</span></span><span style="display:flex;"><span>model<span style="color:#f92672">$</span>multiobj[[2]]<span style="color:#f92672">$</span>con      <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">0.0</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Save initial model</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">gurobi_write</span>(model,<span style="color:#e6db74">&#39;workforce5.lp&#39;</span>, env)
+</span></span></code></pre></div><pre tabindex="0"><code>## NULL
+</code></pre><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-r" data-lang="r"><span style="display:flex;"><span><span style="color:#75715e"># Optimize</span>
+</span></span><span style="display:flex;"><span>result <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">solveandprint</span>(model, env)
+</span></span></code></pre></div><pre tabindex="0"><code>## Gurobi Optimizer version 9.1.2 build v9.1.2rc0 (win64)
+## Thread count: 10 physical cores, 20 logical processors, using up to 20 threads
+## Optimize a model with 23 rows, 137 columns and 261 nonzeros
+## Model fingerprint: 0x68a3b7b1
+## Model has 2 general constraints
+## Variable types: 25 continuous, 112 integer (112 binary)
+## Coefficient statistics:
+##   Matrix range     [1e+00, 1e+00]
+##   Objective range  [1e+00, 1e+00]
+##   Bounds range     [1e+00, 1e+00]
+##   RHS range        [2e+00, 7e+00]
+## 
+## ---------------------------------------------------------------------------
+## Multi-objectives: starting optimization with 2 objectives ... 
+## ---------------------------------------------------------------------------
+## 
+## Multi-objectives: applying initial presolve ...
+## ---------------------------------------------------------------------------
+## 
+## Presolve added 13 rows and 0 columns
+## Presolve removed 0 rows and 3 columns
+## Presolve time: 0.00s
+## Presolved: 36 rows and 134 columns
+## ---------------------------------------------------------------------------
+## 
+## Multi-objectives: optimize objective 1 (TotalSlack) ...
+## ---------------------------------------------------------------------------
+## 
+## Presolve added 8 rows and 0 columns
+## Presolve removed 0 rows and 20 columns
+## Presolve time: 0.00s
+## Presolved: 44 rows, 114 columns, 224 nonzeros
+## Presolved model has 8 SOS constraint(s)
+## Variable types: 18 continuous, 96 integer (81 binary)
+## Found heuristic solution: objective 7.0000000
+## Found heuristic solution: objective 6.0000000
+## 
+## Root relaxation: objective 3.000000e+00, 30 iterations, 0.00 seconds
+## 
+##     Nodes    |    Current Node    |     Objective Bounds      |     Work
+##  Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+## 
+##      0     0    3.00000    0    4    6.00000    3.00000  50.0%     -    0s
+## H    0     0                       3.0000000    3.00000  0.00%     -    0s
+##      0     0    3.00000    0    4    3.00000    3.00000  0.00%     -    0s
+## 
+## Explored 1 nodes (30 simplex iterations) in 0.01 seconds
+## Thread count was 20 (of 20 available processors)
+## 
+## Solution count 3: 3 6 7 
+## 
+## Optimal solution found (tolerance 1.00e-04)
+## Best objective 3.000000000000e+00, best bound 3.000000000000e+00, gap 0.0000%
+## ---------------------------------------------------------------------------
+## 
+## Multi-objectives: optimize objective 2 (Fairness) ...
+## ---------------------------------------------------------------------------
+## 
+## 
+## Loaded user MIP start with objective 4
+## 
+## Presolve added 8 rows and 0 columns
+## Presolve removed 0 rows and 10 columns
+## Presolve time: 0.00s
+## Presolved: 45 rows, 124 columns, 273 nonzeros
+## Presolved model has 8 SOS constraint(s)
+## Variable types: 18 continuous, 106 integer (81 binary)
+## 
+## Root relaxation: objective 0.000000e+00, 74 iterations, 0.00 seconds
+## 
+##     Nodes    |    Current Node    |     Objective Bounds      |     Work
+##  Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+## 
+##      0     0    0.00000    0   16    4.00000    0.00000   100%     -    0s
+## H    0     0                       2.0000000    0.00000   100%     -    0s
+## H    0     0                       1.0000000    0.00000   100%     -    0s
+##      0     0    0.14286    0   20    1.00000    0.14286  85.7%     -    0s
+##      0     0    0.14286    0   19    1.00000    0.14286  85.7%     -    0s
+##      0     0    0.14286    0   21    1.00000    0.14286  85.7%     -    0s
+##      0     0    0.14286    0   20    1.00000    0.14286  85.7%     -    0s
+##      0     0    0.14286    0   19    1.00000    0.14286  85.7%     -    0s
+##      0     2    0.14286    0   19    1.00000    0.14286  85.7%     -    0s
+## 
+## Explored 3265 nodes (9169 simplex iterations) in 0.12 seconds
+## Thread count was 20 (of 20 available processors)
+## 
+## Solution count 4: 1 1 2 4 
+## 
+## Optimal solution found (tolerance 1.00e-04)
+## Best objective 1.000000000000e+00, best bound 1.000000000000e+00, gap 0.0000%
+## 
+## ---------------------------------------------------------------------------
+## Multi-objectives: solved in 0.12 seconds, solution count 6
+## 
+## The optimal objective is 4 1 
+## Schedule:
+## 	 Mon1 :Bob  Fred  Tobi  
+## 	 Tue2 :Amy  Bob  
+## 	 Wed3 :Cathy  Dan  Fred  Gu  
+## 	 Thu4 :Cathy  Ed  Gu  
+## 	 Fri5 :Amy  Bob  Cathy  Dan  Ed  
+## 	 Sat6 :Bob  Dan  Fred  Gu  Tobi  
+## 	 Sun7 :Amy  Cathy  Ed  Gu  Tobi  
+## 	 Mon8 :Bob  Ed  
+## 	 Tue9 :Dan  Fred  
+## 	 Wed10 :Amy  Cathy  Dan  
+## 	 Thu11 :Amy  Bob  Ed  Gu  
+## 	 Fri12 :Cathy  Dan  Fred  Tobi  
+## 	 Sat13 :Amy  Bob  Cathy  Dan  Ed  Fred  Tobi  
+## 	 Sun14 :Amy  Ed  Fred  Gu  Tobi  
+## Workload:
+## 	 Amy : 7 
+## 	 Bob : 7 
+## 	 Cathy : 7 
+## 	 Dan : 7 
+## 	 Ed : 7 
+## 	 Fred : 7 
+## 	 Gu : 6 
+## 	 Tobi : 6
+</code></pre><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-r" data-lang="r"><span style="display:flex;"><span><span style="color:#66d9ef">if</span> (result<span style="color:#f92672">$</span>status <span style="color:#f92672">!=</span> <span style="color:#e6db74">&#39;OPTIMAL&#39;</span>) <span style="color:#a6e22e">stop</span>(<span style="color:#e6db74">&#39;Stop now\n&#39;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#Clear space</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">rm</span>(model, env, availability, Shifts, Workers, shiftRequirements, result)
+</span></span></code></pre></div><p>Add a new chunk by clicking the <em>Insert Chunk</em> button on the toolbar or by pressing <em>Ctrl+Alt+I</em>.</p>
+<p>When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the <em>Preview</em> button or press <em>Ctrl+Shift+K</em> to preview the HTML file).</p>
+<p>The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike <em>Knit</em>, <em>Preview</em> does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.</p>
+
+</article>
+
+</main>
+<footer class="site-footer">
+  <p>
+    <a href="mailto:erick.jones@uta.edu">erick.jones@uta.edu</a> ·
+    <a href="https://scholar.google.com/citations?hl=en&user=03RL76wAAAAJ">Google Scholar</a> ·
+    <a href="https://www.linkedin.com/in/erickjones2/">LinkedIn</a> ·
+    <a href="https://github.com/yamierick">GitHub</a>
+  </p>
+  <p class="constellation">Professional site · <a href="https://engineerliving.com">Engineer Living (ideas &amp; writing)</a> · <em>The Friction Deficit</em> (fiction, coming soon)</p>
+</footer>
+</body>
+</html>

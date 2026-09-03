@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quadratic Programming Examples and Algorithms · Erick C. Jones Jr., Ph.D.</title>
+<meta name="description" content="Assistant Professor, Industrial, Manufacturing, and Systems Engineering, UT Arlington. Building the future of energy and critical mineral systems — end to end and back.">
+<link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+<header class="site-header">
+  <a class="site-title" href="/">Erick C. Jones Jr.</a>
+  <nav>
+    <a href="/about/">About</a><a href="/research/">Research</a><a href="/labs/">Labs</a><a href="/publications/">Publications</a><a href="/teaching/">Teaching</a><a href="/resources/">Resources</a><a href="/beyond/">Beyond</a>
+  </nav>
+</header>
+<main>
+
+<article>
+  <h1>Quadratic Programming Examples and Algorithms</h1>
+  <p class="meta"><time>January 7, 2020</time> · ORIE Techniques</p>
+  <h2 id="background">Background</h2>
+<p>This post explores how to solve QPs by hand and with Gurobi.
+I have written these using Gurobi as a solver and as the mathematical formulation software.
+This is a reproducible example if you have R Studio just  make sure you have installed the correct packages.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-r" data-lang="r"><span style="display:flex;"><span><span style="color:#a6e22e">library</span>(gurobi)
+</span></span></code></pre></div><pre tabindex="0"><code>## Warning: package &#39;slam&#39; was built under R version 4.1.2
+</code></pre><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-r" data-lang="r"><span style="display:flex;"><span><span style="color:#a6e22e">library</span>(tictoc)
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">library</span>(Matrix)
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">library</span>(ggplot2)
+</span></span></code></pre></div><pre tabindex="0"><code>## Warning: package &#39;ggplot2&#39; was built under R version 4.1.2
+</code></pre><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-r" data-lang="r"><span style="display:flex;"><span><span style="color:#75715e">#library(matlib)</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">library</span>(MASS)
+</span></span></code></pre></div><h2 id="gradient-descent-a-first-order-method">Gradient Descent: A first order method</h2>
+<p><code>\(x_{i+1} = x_i + \lambda*d/f(x)\)</code></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-r" data-lang="r"><span style="display:flex;"><span>x <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">-10</span><span style="color:#f92672">:</span><span style="color:#ae81ff">10</span>)
+</span></span><span style="display:flex;"><span>fx1 <span style="color:#f92672">&lt;-</span> x^2
+</span></span><span style="display:flex;"><span>xi <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">10</span>
+</span></span><span style="display:flex;"><span>lambda <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">0.2</span>
+</span></span><span style="display:flex;"><span>xit <span style="color:#f92672">&lt;-</span> xi
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>fx <span style="color:#f92672">&lt;-</span> xit^2
+</span></span><span style="display:flex;"><span>dfx <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">2</span><span style="color:#f92672">*</span>xit
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>gd <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">data.frame</span>(<span style="color:#e6db74">&#39;x&#39;</span> <span style="color:#f92672">=</span> xit, <span style="color:#e6db74">&#39;fx&#39;</span> <span style="color:#f92672">=</span> fx, <span style="color:#e6db74">&#39;dfx&#39;</span> <span style="color:#f92672">=</span> dfx)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">while</span>(dfx <span style="color:#f92672">&lt;</span> <span style="color:#ae81ff">-10</span>^<span style="color:#ae81ff">-50</span> <span style="color:#f92672">|</span> dfx <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">10</span>^<span style="color:#ae81ff">-50</span>){
+</span></span><span style="display:flex;"><span>xit <span style="color:#f92672">&lt;-</span> xit <span style="color:#f92672">-</span> lambda<span style="color:#f92672">*</span>dfx
+</span></span><span style="display:flex;"><span>fx <span style="color:#f92672">&lt;-</span> xit^2
+</span></span><span style="display:flex;"><span>dfx <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">2</span><span style="color:#f92672">*</span>xit
+</span></span><span style="display:flex;"><span>gd <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">rbind</span>(gd, <span style="color:#a6e22e">c</span>(xit,fx,dfx))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">head</span>(gd)
+</span></span></code></pre></div><pre tabindex="0"><code>##         x          fx     dfx
+## 1 10.0000 100.0000000 20.0000
+## 2  6.0000  36.0000000 12.0000
+## 3  3.6000  12.9600000  7.2000
+## 4  2.1600   4.6656000  4.3200
+## 5  1.2960   1.6796160  2.5920
+## 6  0.7776   0.6046618  1.5552
+</code></pre><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-r" data-lang="r"><span style="display:flex;"><span><span style="color:#a6e22e">tail</span>(gd)
+</span></span></code></pre></div><pre tabindex="0"><code>##                x            fx          dfx
+## 228 4.368515e-50  1.908392e-99 8.737030e-50
+## 229 2.621109e-50 6.870213e-100 5.242218e-50
+## 230 1.572665e-50 2.473277e-100 3.145331e-50
+## 231 9.435993e-51 8.903795e-101 1.887199e-50
+## 232 5.661596e-51 3.205366e-101 1.132319e-50
+## 233 3.396957e-51 1.153932e-101 6.793915e-51
+</code></pre><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-r" data-lang="r"><span style="display:flex;"><span><span style="color:#a6e22e">qplot</span>(x <span style="color:#f92672">=</span> x, y <span style="color:#f92672">=</span> fx1)
+</span></span></code></pre></div><img src="/blog/ORIE/QP Modeling/QP_algorithms_files/figure-html/gradient_descent_example-1.png" width="672" />
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-r" data-lang="r"><span style="display:flex;"><span><span style="color:#a6e22e">qplot</span>(x,fx, data <span style="color:#f92672">=</span> gd)
+</span></span></code></pre></div><img src="/blog/ORIE/QP Modeling/QP_algorithms_files/figure-html/gradient_descent_example-2.png" width="672" />
+<h2 id="standard-form-for-quadratics">Standard form for quadratics</h2>
+<p><code>\(min\: z; z = -8x_1-16x_2+x_1^2+4x_2^2\)</code></p>
+<p>s.t.
+<code>\(x_1 + x_2 + x_3 = 5\)</code>
+<code>\(x_1 + x_4 = 3\)</code>
+From Jensen and Bard Quadratic Solver notes in Book
+Idea given A,b,c and intial value of x; find optimal x that minimizes c&rsquo;*x</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-r" data-lang="r"><span style="display:flex;"><span>constr1 <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">1</span>,<span style="color:#ae81ff">1</span>,<span style="color:#ae81ff">1</span>,<span style="color:#ae81ff">0</span>)
+</span></span><span style="display:flex;"><span>constr2 <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">1</span>,<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">1</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>A <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">rbind</span>(constr1,constr2)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>m <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">nrow</span>(A)
+</span></span><span style="display:flex;"><span>n <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">ncol</span>(A)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>b <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">matrix</span>(<span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">5</span>,<span style="color:#ae81ff">3</span>),nrow <span style="color:#f92672">=</span>m)
+</span></span><span style="display:flex;"><span>c <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">matrix</span>(<span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">-8</span>,<span style="color:#ae81ff">-16</span>,<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">0</span>), nrow <span style="color:#f92672">=</span> n)
+</span></span><span style="display:flex;"><span>Q <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">rbind</span>(<span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">2</span>,<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">0</span>),<span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">8</span>,<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">0</span>),<span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">0</span>),<span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">0</span>))
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#inital x values (xi) given by slacks = RHS</span>
+</span></span><span style="display:flex;"><span>xi <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">matrix</span>(<span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">1</span>,<span style="color:#ae81ff">1</span>,<span style="color:#ae81ff">0.5</span>,<span style="color:#ae81ff">0.5</span>), nrow <span style="color:#f92672">=</span>n)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>m <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">nrow</span>(A)
+</span></span><span style="display:flex;"><span>n <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">ncol</span>(A)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>I <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">diag</span>(n)
+</span></span><span style="display:flex;"><span>z1 <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">matrix</span>(<span style="color:#a6e22e">rep</span>(<span style="color:#ae81ff">0</span>,n<span style="color:#f92672">*</span>n), nrow <span style="color:#f92672">=</span> n)
+</span></span><span style="display:flex;"><span>z2 <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">matrix</span>(<span style="color:#a6e22e">rep</span>(<span style="color:#ae81ff">0</span>,m<span style="color:#f92672">*</span>m), nrow <span style="color:#f92672">=</span> m)
+</span></span><span style="display:flex;"><span>z3 <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">matrix</span>(<span style="color:#a6e22e">rep</span>(<span style="color:#ae81ff">0</span>,m<span style="color:#f92672">*</span>n), nrow <span style="color:#f92672">=</span> m)
+</span></span><span style="display:flex;"><span>y <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">matrix</span>(<span style="color:#a6e22e">rep</span>(<span style="color:#ae81ff">1</span>,m), nrow <span style="color:#f92672">=</span> n)
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#The complimentary slackness modifier 1/t eventually goes to 0 as t &gt;&gt;&gt;&gt; inf</span>
+</span></span><span style="display:flex;"><span>t <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">9</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#Step size pretty much make it up</span>
+</span></span><span style="display:flex;"><span>alpha <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">0.1</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#mu*x = 0 in complemntariy slackness condition , mu &gt;0 is dual condition mu correspond to dual variables, </span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#using fancy vectors this gives Xd*mu = XM1 = 1/t where t &gt;&gt;&gt;&gt; inf </span>
+</span></span><span style="display:flex;"><span>x <span style="color:#f92672">&lt;-</span> xi
+</span></span><span style="display:flex;"><span>mu <span style="color:#f92672">&lt;-</span> x<span style="color:#f92672">/</span>t
+</span></span><span style="display:flex;"><span>mu_minus_c <span style="color:#f92672">&lt;-</span> mu <span style="color:#f92672">-</span> c <span style="color:#f92672">-</span> Q<span style="color:#f92672">%*%</span>x
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#Gives lagrangian multipliers for constraints</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#Solving c+A*lamda-mu = 0 gives initial lambda</span>
+</span></span><span style="display:flex;"><span>lambda <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">ginv</span>(<span style="color:#a6e22e">t</span>(A))<span style="color:#f92672">%*%</span>(mu_minus_c)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#combined vector having values of x, lambda, and mu useful when adding the search direction</span>
+</span></span><span style="display:flex;"><span>w <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">rbind</span>(x, lambda, mu)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#This is the KKT condition stationarity, at optimality this derivative should  be 0,</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#Using the lagrangian cx+lambda*Ax-mu &gt;&gt; c+A*lambda-mu</span>
+</span></span><span style="display:flex;"><span>c_plus_tA <span style="color:#f92672">&lt;-</span> Q<span style="color:#f92672">%*%</span>x<span style="color:#f92672">+</span>c<span style="color:#f92672">+</span><span style="color:#a6e22e">t</span>(A)<span style="color:#f92672">%*%</span>lambda<span style="color:#f92672">-</span>mu
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#This is the KKT condition primal feasiblity, this should always be 0 Ax-b=0 </span>
+</span></span><span style="display:flex;"><span>A_times_x_minus_b <span style="color:#f92672">&lt;-</span> A<span style="color:#f92672">%*%</span>x<span style="color:#f92672">-</span>b
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#This is the modfied complimentary condtion XM1 -1/t = 0 X is the diag(x) and M is diag(mu) 1/t &gt;&gt;&gt; 0 as t gets larger</span>
+</span></span><span style="display:flex;"><span>x_times_mu_minus_y_over_t <span style="color:#f92672">&lt;-</span> x<span style="color:#f92672">*</span>mu<span style="color:#f92672">-</span>y<span style="color:#f92672">/</span>t
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#The right hand side of the search direction iteration given from the Newton-Raphson Method</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#Combines the vectors above</span>
+</span></span><span style="display:flex;"><span>B <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">rbind</span>(c_plus_tA,A_times_x_minus_b,x_times_mu_minus_y_over_t)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>objective <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">0.5</span><span style="color:#f92672">*</span><span style="color:#a6e22e">t</span>(x)<span style="color:#f92672">%*%</span>Q<span style="color:#f92672">%*%</span>x<span style="color:#f92672">+</span><span style="color:#a6e22e">t</span>(c)<span style="color:#f92672">%*%</span>x
+</span></span><span style="display:flex;"><span>error <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">norm</span>(B,<span style="color:#e6db74">&#39;2&#39;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>iteration_list <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">data.frame</span>(<span style="color:#e6db74">&#39;x1&#39;</span> <span style="color:#f92672">=</span> x[1], <span style="color:#e6db74">&#39;x2&#39;</span> <span style="color:#f92672">=</span> x[2], <span style="color:#e6db74">&#39;x3&#39;</span> <span style="color:#f92672">=</span> x[3], <span style="color:#e6db74">&#39;x4&#39;</span> <span style="color:#f92672">=</span> x[4], <span style="color:#e6db74">&#39;objective&#39;</span> <span style="color:#f92672">=</span> objective, <span style="color:#e6db74">&#39;error&#39;</span> <span style="color:#f92672">=</span> error)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#loop</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">while</span>(error <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">10</span>^<span style="color:#ae81ff">-12</span>){
+</span></span><span style="display:flex;"><span>t <span style="color:#f92672">&lt;-</span> t<span style="color:#f92672">*</span><span style="color:#ae81ff">9</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Xd <span style="color:#f92672">=</span> <span style="color:#a6e22e">Diagonal</span>(n <span style="color:#f92672">=</span> n, x)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Mud <span style="color:#f92672">=</span> <span style="color:#a6e22e">Diagonal</span>(n <span style="color:#f92672">=</span> n, mu) 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#The left hand side matrix of the search direction iteration, it containtes information from the A, x, and mu vectors and matricies of 1s or 0s to make the math make sense</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>C <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">rbind</span>(<span style="color:#a6e22e">cbind</span>(Q,<span style="color:#a6e22e">t</span>(A),<span style="color:#f92672">-</span>I),<span style="color:#a6e22e">cbind</span>(A,z2,z3), <span style="color:#a6e22e">cbind</span>(Mud,<span style="color:#a6e22e">t</span>(z3), Xd))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#The right hand side of the search direction iteration given from the Newton-Raphson Method</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#This contains the objective function costs, the RHS values, as well as the A, x, and mu vectors. </span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#It also has the complimentary condition represented by t</span>
+</span></span><span style="display:flex;"><span>B <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">rbind</span>(Q<span style="color:#f92672">%*%</span>x<span style="color:#f92672">+</span>c<span style="color:#f92672">+</span><span style="color:#a6e22e">t</span>(A)<span style="color:#f92672">%*%</span>lambda<span style="color:#f92672">-</span>mu,A<span style="color:#f92672">%*%</span>x<span style="color:#f92672">-</span>b,x<span style="color:#f92672">*</span>mu<span style="color:#f92672">-</span>y<span style="color:#f92672">/</span>t)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#solving the systems of equations with C and B gives the search direction as you move closer and closer to solving the complimentary condition in the KKT conditions</span>
+</span></span><span style="display:flex;"><span>dw <span style="color:#f92672">=</span> <span style="color:#a6e22e">solve</span>(<span style="color:#f92672">-</span>C,B)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#update your w vector which is just a list of the x, mu, and lambda vectors using the search direction</span>
+</span></span><span style="display:flex;"><span>w <span style="color:#f92672">&lt;-</span> w <span style="color:#f92672">+</span> alpha<span style="color:#f92672">*</span>dw
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>x <span style="color:#f92672">&lt;-</span> w[1<span style="color:#f92672">:</span>n]
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>lambda <span style="color:#f92672">&lt;-</span> w<span style="color:#a6e22e">[</span>(n<span style="color:#ae81ff">+1</span>)<span style="color:#f92672">:</span>(n<span style="color:#f92672">+</span>m)]
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>mu <span style="color:#f92672">&lt;-</span> w<span style="color:#a6e22e">[</span>(n<span style="color:#f92672">+</span>m<span style="color:#ae81ff">+1</span>)<span style="color:#f92672">:</span><span style="color:#a6e22e">length</span>(w)]
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#calculate the objective function from the x values and the error. Remember if this satisifies all the KKT conditions then the B vector will be 0.</span>
+</span></span><span style="display:flex;"><span>objective <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">0.5</span><span style="color:#f92672">*</span><span style="color:#a6e22e">t</span>(x)<span style="color:#f92672">%*%</span>Q<span style="color:#f92672">%*%</span>x<span style="color:#f92672">+</span><span style="color:#a6e22e">t</span>(c)<span style="color:#f92672">%*%</span>x
+</span></span><span style="display:flex;"><span>error <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">norm</span>(B,<span style="color:#e6db74">&#39;2&#39;</span>)
+</span></span><span style="display:flex;"><span>iteration_list <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">rbind</span>(iteration_list,<span style="color:#a6e22e">c</span>(x,objective,error))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">head</span>(iteration_list)
+</span></span></code></pre></div><pre tabindex="0"><code>##         x1       x2         x3         x4 objective    error
+## 1 1.000000 1.000000 0.50000000 0.50000000 -19.00000 6.520410
+## 2 1.269990 1.096877 0.38313300 0.38001002 -21.28452 6.520877
+## 3 1.516786 1.183938 0.27427586 0.26821381 -23.16982 5.868998
+## 4 1.734188 1.261642 0.18166935 0.17231180 -24.68541 5.282035
+## 5 1.918400 1.330365 0.11098503 0.09745009 -25.87330 4.753769
+## 6 2.066579 1.390789 0.06640714 0.04768647 -26.77733 4.278347
+</code></pre><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-r" data-lang="r"><span style="display:flex;"><span><span style="color:#a6e22e">tail</span>(iteration_list)
+</span></span></code></pre></div><pre tabindex="0"><code>##     x1 x2           x3           x4 objective        error
+## 278  3  2 3.020886e-08 5.122922e-16       -31 1.531109e-12
+## 279  3  2 2.869842e-08 4.610630e-16       -31 1.377965e-12
+## 280  3  2 2.726350e-08 4.149567e-16       -31 1.239794e-12
+## 281  3  2 2.590032e-08 3.734610e-16       -31 1.115852e-12
+## 282  3  2 2.460531e-08 3.361149e-16       -31 1.003790e-12
+## 283  3  2 2.337504e-08 3.025034e-16       -31 9.038590e-13
+</code></pre><h2 id="standard-form-for-quadratics-2">standard form for quadratics 2</h2>
+<p><code>\(min \:z; z = 4x_1^2 + 4x_2^2 - 2x_1x_2 - 12x_1 - 72x_2 + 384\)</code>
+s.t.
+<code>\(2x_1 + x_2 + x_3 = 18\)</code>
+<code>\(6x_1+ 5x_2 + x_4 = 60\)</code>
+<code>\(2x_1 + 5x_2 + x_5 = 40\)</code></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-r" data-lang="r"><span style="display:flex;"><span><span style="color:#75715e">#Another example from http://fourier.eng.hmc.edu/e176/lectures/ch3/node19.html, but don&#39;t have answers </span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#Work out matricies in Wolfram Alpha</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#Idea given A,b,c and intial value of x; find optimal x that minimizes c&#39;*x</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>constr1 <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">2</span>,<span style="color:#ae81ff">1</span>,<span style="color:#ae81ff">1</span>,<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">0</span>)
+</span></span><span style="display:flex;"><span>constr2 <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">6</span>,<span style="color:#ae81ff">5</span>,<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">1</span>,<span style="color:#ae81ff">0</span>)
+</span></span><span style="display:flex;"><span>constr3 <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">2</span>,<span style="color:#ae81ff">5</span>,<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">1</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>A <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">rbind</span>(constr1,constr2, constr3)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>b <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">matrix</span>(<span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">18</span>,<span style="color:#ae81ff">60</span>,<span style="color:#ae81ff">40</span>),nrow <span style="color:#f92672">=</span><span style="color:#ae81ff">3</span>)
+</span></span><span style="display:flex;"><span>c <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">matrix</span>(<span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">-8</span>,<span style="color:#ae81ff">-16</span>,<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">0</span>), nrow <span style="color:#f92672">=</span> <span style="color:#ae81ff">5</span>)
+</span></span><span style="display:flex;"><span>Q <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">rbind</span>(<span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">2</span>,<span style="color:#ae81ff">1</span>,<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">0</span>),<span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">1</span>,<span style="color:#ae81ff">2</span>,<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">0</span>),<span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">0</span>),<span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">0</span>),<span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">0</span>))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">rm</span>(A,b,c,Q,constr1,constr2,constr3)
+</span></span></code></pre></div>
+</article>
+
+</main>
+<footer class="site-footer">
+  <p>
+    <a href="mailto:erick.jones@uta.edu">erick.jones@uta.edu</a> ·
+    <a href="https://scholar.google.com/citations?hl=en&user=03RL76wAAAAJ">Google Scholar</a> ·
+    <a href="https://www.linkedin.com/in/erickjones2/">LinkedIn</a> ·
+    <a href="https://github.com/yamierick">GitHub</a>
+  </p>
+  <p class="constellation">Professional site · <a href="https://engineerliving.com">Engineer Living (ideas &amp; writing)</a> · <em>The Friction Deficit</em> (fiction, coming soon)</p>
+</footer>
+</body>
+</html>

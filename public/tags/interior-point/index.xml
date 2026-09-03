@@ -1,21 +1,0 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?>
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
-  <channel>
-    <title>Interior Point on Erick C. Jones Jr.</title>
-    <link>/tags/interior-point/</link>
-    <description>Recent content in Interior Point on Erick C. Jones Jr.</description>
-    <generator>Hugo -- gohugo.io</generator>
-    <language>en</language>
-    <lastBuildDate>Tue, 07 Jan 2020 00:00:00 +0000</lastBuildDate><atom:link href="/tags/interior-point/index.xml" rel="self" type="application/rss+xml" />
-    <item>
-      <title>Quadratic Programming Examples and Algorithms</title>
-      <link>/blog/orie/qp-modeling/qp_algorithms/</link>
-      <pubDate>Tue, 07 Jan 2020 00:00:00 +0000</pubDate>
-      
-      <guid>/blog/orie/qp-modeling/qp_algorithms/</guid>
-      <description>BackgroundThis post explores how to solve QPs by hand and with Gurobi. I have written these using Gurobi as a solver and as the mathematical formulation software. This is a reproducible example if you have R Studio just make sure you have installed the correct packages.
-library(gurobi) ## Warning: package &#39;slam&#39; was built under R version 4.1.2library(tictoc) library(Matrix) library(ggplot2) ## Warning: package &#39;ggplot2&#39; was built under R version 4.</description>
-    </item>
-    
-  </channel>
-</rss>

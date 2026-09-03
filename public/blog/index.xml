@@ -1,169 +1,0 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?>
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
-  <channel>
-    <title>Posts on Erick C. Jones Jr.</title>
-    <link>/blog/</link>
-    <description>Recent content in Posts on Erick C. Jones Jr.</description>
-    <generator>Hugo -- gohugo.io</generator>
-    <language>en</language>
-    <lastBuildDate>Fri, 21 Jan 2022 00:00:00 +0000</lastBuildDate><atom:link href="/blog/index.xml" rel="self" type="application/rss+xml" />
-    <item>
-      <title>Job Opening - Communications and Digital Media Student Assistant</title>
-      <link>/blog/job-posting/communications/commjob/</link>
-      <pubDate>Fri, 21 Jan 2022 00:00:00 +0000</pubDate>
-      
-      <guid>/blog/job-posting/communications/commjob/</guid>
-      <description>Communications and Digital Media Role DescriptionSAVII labs is looking for a Communications Media Assistant to join our team! We need a talented student who can create graphics, develop technical content, and maintain the lab’s web and social media presence.
-Your workday will include creating content for presentations, our website, occasionally social media, and other tasks as assigned. This job is a great opportunity to gain hands-on experience in developing and carrying out technical communication and media strategies.</description>
-    </item>
-    
-    <item>
-      <title>Job Opening - Undergraduate Research Assistant</title>
-      <link>/blog/job-posting/research/researchjob/</link>
-      <pubDate>Fri, 21 Jan 2022 00:00:00 +0000</pubDate>
-      
-      <guid>/blog/job-posting/research/researchjob/</guid>
-      <description>Undergraduate Research Assistant Role DescriptionSAVII labs is looking for an Undergraduate Research Assistant to join our team! We need a talented and motivated student who can learn on a variety of different software platforms to assist on a few different projects.
-A workday might include gathering and analyzing data, creating an electronics diagram in LabView, developing maps in ArcGIS, or creating a 3D BIM model in Revit.</description>
-    </item>
-    
-    <item>
-      <title>A Selective Laser Sintering Creation - Wind Powered Tops</title>
-      <link>/blog/class_projects/sls/slsdesign/</link>
-      <pubDate>Sat, 21 Mar 2020 00:00:00 +0000</pubDate>
-      
-      <guid>/blog/class_projects/sls/slsdesign/</guid>
-      <description>We designed a spinning top that is novel, aesthetically pleasing, durable, spins well, and whose unique fan assembly can only be made using SLS. Our design incorporates a modular top system that allows for interchangeable designs to be attached to the universal base. We designed two UT-themed attachable tops, one that is a replica of the UT model tower and the other that is a replica of the UT seal. The universal base has wind turbine blades in its center so that air can be blown through it to keep it spinning even with a large top installed.</description>
-    </item>
-    
-    <item>
-      <title>Natural Language Processing - Sentiment Analysis</title>
-      <link>/blog/class_projects/nlp/sentimentanalysis/</link>
-      <pubDate>Sat, 21 Mar 2020 00:00:00 +0000</pubDate>
-      
-      <guid>/blog/class_projects/nlp/sentimentanalysis/</guid>
-      <description>We investigated how different Natural Language Processing (NLP) techniques could be used to perform sentiment analysis on real user generated text data from the Sentiment140 dataset [1]. First we investigated an LSTM model before deciding on using the self-attention network code from [2] because of the possible speed and accuracy advantages. Our contributions included investigating how the training batch size and dropout rate affected the accuracy of the model and validating an existing model by reproducing it and using it with a different dataset.</description>
-    </item>
-    
-    <item>
-      <title>Decompositions Algorithms Broken Down and Explained</title>
-      <link>/blog/orie/decomp-algorithms/decompo_algs/</link>
-      <pubDate>Fri, 10 Jan 2020 00:00:00 +0000</pubDate>
-      
-      <guid>/blog/orie/decomp-algorithms/decompo_algs/</guid>
-      <description>This post explores how to use various decomposition techniques to solve LPs and MIPs. I have written these using Gurobi as a solver and as the mathematical formulation software. This is a reproducible example if you have R Studio just make sure you have installed the correct packages.
-library(gurobi) ## Warning: package &#39;slam&#39; was built under R version 4.1.2library(tictoc) library(Matrix) library(ggplot2) ## Warning: package &#39;ggplot2&#39; was built under R version 4.</description>
-    </item>
-    
-    <item>
-      <title>Benders Decomposition Algorithm Explained</title>
-      <link>/blog/orie/bender-decomp/benders/</link>
-      <pubDate>Thu, 09 Jan 2020 00:00:00 +0000</pubDate>
-      
-      <guid>/blog/orie/bender-decomp/benders/</guid>
-      <description>This post explores how to use Benders Decomposition to solve LPs and MIPs. I have written these using Gurobi as a solver and as the mathematical formulation software. This is a reproducible example if you have R Studio just make sure you have installed the correct packages.
-library(gurobi) ## Warning: package &#39;slam&#39; was built under R version 4.1.2library(lpSolveAPI) library(tictoc) library(Matrix) library(ggplot2) ## Warning: package &#39;ggplot2&#39; was built under R version 4.</description>
-    </item>
-    
-    <item>
-      <title>Quadratic Programming Examples and Algorithms</title>
-      <link>/blog/orie/qp-modeling/qp_algorithms/</link>
-      <pubDate>Tue, 07 Jan 2020 00:00:00 +0000</pubDate>
-      
-      <guid>/blog/orie/qp-modeling/qp_algorithms/</guid>
-      <description>BackgroundThis post explores how to solve QPs by hand and with Gurobi. I have written these using Gurobi as a solver and as the mathematical formulation software. This is a reproducible example if you have R Studio just make sure you have installed the correct packages.
-library(gurobi) ## Warning: package &#39;slam&#39; was built under R version 4.1.2library(tictoc) library(Matrix) library(ggplot2) ## Warning: package &#39;ggplot2&#39; was built under R version 4.</description>
-    </item>
-    
-    <item>
-      <title>Gurboi&#39;s R Examples 2</title>
-      <link>/blog/orie/gurobi-examples-2/gurobi_examples2/</link>
-      <pubDate>Mon, 06 Jan 2020 00:00:00 +0000</pubDate>
-      
-      <guid>/blog/orie/gurobi-examples-2/gurobi_examples2/</guid>
-      <description>This post explores how to use Gurobi to solve more advanced LPs, MIPs, and QPs. I have written these using Gurobi as a solver and as the mathematical formulation software. This is a reproducible example if you have R Studio just make sure you have installed the correct packages.
-library(gurobi) ## Warning: package &#39;slam&#39; was built under R version 4.1.2library(Matrix) This example formulates and solves the following simple QP model:</description>
-    </item>
-    
-    <item>
-      <title>Gurobi Basic LP/MIP Examples</title>
-      <link>/blog/orie/gurobi-examples/gurobi_examples/</link>
-      <pubDate>Sun, 05 Jan 2020 00:00:00 +0000</pubDate>
-      
-      <guid>/blog/orie/gurobi-examples/gurobi_examples/</guid>
-      <description>This post explores how to use Gurobi to solve LPs and MIPs. I have written these using Gurobi as a solver and as the mathematical formulation software. This is a reproducible example if you have R Studio just make sure you have installed the correct packages.
-library(gurobi) ## Warning: package &#39;slam&#39; was built under R version 4.1.2library(Matrix) This example formulates and solves the following simple LP model: \(max: x + 2y + 3z\)</description>
-    </item>
-    
-    <item>
-      <title>Basics of Markov Chains</title>
-      <link>/blog/orie/markov-chains/markovchains/</link>
-      <pubDate>Sat, 04 Jan 2020 00:00:00 +0000</pubDate>
-      
-      <guid>/blog/orie/markov-chains/markovchains/</guid>
-      <description>BackgroundThis post explores how to markov chains work and how to visulaize them in R. I use a R package specifically designed to visualize markov chains. I also represent these markov chains using tables. This is a reproducible example if you have R Studio just make sure you have installed the correct packages.
-library(markovchain) ## Warning: package &#39;markovchain&#39; was built under R version 4.1.2library(diagram) #Allows the use of exponential operators in matrix library(expm) ## Warning: package &#39;expm&#39; was built under R version 4.</description>
-    </item>
-    
-    <item>
-      <title>Linear Programming Examples and Applications</title>
-      <link>/blog/orie/lp-algorithms/lp_algorithms/</link>
-      <pubDate>Fri, 03 Jan 2020 00:00:00 +0000</pubDate>
-      
-      <guid>/blog/orie/lp-algorithms/lp_algorithms/</guid>
-      <description>BackgroundThis post explores how to use the fundamental algorithms to solve LPs. I have written these using Gurobi as a solver and as the mathematical formulation software. This is a reproducible example if you have R Studio just make sure you have installed the correct packages.
-library(gurobi) ## Warning: package &#39;slam&#39; was built under R version 4.1.2library(tictoc) library(Matrix) library(ggplot2) ## Warning: package &#39;ggplot2&#39; was built under R version 4.</description>
-    </item>
-    
-    <item>
-      <title>The Basics of Simulation</title>
-      <link>/blog/orie/simulation-basics/simulation_basics/</link>
-      <pubDate>Thu, 02 Jan 2020 00:00:00 +0000</pubDate>
-      
-      <guid>/blog/orie/simulation-basics/simulation_basics/</guid>
-      <description>BackgroundThis post explores some of the basic concepts of simulation. I mostly explore these concepts using basic probablity and the built in distribution functions. This is a reproducible example if you have R Studio just make sure you have installed the correct packages.
-Ideas from Probablity Coursehttps://www.probabilitycourse.com/chapter13/chapter13.php
-set.seed(123) p &amp;lt;- 0.5 n &amp;lt;- 1000 U &amp;lt;- runif(n) toss &amp;lt;- as.</description>
-    </item>
-    
-    <item>
-      <title>Statistic Basics and Linear Regression</title>
-      <link>/blog/orie/stat-basics/stat_basics/</link>
-      <pubDate>Wed, 01 Jan 2020 00:00:00 +0000</pubDate>
-      
-      <guid>/blog/orie/stat-basics/stat_basics/</guid>
-      <description>This post explores some of the basic concepts of statistics. I mostly explore these concepts using linear regression. This is a reproducible example if you have R Studio just make sure you have installed the correct packages.
-#http://r-statistics.co/Linear-Regression.html #https://www.statmethods.net/stats/regression.html #http://r-statistics.co/Statistical-Tests-in-R.html #http://www.sthda.com/english/articles/40-regression-analysis/166-predict-in-r-model-predictions-and-confidence-intervals/ #Dr. Sager Utexas datasets data &amp;lt;- read.table(&amp;#39;AustinApartmentRents1.txt&amp;#39;, header = TRUE) summary(data) ## Rent Area ## Min. : 399.0 Min. : 474 ## 1st Qu.: 470.0 1st Qu.: 666 ## Median : 535.</description>
-    </item>
-    
-    <item>
-      <title>Sim CCS City</title>
-      <link>/blog/orie/sci-res-city/sci_res_city2/</link>
-      <pubDate>Fri, 03 May 2019 00:00:00 +0000</pubDate>
-      
-      <guid>/blog/orie/sci-res-city/sci_res_city2/</guid>
-      <description>BackgroundI extended the work of (Wu and Plantinga 2003) using R and certain equation modififications to investigate how the addition of a light rail line would influence a city.
-Cities have housed most of the human race since 2004 and as a result influence most of the individual, commercial, and industrial energy and GHG patterns. However, city designs, have placed amenities in isolated suburban pockets, the abundance of roads have encouraged sprawl, and zoning laws have discouraged density.</description>
-    </item>
-    
-    <item>
-      <title>Monocentric City Modeling</title>
-      <link>/blog/orie/city-modeling/modeling_city/</link>
-      <pubDate>Sun, 03 Mar 2019 00:00:00 +0000</pubDate>
-      
-      <guid>/blog/orie/city-modeling/modeling_city/</guid>
-      <description>I extended the work of (Wu and Plantinga 2003) using R and certain equation modifications to investigate how the addition of a light rail line would influence a city.
-Cities have housed most of the human race since 2004 and as a result influence most of the individual, commercial, and industrial energy and GHG patterns. However, city designs, have placed amenities in isolated suburban pockets, the abundance of roads have encouraged sprawl, and zoning laws have discouraged density.</description>
-    </item>
-    
-    <item>
-      <title>Austin Land Use</title>
-      <link>/blog/class_projects/austin-land-use/austin-land-use/</link>
-      <pubDate>Fri, 21 Sep 2018 00:00:00 +0000</pubDate>
-      
-      <guid>/blog/class_projects/austin-land-use/austin-land-use/</guid>
-      <description>I compiled the land use of Austin by zoning and land use data. Furthermore, number of parking spaces and the square footage of those parking spaces by land use (single family homes, apartments and commercial buildings). Furthermore, I compared that square footage with the square footage actually in the buildings and the land area of the city of Austin. And then I used the building data I compiled to determine how much rooftop space Austin has and how much solar that could hold.</description>
-    </item>
-    
-  </channel>
-</rss>

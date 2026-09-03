@@ -1,61 +1,0 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?>
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
-  <channel>
-    <title>Algorithms on Erick C. Jones Jr.</title>
-    <link>/tags/algorithms/</link>
-    <description>Recent content in Algorithms on Erick C. Jones Jr.</description>
-    <generator>Hugo -- gohugo.io</generator>
-    <language>en</language>
-    <lastBuildDate>Fri, 10 Jan 2020 00:00:00 +0000</lastBuildDate><atom:link href="/tags/algorithms/index.xml" rel="self" type="application/rss+xml" />
-    <item>
-      <title>Decompositions Algorithms Broken Down and Explained</title>
-      <link>/blog/orie/decomp-algorithms/decompo_algs/</link>
-      <pubDate>Fri, 10 Jan 2020 00:00:00 +0000</pubDate>
-      
-      <guid>/blog/orie/decomp-algorithms/decompo_algs/</guid>
-      <description>This post explores how to use various decomposition techniques to solve LPs and MIPs. I have written these using Gurobi as a solver and as the mathematical formulation software. This is a reproducible example if you have R Studio just make sure you have installed the correct packages.
-library(gurobi) ## Warning: package &#39;slam&#39; was built under R version 4.1.2library(tictoc) library(Matrix) library(ggplot2) ## Warning: package &#39;ggplot2&#39; was built under R version 4.</description>
-    </item>
-    
-    <item>
-      <title>Benders Decomposition Algorithm Explained</title>
-      <link>/blog/orie/bender-decomp/benders/</link>
-      <pubDate>Thu, 09 Jan 2020 00:00:00 +0000</pubDate>
-      
-      <guid>/blog/orie/bender-decomp/benders/</guid>
-      <description>This post explores how to use Benders Decomposition to solve LPs and MIPs. I have written these using Gurobi as a solver and as the mathematical formulation software. This is a reproducible example if you have R Studio just make sure you have installed the correct packages.
-library(gurobi) ## Warning: package &#39;slam&#39; was built under R version 4.1.2library(lpSolveAPI) library(tictoc) library(Matrix) library(ggplot2) ## Warning: package &#39;ggplot2&#39; was built under R version 4.</description>
-    </item>
-    
-    <item>
-      <title>Quadratic Programming Examples and Algorithms</title>
-      <link>/blog/orie/qp-modeling/qp_algorithms/</link>
-      <pubDate>Tue, 07 Jan 2020 00:00:00 +0000</pubDate>
-      
-      <guid>/blog/orie/qp-modeling/qp_algorithms/</guid>
-      <description>BackgroundThis post explores how to solve QPs by hand and with Gurobi. I have written these using Gurobi as a solver and as the mathematical formulation software. This is a reproducible example if you have R Studio just make sure you have installed the correct packages.
-library(gurobi) ## Warning: package &#39;slam&#39; was built under R version 4.1.2library(tictoc) library(Matrix) library(ggplot2) ## Warning: package &#39;ggplot2&#39; was built under R version 4.</description>
-    </item>
-    
-    <item>
-      <title>Gurboi&#39;s R Examples 2</title>
-      <link>/blog/orie/gurobi-examples-2/gurobi_examples2/</link>
-      <pubDate>Mon, 06 Jan 2020 00:00:00 +0000</pubDate>
-      
-      <guid>/blog/orie/gurobi-examples-2/gurobi_examples2/</guid>
-      <description>This post explores how to use Gurobi to solve more advanced LPs, MIPs, and QPs. I have written these using Gurobi as a solver and as the mathematical formulation software. This is a reproducible example if you have R Studio just make sure you have installed the correct packages.
-library(gurobi) ## Warning: package &#39;slam&#39; was built under R version 4.1.2library(Matrix) This example formulates and solves the following simple QP model:</description>
-    </item>
-    
-    <item>
-      <title>Linear Programming Examples and Applications</title>
-      <link>/blog/orie/lp-algorithms/lp_algorithms/</link>
-      <pubDate>Fri, 03 Jan 2020 00:00:00 +0000</pubDate>
-      
-      <guid>/blog/orie/lp-algorithms/lp_algorithms/</guid>
-      <description>BackgroundThis post explores how to use the fundamental algorithms to solve LPs. I have written these using Gurobi as a solver and as the mathematical formulation software. This is a reproducible example if you have R Studio just make sure you have installed the correct packages.
-library(gurobi) ## Warning: package &#39;slam&#39; was built under R version 4.1.2library(tictoc) library(Matrix) library(ggplot2) ## Warning: package &#39;ggplot2&#39; was built under R version 4.</description>
-    </item>
-    
-  </channel>
-</rss>

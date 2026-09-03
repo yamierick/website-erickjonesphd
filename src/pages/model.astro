@@ -1,0 +1,352 @@
+---
+import Base from "../layouts/Base.astro";
+---
+
+<Base title="A Toy Linked Model" wide={true}>
+  <p class="subhead">Battery demand → critical mineral demand → primary mining and end-of-life recovery. Move the knobs.</p>
+
+  <p class="disclaimer">
+    <strong>This is a teaching toy, not research.</strong> It is a deterministic
+    stock-and-flow sketch with order-of-magnitude parameters, rounded hard and
+    calibrated to nothing. It is not SEAR Lab output, it does not represent any
+    real supply chain, and no number it produces should be cited. It exists to
+    make one mechanism visible — see the note at the bottom.
+  </p>
+
+  <div class="model">
+    <div class="controls">
+      <fieldset>
+        <legend>Mineral</legend>
+        <div class="seg" id="mineral">
+          <button type="button" data-v="lithium" class="on">Lithium</button>
+          <button type="button" data-v="nickel">Nickel</button>
+          <button type="button" data-v="cobalt">Cobalt</button>
+        </div>
+        <p class="hint" id="chem-hint"></p>
+      </fieldset>
+
+      <fieldset>
+        <legend>Demand</legend>
+        <label>Cell demand growth <output data-for="demandGrowth"></output>
+          <input type="range" id="demandGrowth" min="0" max="30" step="1" value="12">
+        </label>
+        <label>LFP share of chemistry <output data-for="lfpShare"></output>
+          <input type="range" id="lfpShare" min="0" max="100" step="5" value="50">
+        </label>
+      </fieldset>
+
+      <fieldset>
+        <legend>Primary supply</legend>
+        <label>Mine capacity growth <output data-for="primaryGrowth"></output>
+          <input type="range" id="primaryGrowth" min="0" max="20" step="1" value="6">
+        </label>
+      </fieldset>
+
+      <fieldset>
+        <legend>The loop back</legend>
+        <label>Collection rate <output data-for="collection"></output>
+          <input type="range" id="collection" min="0" max="100" step="5" value="70">
+        </label>
+        <label>Recovery yield <output data-for="recovery"></output>
+          <input type="range" id="recovery" min="0" max="95" step="5" value="50">
+        </label>
+        <label>Pack lifetime <output data-for="life"></output>
+          <input type="range" id="life" min="5" max="20" step="1" value="12">
+        </label>
+        <label>Second-life share <output data-for="secondLifeShare"></output>
+          <input type="range" id="secondLifeShare" min="0" max="80" step="5" value="25">
+        </label>
+      </fieldset>
+
+      <button type="button" id="reset" class="reset">Reset</button>
+    </div>
+
+    <div class="output">
+      <svg id="chart" viewBox="0 0 720 360" role="img" aria-labelledby="chart-title">
+        <title id="chart-title">Mineral demand against primary and recovered supply, by year</title>
+      </svg>
+      <div class="legend">
+        <span><i class="sw sw-primary"></i>Primary mining</span>
+        <span><i class="sw sw-recycled"></i>Recovered (end-of-life)</span>
+        <span><i class="sw sw-demand"></i>Demand</span>
+        <span><i class="sw sw-gap"></i>Unmet</span>
+      </div>
+      <dl class="readout" id="readout"></dl>
+    </div>
+  </div>
+
+  <h2>What this is showing</h2>
+  <p>
+    The recovered-supply band is the whole point. Its size in any given year is
+    set by how many packs were built ten to fifteen years earlier, multiplied by
+    how many of them are actually collected and how much metal the process
+    recovers. Those are decisions made long before the shortfall appears.
+  </p>
+  <p>
+    Try it: push demand growth up until a gap opens, then try to close it by
+    raising the recovery yield. You cannot — not quickly. The material simply is
+    not in the waste stream yet. Now lower the pack lifetime and watch the loop
+    arrive sooner but carry less. Then set LFP share to 100% and watch the
+    nickel and cobalt problems vanish while the lithium problem does not.
+  </p>
+  <p>
+    That is the argument for studying these systems <em>end to end and back</em>
+    rather than one stage at a time. A model of mining alone cannot see the
+    recovery loop; a model of recycling alone cannot see what feeds it. The
+    interesting behaviour lives in the coupling, and it is a decade-scale lag.
+  </p>
+  <p class="hint">
+    Model source: <code>src/scripts/linkedModel.js</code>. Roughly eighty lines,
+    no dependencies, all parameters at the top.
+  </p>
+</Base>
+
+<style>
+  .disclaimer {
+    border-left: 3px solid var(--accent);
+    padding: .6rem .9rem;
+    background: var(--code-bg);
+    font-size: .92rem;
+  }
+  .model { display: grid; grid-template-columns: 15rem 1fr; gap: 1.5rem; margin: 1.5rem 0; }
+  @media (max-width: 800px) { .model { grid-template-columns: 1fr; } }
+  .controls fieldset {
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    padding: .6rem .8rem .8rem;
+    margin: 0 0 .8rem;
+  }
+  .controls legend {
+    font-family: system-ui, sans-serif;
+    font-size: .78rem;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--accent);
+    padding: 0 .3rem;
+  }
+  .controls label {
+    display: block;
+    font-family: system-ui, sans-serif;
+    font-size: .82rem;
+    color: var(--muted);
+    margin-top: .5rem;
+  }
+  .controls input[type=range] { width: 100%; margin-top: .2rem; accent-color: var(--accent); }
+  .controls output { float: right; font-variant-numeric: tabular-nums; color: var(--text); }
+  .seg { display: flex; gap: .25rem; }
+  .seg button {
+    flex: 1;
+    font: inherit;
+    font-family: system-ui, sans-serif;
+    font-size: .8rem;
+    padding: .3rem .1rem;
+    background: var(--bg);
+    color: var(--muted);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  .seg button.on { background: var(--accent); border-color: var(--accent); color: var(--bg); }
+  .reset {
+    font-family: system-ui, sans-serif;
+    font-size: .8rem;
+    background: none;
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: .3rem .7rem;
+    color: var(--muted);
+    cursor: pointer;
+  }
+  .hint { font-family: system-ui, sans-serif; font-size: .78rem; color: var(--muted); margin: .5rem 0 0; }
+  #chart { width: 100%; height: auto; display: block; }
+  .legend {
+    display: flex; flex-wrap: wrap; gap: .2rem 1rem;
+    font-family: system-ui, sans-serif; font-size: .78rem; color: var(--muted);
+    margin-top: .4rem;
+  }
+  .sw { display: inline-block; width: .7rem; height: .7rem; margin-right: .3rem; vertical-align: -1px; border-radius: 2px; }
+  .sw-primary { background: var(--muted); opacity: .45; }
+  .sw-recycled { background: var(--accent); opacity: .75; }
+  .sw-demand { background: var(--text); height: .18rem; border-radius: 0; }
+  .sw-gap { background: repeating-linear-gradient(45deg, var(--muted) 0 2px, transparent 2px 4px); }
+  .readout {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+    gap: .6rem; margin: 1rem 0 0;
+    font-family: system-ui, sans-serif;
+  }
+  .readout div { border: 1px solid var(--rule); border-radius: 6px; padding: .5rem .7rem; }
+  .readout dt { font-size: .72rem; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+  .readout dd { margin: .15rem 0 0; font-size: 1.15rem; font-variant-numeric: tabular-nums; }
+</style>
+
+<script>
+  import { run, DEFAULTS, intensity } from "../scripts/linkedModel.js";
+
+  const PCT = new Set(["demandGrowth", "primaryGrowth", "lfpShare", "recovery", "collection", "secondLifeShare"]);
+  const state = {
+    mineral: "lithium",
+    demandGrowth: 12, primaryGrowth: 6, lfpShare: 50,
+    recovery: 50, collection: 70, life: 12, secondLifeShare: 25,
+  };
+  const INITIAL = { ...state };
+
+  const $ = (s) => document.querySelector(s);
+  const svg = $("#chart");
+  const NS = "http://www.w3.org/2000/svg";
+
+  function el(name, attrs, text) {
+    const n = document.createElementNS(NS, name);
+    for (const k in attrs) n.setAttribute(k, attrs[k]);
+    if (text != null) n.textContent = text;
+    return n;
+  }
+
+  function params() {
+    return {
+      demandGrowth: state.demandGrowth / 100,
+      primaryGrowth: state.primaryGrowth / 100,
+      lfpShare: state.lfpShare / 100,
+      recovery: state.recovery / 100,
+      collection: state.collection / 100,
+      secondLifeShare: state.secondLifeShare / 100,
+      life: state.life,
+    };
+  }
+
+  const fmt = (v) => (v >= 100 ? Math.round(v).toLocaleString() : v.toFixed(1));
+
+  function draw(r) {
+    while (svg.firstChild && svg.firstChild.nodeName !== "title") svg.removeChild(svg.lastChild);
+    while (svg.childNodes.length > 1) svg.removeChild(svg.lastChild);
+
+    const W = 720, H = 360, L = 56, R = 12, T = 14, B = 30;
+    const n = r.year.length;
+    const peak = Math.max(...r.demand, ...r.primary.map((p, i) => p + r.recycled[i]), 1);
+    const yMax = peak * 1.08;
+    const x = (i) => L + (i / (n - 1)) * (W - L - R);
+    const y = (v) => H - B - (v / yMax) * (H - T - B);
+
+    // gridlines
+    const steps = 5;
+    for (let s = 0; s <= steps; s++) {
+      const v = (yMax / steps) * s;
+      svg.appendChild(el("line", {
+        x1: L, x2: W - R, y1: y(v), y2: y(v),
+        stroke: "var(--rule)", "stroke-width": 1,
+      }));
+      svg.appendChild(el("text", {
+        x: L - 8, y: y(v) + 4, "text-anchor": "end",
+        "font-size": 11, fill: "var(--muted)",
+        "font-family": "system-ui, sans-serif",
+      }, Math.round(v).toLocaleString()));
+    }
+    svg.appendChild(el("text", {
+      x: L - 8, y: T + 2, "text-anchor": "end",
+      "font-size": 10, fill: "var(--muted)",
+      "font-family": "system-ui, sans-serif",
+    }, "kt/yr"));
+
+    // x labels every 5 years
+    for (let i = 0; i < n; i += 5) {
+      svg.appendChild(el("text", {
+        x: x(i), y: H - B + 16, "text-anchor": "middle",
+        "font-size": 11, fill: "var(--muted)",
+        "font-family": "system-ui, sans-serif",
+      }, r.year[i]));
+    }
+
+    const area = (lo, hi) => {
+      let d = `M ${x(0)} ${y(lo[0])}`;
+      for (let i = 1; i < n; i++) d += ` L ${x(i)} ${y(lo[i])}`;
+      for (let i = n - 1; i >= 0; i--) d += ` L ${x(i)} ${y(hi[i])}`;
+      return d + " Z";
+    };
+    const zero = r.year.map(() => 0);
+    const stacked = r.primary.map((p, i) => p + r.recycled[i]);
+
+    svg.appendChild(el("path", { d: area(zero, r.primary), fill: "var(--muted)", opacity: .45 }));
+    svg.appendChild(el("path", { d: area(r.primary, stacked), fill: "var(--accent)", opacity: .75 }));
+
+    // unmet demand hatched between supply and demand where demand is higher
+    const hasGap = r.gap.some((g) => g > 0.001);
+    if (hasGap) {
+      const top = r.demand.map((d, i) => Math.max(d, stacked[i]));
+      svg.appendChild(el("path", {
+        d: area(stacked, top), fill: "var(--muted)", opacity: .18,
+      }));
+    }
+
+    let dl = `M ${x(0)} ${y(r.demand[0])}`;
+    for (let i = 1; i < n; i++) dl += ` L ${x(i)} ${y(r.demand[i])}`;
+    svg.appendChild(el("path", {
+      d: dl, fill: "none", stroke: "var(--text)", "stroke-width": 2.2,
+    }));
+
+    svg.appendChild(el("line", {
+      x1: L, x2: W - R, y1: H - B, y2: H - B, stroke: "var(--rule)", "stroke-width": 1,
+    }));
+  }
+
+  function readout(r) {
+    const s = r.summary;
+    const items = [
+      ["Intensity", `${Math.round(s.intensity)} t/GWh`],
+      ["Recovered share", `${Math.round(s.recycledShare * 100)}%`],
+      ["Demand met (final yr)", `${Math.round(s.metDemandShare * 100)}%`],
+      ["First shortfall", s.firstShortfallYear ?? "none"],
+      ["Cumulative unmet", `${fmt(s.cumulativeGap)} kt`],
+    ];
+    const dl = $("#readout");
+    dl.innerHTML = "";
+    for (const [k, v] of items) {
+      const d = document.createElement("div");
+      const dt = document.createElement("dt"); dt.textContent = k;
+      const dd = document.createElement("dd"); dd.textContent = v;
+      d.append(dt, dd); dl.appendChild(d);
+    }
+  }
+
+  function syncLabels() {
+    document.querySelectorAll("output[data-for]").forEach((o) => {
+      const k = o.dataset.for;
+      o.textContent = PCT.has(k) ? `${state[k]}%` : `${state[k]} yr`;
+    });
+    const inten = intensity(state.mineral, state.lfpShare / 100);
+    $("#chem-hint").textContent = inten === 0
+      ? "LFP cells contain none of this metal — at 100% LFP, demand goes to zero."
+      : `At this chemistry mix: ${Math.round(inten)} t per GWh.`;
+  }
+
+  function update() {
+    const r = run(params(), state.mineral);
+    draw(r);
+    readout(r);
+    syncLabels();
+  }
+
+  document.querySelectorAll(".controls input[type=range]").forEach((inp) => {
+    inp.addEventListener("input", () => {
+      state[inp.id] = Number(inp.value);
+      update();
+    });
+  });
+
+  document.querySelectorAll("#mineral button").forEach((b) => {
+    b.addEventListener("click", () => {
+      document.querySelectorAll("#mineral button").forEach((o) => o.classList.remove("on"));
+      b.classList.add("on");
+      state.mineral = b.dataset.v;
+      update();
+    });
+  });
+
+  $("#reset").addEventListener("click", () => {
+    Object.assign(state, INITIAL);
+    document.querySelectorAll(".controls input[type=range]").forEach((i) => { i.value = state[i.id]; });
+    document.querySelectorAll("#mineral button").forEach((o) =>
+      o.classList.toggle("on", o.dataset.v === state.mineral));
+    update();
+  });
+
+  update();
+</script>

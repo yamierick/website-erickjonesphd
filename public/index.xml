@@ -1,369 +1,0 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?>
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
-  <channel>
-    <title>Erick C. Jones Jr.</title>
-    <link>/</link>
-    <description>Recent content on Erick C. Jones Jr.</description>
-    <generator>Hugo -- gohugo.io</generator>
-    <language>en</language>
-    <lastBuildDate>Sat, 01 Jun 2030 13:00:00 +0000</lastBuildDate><atom:link href="/index.xml" rel="self" type="application/rss+xml" />
-    <item>
-      <title>Example Talk</title>
-      <link>/talk/example/</link>
-      <pubDate>Sat, 01 Jun 2030 13:00:00 +0000</pubDate>
-      
-      <guid>/talk/example/</guid>
-      <description>An example talk using Academic&amp;rsquo;s Markdown slides feature.</description>
-    </item>
-    
-    <item>
-      <title>Job Opening - Communications and Digital Media Student Assistant</title>
-      <link>/blog/job-posting/communications/commjob/</link>
-      <pubDate>Fri, 21 Jan 2022 00:00:00 +0000</pubDate>
-      
-      <guid>/blog/job-posting/communications/commjob/</guid>
-      <description>Communications and Digital Media Role DescriptionSAVII labs is looking for a Communications Media Assistant to join our team! We need a talented student who can create graphics, develop technical content, and maintain the lab’s web and social media presence.
-Your workday will include creating content for presentations, our website, occasionally social media, and other tasks as assigned. This job is a great opportunity to gain hands-on experience in developing and carrying out technical communication and media strategies.</description>
-    </item>
-    
-    <item>
-      <title>Job Opening - Undergraduate Research Assistant</title>
-      <link>/blog/job-posting/research/researchjob/</link>
-      <pubDate>Fri, 21 Jan 2022 00:00:00 +0000</pubDate>
-      
-      <guid>/blog/job-posting/research/researchjob/</guid>
-      <description>Undergraduate Research Assistant Role DescriptionSAVII labs is looking for an Undergraduate Research Assistant to join our team! We need a talented and motivated student who can learn on a variety of different software platforms to assist on a few different projects.
-A workday might include gathering and analyzing data, creating an electronics diagram in LabView, developing maps in ArcGIS, or creating a 3D BIM model in Revit.</description>
-    </item>
-    
-    <item>
-      <title>EV Batteries for Resilience</title>
-      <link>/project/ev-battery-and-resilience/</link>
-      <pubDate>Mon, 10 Jan 2022 00:00:00 +0000</pubDate>
-      
-      <guid>/project/ev-battery-and-resilience/</guid>
-      <description>Investigate the secondary uses of EV batteries by recongizing EVs are giant power centers made of batteries that happen to have vehicles on top of them.</description>
-    </item>
-    
-    <item>
-      <title>Green Building Lifecycle Optimization</title>
-      <link>/project/green-building/</link>
-      <pubDate>Mon, 10 Jan 2022 00:00:00 +0000</pubDate>
-      
-      <guid>/project/green-building/</guid>
-      <description>Improve Green Building Throughout Entire Lifecycle (Design, Building, and Operations)</description>
-    </item>
-    
-    <item>
-      <title>Green Warriors Weatherization Program Improvement</title>
-      <link>/project/green-warriors/</link>
-      <pubDate>Mon, 10 Jan 2022 00:00:00 +0000</pubDate>
-      
-      <guid>/project/green-warriors/</guid>
-      <description>A program to improve the efficiency of the Weatherization Assistance Program in Dallas</description>
-    </item>
-    
-    <item>
-      <title>Heat Pump for Energy Efficiency and Climate Change Mitigation</title>
-      <link>/project/heat-pump-ee-impact/</link>
-      <pubDate>Mon, 10 Jan 2022 00:00:00 +0000</pubDate>
-      
-      <guid>/project/heat-pump-ee-impact/</guid>
-      <description>Investigate how heat pump adoption could affect energy usage and climate impacts.</description>
-    </item>
-    
-    <item>
-      <title>Demand Response, COSMOS NSF Project</title>
-      <link>/project/demand-response/</link>
-      <pubDate>Wed, 10 Nov 2021 00:00:00 +0000</pubDate>
-      
-      <guid>/project/demand-response/</guid>
-      <description>Investigate Demand Response Control Algorithms</description>
-    </item>
-    
-    <item>
-      <title>Microgrid Automation, Micro-Wind Turbines and Rooftop Solar</title>
-      <link>/project/campus-microgrid/</link>
-      <pubDate>Sun, 10 Oct 2021 00:00:00 +0000</pubDate>
-      
-      <guid>/project/campus-microgrid/</guid>
-      <description>A project to evaluate solar and wind energy production, microgrid controls, and automation</description>
-    </item>
-    
-    <item>
-      <title>Introduction to Probability and Statistics</title>
-      <link>/courses/prob_stat/</link>
-      <pubDate>Wed, 01 Sep 2021 00:00:00 +0000</pubDate>
-      
-      <guid>/courses/prob_stat/</guid>
-      <description>Description of Course Content:
-Topics in engineering that involve random processes. Applications and backgrounds for topics in reliability, inventory systems, and queuing problems, including absolute and conditional prob- abilities, discrete and continuous random variables, parameter estimation, hypothesis testing, and an introduction to linear regression. This course will also introduce basic programming skills and applications for statistical analyses using R and the tidyverse as well spreadsheet software (e.g., Excel, Google Sheets).</description>
-    </item>
-    
-    <item>
-      <title>Agriculture Solar and Desalination Stochastic Investment Optimization</title>
-      <link>/project/ag-solar-and-desalination/</link>
-      <pubDate>Mon, 17 May 2021 00:00:00 +0000</pubDate>
-      
-      <guid>/project/ag-solar-and-desalination/</guid>
-      <description>A Stochastic Optimization scheme balancing food, energy, and water.</description>
-    </item>
-    
-    <item>
-      <title>Community Solar for Low-Income Households in the Competitive Market</title>
-      <link>/project/community-solar-in-the-competitive-market/</link>
-      <pubDate>Thu, 17 Sep 2020 00:00:00 +0000</pubDate>
-      
-      <guid>/project/community-solar-in-the-competitive-market/</guid>
-      <description>Looking for ways to integrate Community Solar for Low-Income Households in the Competitive Market</description>
-    </item>
-    
-    <item>
-      <title>Co-optimization and community, Maximizing the benefits of Distributed Electricity and Water Technologies</title>
-      <link>/publication/co-optimization-and-community-maximizing-the-benefits-of-distributed-electricity-and-water-technologies/</link>
-      <pubDate>Sun, 13 Sep 2020 00:00:00 +0000</pubDate>
-      
-      <guid>/publication/co-optimization-and-community-maximizing-the-benefits-of-distributed-electricity-and-water-technologies/</guid>
-      <description>How co-optimzing distributed water and energy technologies at the community scale can bring about cost savings that wouldn&amp;rsquo;t exist without their mutual benefits.</description>
-    </item>
-    
-    <item>
-      <title>Impacting at Risk Communities using AI to optimize the COVID-19 Pandemic Therapeutics Supply Chain</title>
-      <link>/publication/impacting-at-risk-communities-using-ai-to-optimize-the-covid-19-pandemic-therapeutics-supply-chain/</link>
-      <pubDate>Mon, 07 Sep 2020 00:00:00 +0000</pubDate>
-      
-      <guid>/publication/impacting-at-risk-communities-using-ai-to-optimize-the-covid-19-pandemic-therapeutics-supply-chain/</guid>
-      <description>Creates a COVID-19 supply chain for the city of Houston</description>
-    </item>
-    
-    <item>
-      <title>Pathways for Reducing Energy Burdens in Harris County</title>
-      <link>/publication/pathways-for-reducing-energy-burdens-in-harris-county/</link>
-      <pubDate>Thu, 13 Aug 2020 00:00:00 +0000</pubDate>
-      
-      <guid>/publication/pathways-for-reducing-energy-burdens-in-harris-county/</guid>
-      <description>How energy efficiency and solar can reduce the energy burdens of low income communities.</description>
-    </item>
-    
-    <item>
-      <title>COVID-19 AI-Enabled Supply Chain Optimization</title>
-      <link>/project/covid-19-houston/</link>
-      <pubDate>Sun, 19 Jul 2020 00:00:00 +0000</pubDate>
-      
-      <guid>/project/covid-19-houston/</guid>
-      <description>This EAGER award supports fundamental research in technology-enabled supply chain design to effectively deliver therapeutics to at risk populations in an urban setting.</description>
-    </item>
-    
-    <item>
-      <title>CCS Infrastructure Planning, SimCCS Improvements and Case Study</title>
-      <link>/project/simccs/</link>
-      <pubDate>Tue, 19 May 2020 00:00:00 +0000</pubDate>
-      
-      <guid>/project/simccs/</guid>
-      <description>Worked to upgrade the SimCCS framework by adding a temporal element.</description>
-    </item>
-    
-    <item>
-      <title>Co-Optimization and Community, Community Solar and RWH</title>
-      <link>/project/community-solar-and-rwh/</link>
-      <pubDate>Sun, 17 May 2020 00:00:00 +0000</pubDate>
-      
-      <guid>/project/community-solar-and-rwh/</guid>
-      <description>An Optimization Scheme for Community Solar and RWH</description>
-    </item>
-    
-    <item>
-      <title>A Selective Laser Sintering Creation - Wind Powered Tops</title>
-      <link>/blog/class_projects/sls/slsdesign/</link>
-      <pubDate>Sat, 21 Mar 2020 00:00:00 +0000</pubDate>
-      
-      <guid>/blog/class_projects/sls/slsdesign/</guid>
-      <description>We designed a spinning top that is novel, aesthetically pleasing, durable, spins well, and whose unique fan assembly can only be made using SLS. Our design incorporates a modular top system that allows for interchangeable designs to be attached to the universal base. We designed two UT-themed attachable tops, one that is a replica of the UT model tower and the other that is a replica of the UT seal. The universal base has wind turbine blades in its center so that air can be blown through it to keep it spinning even with a large top installed.</description>
-    </item>
-    
-    <item>
-      <title>Natural Language Processing - Sentiment Analysis</title>
-      <link>/blog/class_projects/nlp/sentimentanalysis/</link>
-      <pubDate>Sat, 21 Mar 2020 00:00:00 +0000</pubDate>
-      
-      <guid>/blog/class_projects/nlp/sentimentanalysis/</guid>
-      <description>We investigated how different Natural Language Processing (NLP) techniques could be used to perform sentiment analysis on real user generated text data from the Sentiment140 dataset [1]. First we investigated an LSTM model before deciding on using the self-attention network code from [2] because of the possible speed and accuracy advantages. Our contributions included investigating how the training batch size and dropout rate affected the accuracy of the model and validating an existing model by reproducing it and using it with a different dataset.</description>
-    </item>
-    
-    <item>
-      <title>Decomposing Systems  Illustrating the Utility of Distributed Energy Resources with Decomposition Techniques</title>
-      <link>/publication/illustrating-the-utility-of-distributed-energy-resources-with-decomposition-techniques/</link>
-      <pubDate>Thu, 13 Feb 2020 00:00:00 +0000</pubDate>
-      
-      <guid>/publication/illustrating-the-utility-of-distributed-energy-resources-with-decomposition-techniques/</guid>
-      <description>How distributed energy resources affect the grid solved with decomposition techniques.</description>
-    </item>
-    
-    <item>
-      <title>Decompositions Algorithms Broken Down and Explained</title>
-      <link>/blog/orie/decomp-algorithms/decompo_algs/</link>
-      <pubDate>Fri, 10 Jan 2020 00:00:00 +0000</pubDate>
-      
-      <guid>/blog/orie/decomp-algorithms/decompo_algs/</guid>
-      <description>This post explores how to use various decomposition techniques to solve LPs and MIPs. I have written these using Gurobi as a solver and as the mathematical formulation software. This is a reproducible example if you have R Studio just make sure you have installed the correct packages.
-library(gurobi) ## Warning: package &#39;slam&#39; was built under R version 4.1.2library(tictoc) library(Matrix) library(ggplot2) ## Warning: package &#39;ggplot2&#39; was built under R version 4.</description>
-    </item>
-    
-    <item>
-      <title>Benders Decomposition Algorithm Explained</title>
-      <link>/blog/orie/bender-decomp/benders/</link>
-      <pubDate>Thu, 09 Jan 2020 00:00:00 +0000</pubDate>
-      
-      <guid>/blog/orie/bender-decomp/benders/</guid>
-      <description>This post explores how to use Benders Decomposition to solve LPs and MIPs. I have written these using Gurobi as a solver and as the mathematical formulation software. This is a reproducible example if you have R Studio just make sure you have installed the correct packages.
-library(gurobi) ## Warning: package &#39;slam&#39; was built under R version 4.1.2library(lpSolveAPI) library(tictoc) library(Matrix) library(ggplot2) ## Warning: package &#39;ggplot2&#39; was built under R version 4.</description>
-    </item>
-    
-    <item>
-      <title>Quadratic Programming Examples and Algorithms</title>
-      <link>/blog/orie/qp-modeling/qp_algorithms/</link>
-      <pubDate>Tue, 07 Jan 2020 00:00:00 +0000</pubDate>
-      
-      <guid>/blog/orie/qp-modeling/qp_algorithms/</guid>
-      <description>BackgroundThis post explores how to solve QPs by hand and with Gurobi. I have written these using Gurobi as a solver and as the mathematical formulation software. This is a reproducible example if you have R Studio just make sure you have installed the correct packages.
-library(gurobi) ## Warning: package &#39;slam&#39; was built under R version 4.1.2library(tictoc) library(Matrix) library(ggplot2) ## Warning: package &#39;ggplot2&#39; was built under R version 4.</description>
-    </item>
-    
-    <item>
-      <title>Gurboi&#39;s R Examples 2</title>
-      <link>/blog/orie/gurobi-examples-2/gurobi_examples2/</link>
-      <pubDate>Mon, 06 Jan 2020 00:00:00 +0000</pubDate>
-      
-      <guid>/blog/orie/gurobi-examples-2/gurobi_examples2/</guid>
-      <description>This post explores how to use Gurobi to solve more advanced LPs, MIPs, and QPs. I have written these using Gurobi as a solver and as the mathematical formulation software. This is a reproducible example if you have R Studio just make sure you have installed the correct packages.
-library(gurobi) ## Warning: package &#39;slam&#39; was built under R version 4.1.2library(Matrix) This example formulates and solves the following simple QP model:</description>
-    </item>
-    
-    <item>
-      <title>Gurobi Basic LP/MIP Examples</title>
-      <link>/blog/orie/gurobi-examples/gurobi_examples/</link>
-      <pubDate>Sun, 05 Jan 2020 00:00:00 +0000</pubDate>
-      
-      <guid>/blog/orie/gurobi-examples/gurobi_examples/</guid>
-      <description>This post explores how to use Gurobi to solve LPs and MIPs. I have written these using Gurobi as a solver and as the mathematical formulation software. This is a reproducible example if you have R Studio just make sure you have installed the correct packages.
-library(gurobi) ## Warning: package &#39;slam&#39; was built under R version 4.1.2library(Matrix) This example formulates and solves the following simple LP model: \(max: x + 2y + 3z\)</description>
-    </item>
-    
-    <item>
-      <title>Basics of Markov Chains</title>
-      <link>/blog/orie/markov-chains/markovchains/</link>
-      <pubDate>Sat, 04 Jan 2020 00:00:00 +0000</pubDate>
-      
-      <guid>/blog/orie/markov-chains/markovchains/</guid>
-      <description>BackgroundThis post explores how to markov chains work and how to visulaize them in R. I use a R package specifically designed to visualize markov chains. I also represent these markov chains using tables. This is a reproducible example if you have R Studio just make sure you have installed the correct packages.
-library(markovchain) ## Warning: package &#39;markovchain&#39; was built under R version 4.1.2library(diagram) #Allows the use of exponential operators in matrix library(expm) ## Warning: package &#39;expm&#39; was built under R version 4.</description>
-    </item>
-    
-    <item>
-      <title>Linear Programming Examples and Applications</title>
-      <link>/blog/orie/lp-algorithms/lp_algorithms/</link>
-      <pubDate>Fri, 03 Jan 2020 00:00:00 +0000</pubDate>
-      
-      <guid>/blog/orie/lp-algorithms/lp_algorithms/</guid>
-      <description>BackgroundThis post explores how to use the fundamental algorithms to solve LPs. I have written these using Gurobi as a solver and as the mathematical formulation software. This is a reproducible example if you have R Studio just make sure you have installed the correct packages.
-library(gurobi) ## Warning: package &#39;slam&#39; was built under R version 4.1.2library(tictoc) library(Matrix) library(ggplot2) ## Warning: package &#39;ggplot2&#39; was built under R version 4.</description>
-    </item>
-    
-    <item>
-      <title>The Basics of Simulation</title>
-      <link>/blog/orie/simulation-basics/simulation_basics/</link>
-      <pubDate>Thu, 02 Jan 2020 00:00:00 +0000</pubDate>
-      
-      <guid>/blog/orie/simulation-basics/simulation_basics/</guid>
-      <description>BackgroundThis post explores some of the basic concepts of simulation. I mostly explore these concepts using basic probablity and the built in distribution functions. This is a reproducible example if you have R Studio just make sure you have installed the correct packages.
-Ideas from Probablity Coursehttps://www.probabilitycourse.com/chapter13/chapter13.php
-set.seed(123) p &amp;lt;- 0.5 n &amp;lt;- 1000 U &amp;lt;- runif(n) toss &amp;lt;- as.</description>
-    </item>
-    
-    <item>
-      <title>Statistic Basics and Linear Regression</title>
-      <link>/blog/orie/stat-basics/stat_basics/</link>
-      <pubDate>Wed, 01 Jan 2020 00:00:00 +0000</pubDate>
-      
-      <guid>/blog/orie/stat-basics/stat_basics/</guid>
-      <description>This post explores some of the basic concepts of statistics. I mostly explore these concepts using linear regression. This is a reproducible example if you have R Studio just make sure you have installed the correct packages.
-#http://r-statistics.co/Linear-Regression.html #https://www.statmethods.net/stats/regression.html #http://r-statistics.co/Statistical-Tests-in-R.html #http://www.sthda.com/english/articles/40-regression-analysis/166-predict-in-r-model-predictions-and-confidence-intervals/ #Dr. Sager Utexas datasets data &amp;lt;- read.table(&amp;#39;AustinApartmentRents1.txt&amp;#39;, header = TRUE) summary(data) ## Rent Area ## Min. : 399.0 Min. : 474 ## 1st Qu.: 470.0 1st Qu.: 666 ## Median : 535.</description>
-    </item>
-    
-    <item>
-      <title>Contributions of shared autonomous vehicles to climate change mitigation</title>
-      <link>/publication/contributions-of-shared-autonomous-vehicles-to-climate-change-mitigation/</link>
-      <pubDate>Mon, 01 Jul 2019 00:00:00 +0000</pubDate>
-      
-      <guid>/publication/contributions-of-shared-autonomous-vehicles-to-climate-change-mitigation/</guid>
-      <description>Looks into how an autonomous shared self driving pardigm could affect climate change.</description>
-    </item>
-    
-    <item>
-      <title>Shared Autonomous Vehicles Impact on Climate Change Mitigation</title>
-      <link>/project/shared-avs-and-climate/</link>
-      <pubDate>Fri, 17 May 2019 00:00:00 +0000</pubDate>
-      
-      <guid>/project/shared-avs-and-climate/</guid>
-      <description>Optimizing Autonomous Shared Transportation and Power System for Climate</description>
-    </item>
-    
-    <item>
-      <title>Sim CCS City</title>
-      <link>/blog/orie/sci-res-city/sci_res_city2/</link>
-      <pubDate>Fri, 03 May 2019 00:00:00 +0000</pubDate>
-      
-      <guid>/blog/orie/sci-res-city/sci_res_city2/</guid>
-      <description>BackgroundI extended the work of (Wu and Plantinga 2003) using R and certain equation modififications to investigate how the addition of a light rail line would influence a city.
-Cities have housed most of the human race since 2004 and as a result influence most of the individual, commercial, and industrial energy and GHG patterns. However, city designs, have placed amenities in isolated suburban pockets, the abundance of roads have encouraged sprawl, and zoning laws have discouraged density.</description>
-    </item>
-    
-    <item>
-      <title>Monocentric City Modeling</title>
-      <link>/blog/orie/city-modeling/modeling_city/</link>
-      <pubDate>Sun, 03 Mar 2019 00:00:00 +0000</pubDate>
-      
-      <guid>/blog/orie/city-modeling/modeling_city/</guid>
-      <description>I extended the work of (Wu and Plantinga 2003) using R and certain equation modifications to investigate how the addition of a light rail line would influence a city.
-Cities have housed most of the human race since 2004 and as a result influence most of the individual, commercial, and industrial energy and GHG patterns. However, city designs, have placed amenities in isolated suburban pockets, the abundance of roads have encouraged sprawl, and zoning laws have discouraged density.</description>
-    </item>
-    
-    <item>
-      <title>Slides</title>
-      <link>/slides/example/</link>
-      <pubDate>Tue, 05 Feb 2019 00:00:00 +0000</pubDate>
-      
-      <guid>/slides/example/</guid>
-      <description>An introduction to using Academic&amp;rsquo;s Slides feature.</description>
-    </item>
-    
-    <item>
-      <title>Austin Land Use</title>
-      <link>/blog/class_projects/austin-land-use/austin-land-use/</link>
-      <pubDate>Fri, 21 Sep 2018 00:00:00 +0000</pubDate>
-      
-      <guid>/blog/class_projects/austin-land-use/austin-land-use/</guid>
-      <description>I compiled the land use of Austin by zoning and land use data. Furthermore, number of parking spaces and the square footage of those parking spaces by land use (single family homes, apartments and commercial buildings). Furthermore, I compared that square footage with the square footage actually in the buildings and the land area of the city of Austin. And then I used the building data I compiled to determine how much rooftop space Austin has and how much solar that could hold.</description>
-    </item>
-    
-    <item>
-      <title>Science in Residence and Planet Texas</title>
-      <link>/project/ptscires/</link>
-      <pubDate>Thu, 19 Jul 2018 00:00:00 +0000</pubDate>
-      
-      <guid>/project/ptscires/</guid>
-      <description>A program to introduce K-12 to the joys of science</description>
-    </item>
-    
-    <item>
-      <title></title>
-      <link>/about/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>/about/</guid>
-      <description>My BackgroundI am an assistant professor in the Department of Industrial, Manufacturing, and Systems Engineering at the University of Texas at Arlington who develops multi-systems optimization models to analyze how energy systems, water resources, supply chains, urban space, and transportation networks operate in concert to influence economic and environmental well-being.
-I spent several years working in the design, manufacturing, oil and gas, and HVAC industries. During this time, he traveled around the world and witnessed how basic infrastructure like electricity, HVAC systems, clean water, internet, and banking where lacking and dramatically affected quality of life for the majority of the world&amp;rsquo;s population.</description>
-    </item>
-    
-  </channel>
-</rss>

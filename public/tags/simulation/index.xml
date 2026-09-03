@@ -1,42 +1,0 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?>
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
-  <channel>
-    <title>Simulation on Erick C. Jones Jr.</title>
-    <link>/tags/simulation/</link>
-    <description>Recent content in Simulation on Erick C. Jones Jr.</description>
-    <generator>Hugo -- gohugo.io</generator>
-    <language>en</language>
-    <lastBuildDate>Thu, 02 Jan 2020 00:00:00 +0000</lastBuildDate><atom:link href="/tags/simulation/index.xml" rel="self" type="application/rss+xml" />
-    <item>
-      <title>The Basics of Simulation</title>
-      <link>/blog/orie/simulation-basics/simulation_basics/</link>
-      <pubDate>Thu, 02 Jan 2020 00:00:00 +0000</pubDate>
-      
-      <guid>/blog/orie/simulation-basics/simulation_basics/</guid>
-      <description>BackgroundThis post explores some of the basic concepts of simulation. I mostly explore these concepts using basic probablity and the built in distribution functions. This is a reproducible example if you have R Studio just make sure you have installed the correct packages.
-Ideas from Probablity Coursehttps://www.probabilitycourse.com/chapter13/chapter13.php
-set.seed(123) p &amp;lt;- 0.5 n &amp;lt;- 1000 U &amp;lt;- runif(n) toss &amp;lt;- as.</description>
-    </item>
-    
-    <item>
-      <title>Sim CCS City</title>
-      <link>/blog/orie/sci-res-city/sci_res_city2/</link>
-      <pubDate>Fri, 03 May 2019 00:00:00 +0000</pubDate>
-      
-      <guid>/blog/orie/sci-res-city/sci_res_city2/</guid>
-      <description>BackgroundI extended the work of (Wu and Plantinga 2003) using R and certain equation modififications to investigate how the addition of a light rail line would influence a city.
-Cities have housed most of the human race since 2004 and as a result influence most of the individual, commercial, and industrial energy and GHG patterns. However, city designs, have placed amenities in isolated suburban pockets, the abundance of roads have encouraged sprawl, and zoning laws have discouraged density.</description>
-    </item>
-    
-    <item>
-      <title>Monocentric City Modeling</title>
-      <link>/blog/orie/city-modeling/modeling_city/</link>
-      <pubDate>Sun, 03 Mar 2019 00:00:00 +0000</pubDate>
-      
-      <guid>/blog/orie/city-modeling/modeling_city/</guid>
-      <description>I extended the work of (Wu and Plantinga 2003) using R and certain equation modifications to investigate how the addition of a light rail line would influence a city.
-Cities have housed most of the human race since 2004 and as a result influence most of the individual, commercial, and industrial energy and GHG patterns. However, city designs, have placed amenities in isolated suburban pockets, the abundance of roads have encouraged sprawl, and zoning laws have discouraged density.</description>
-    </item>
-    
-  </channel>
-</rss>

@@ -1,0 +1,87 @@
+---
+// Port of the Hugo theme's baseof.html. Markup and class names are kept
+// identical so public/css/main.css applies unchanged, and so the 14
+// pass-through R-Markdown pages in public/resources/ (which were rendered by
+// Hugo against this same stylesheet) stay visually consistent with the site.
+// Markdown pages pass their front matter under `frontmatter`; .astro pages pass
+// props directly. Accept both so one layout serves the whole site.
+const fm = Astro.props.frontmatter ?? {};
+const title = Astro.props.title ?? fm.title;
+const description =
+  Astro.props.description ??
+  fm.description ??
+  "Assistant Professor, Industrial, Manufacturing, and Systems Engineering, UT Arlington. Building the future of energy and critical mineral systems — end to end and back.";
+const wide = Astro.props.wide ?? fm.wide ?? false;
+// The Hugo home template printed a hero above the content; ordinary pages
+// printed an <h1> of the title inside an <article>.
+const isHome = Astro.props.home ?? fm.home ?? false;
+const portrait = Astro.props.portrait ?? fm.portrait ?? null;
+const portraitAlt = Astro.props.portraitAlt ?? fm.portraitAlt ?? "";
+const tagline = "Building the Future of Energy and Critical Mineral Systems — End to End and Back";
+const subhead = "Physical, digital, and institutional — the three layers of the infrastructure of the future.";
+
+const siteTitle = "Erick C. Jones Jr., Ph.D.";
+const nav = [
+  { name: "About", url: "/about/" },
+  { name: "Research", url: "/research/" },
+  { name: "Labs", url: "/labs/" },
+  { name: "Publications", url: "/publications/" },
+  { name: "Teaching", url: "/teaching/" },
+  { name: "Resources", url: "/resources/" },
+  { name: "Model", url: "/model/" },
+  { name: "Beyond", url: "/beyond/" },
+];
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{title ? `${title} · ${siteTitle}` : siteTitle}</title>
+<meta name="description" content={description}>
+{/* Tab icon only — a flat "EJ" monogram on the site's green. The header bar
+    stays as the name in text; the favicon is never shown in the page itself. */}
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" href="/img/favicon-32.png" sizes="32x32">
+<link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
+<link rel="stylesheet" href="/css/main.css">
+{wide && <style is:global>{`main { max-width: 62rem; }`}</style>}
+</head>
+<body>
+<header class="site-header">
+  <a class="site-title" href="/">Erick C. Jones Jr.</a>
+  <nav>
+    {nav.map((n) => <a href={n.url}>{n.name}</a>)}
+  </nav>
+</header>
+<main>
+  {isHome ? (
+    <>
+      <section class={portrait ? "hero hero-portrait" : "hero"}>
+        {portrait && <img class="portrait" src={portrait} alt={portraitAlt} width="140" height="140">}
+        <div>
+          <h1>{tagline}</h1>
+          <p class="subhead">{subhead}</p>
+        </div>
+      </section>
+      <slot />
+    </>
+  ) : (
+    <article>
+      {title && <h1>{title}</h1>}
+      <slot />
+    </article>
+  )}
+</main>
+<footer class="site-footer">
+  <p>
+    <a href="mailto:erick.jones@uta.edu">erick.jones@uta.edu</a> ·
+    <a href="https://scholar.google.com/citations?hl=en&user=03RL76wAAAAJ">Google Scholar</a> ·
+    <a href="https://www.linkedin.com/in/erickjones2/">LinkedIn</a> ·
+    <a href="https://github.com/yamierick">GitHub</a>
+  </p>
+  <p class="constellation">Professional site · <a href="https://engineerliving.com">Engineer Living (ideas &amp; writing)</a> · <em>The Friction Deficit</em> (fiction, coming soon)</p>
+</footer>
+</body>
+</html>
