@@ -1,0 +1,70 @@
+---
+/**
+ * The cascade with no site around it, for embedding in an iframe elsewhere
+ * (searlab.uta.edu, which is managed WordPress and cannot host the script
+ * itself). Deployed once here; the host page points at it.
+ *
+ *   <iframe src="https://www.erickjonesphd.com/embed/materials/"
+ *           title="What a grid is made of" width="100%" height="900"
+ *           style="border:0" loading="lazy"></iframe>
+ *
+ * The component posts its height to the parent, so a host that wants to size
+ * the frame to the content can listen for it:
+ *
+ *   window.addEventListener("message", (e) => {
+ *     if (e.data?.type === "cascade-height") frame.height = e.data.height;
+ *   });
+ */
+import MaterialCascade from "../../components/MaterialCascade.astro";
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>What a Grid Is Made Of</title>
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="/css/main.css">
+</head>
+<body class="embed">
+  <p class="disclaimer">
+    <strong>A teaching toy, not research.</strong> Fixed coefficients, nothing
+    optimized, about a third of the numbers order-of-magnitude estimates. It
+    exists to show two multipliers — capacity factor at the top of the chain,
+    ore grade at the bottom. Nothing here should be cited.
+  </p>
+
+  <MaterialCascade />
+
+  <p class="credit">
+    <a href="https://www.erickjonesphd.com/materials/" target="_blank" rel="noopener">
+      Full version, with the explanation and the sources →
+    </a>
+  </p>
+</body>
+</html>
+
+<style is:global>
+  /* No site chrome: the host page supplies its own. Keep the type and colour
+     tokens from main.css so the widget still looks like it belongs to us. */
+  body.embed {
+    margin: 0;
+    padding: 1rem;
+    max-width: 62rem;
+    background: var(--bg);
+    color: var(--text);
+  }
+  body.embed .disclaimer {
+    border-left: 3px solid var(--accent);
+    padding: .5rem .8rem;
+    background: var(--code-bg);
+    font-size: .86rem;
+    margin: 0 0 .5rem;
+  }
+  body.embed .credit {
+    font-family: system-ui, sans-serif;
+    font-size: .82rem;
+    margin: 1rem 0 0;
+  }
+</style>

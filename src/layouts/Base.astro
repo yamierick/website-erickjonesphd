@@ -46,7 +46,25 @@ const nav = [
 <link rel="icon" type="image/png" href="/img/favicon-32.png" sizes="32x32">
 <link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
 <link rel="stylesheet" href="/css/main.css">
-{wide && <style is:global>{`main { max-width: 62rem; }`}</style>}
+{/* A style tag is raw text in Astro -- expressions inside it are NOT
+    evaluated -- so the interpolated form of this rule emitted its own source
+    code as invalid CSS, and `wide` silently did nothing on every page that
+    asked for it. Static rule, class on the element, no interpolation to get
+    wrong. */}
+<style is:global>
+  /* `wide` widens the COLUMN, not the prose. Running body text to 62rem is
+     hard to read, and the pages that ask for wide only want it for a chart or
+     a diagram -- so the text blocks stay at the reading measure and anything
+     else is free to use the full width. */
+  main.wide { max-width: 62rem; }
+  main.wide > article > p,
+  main.wide > article > h1,
+  main.wide > article > h2,
+  main.wide > article > h3,
+  main.wide > article > ul,
+  main.wide > article > ol,
+  main.wide > article > blockquote { max-width: var(--max); }
+</style>
 </head>
 <body>
 <header class="site-header">
@@ -55,7 +73,7 @@ const nav = [
     {nav.map((n) => <a href={n.url}>{n.name}</a>)}
   </nav>
 </header>
-<main>
+<main class={wide ? "wide" : undefined}>
   {isHome ? (
     <>
       <section class={portrait ? "hero hero-portrait" : "hero"}>

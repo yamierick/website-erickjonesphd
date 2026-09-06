@@ -1,0 +1,579 @@
+---
+/**
+ * The interactive cascade: controls, flow diagram, readout.
+ *
+ * Kept as a component rather than a page because it is rendered twice — once
+ * inside the site at /materials/, and once bare at /embed/materials/ for the
+ * lab site to put in an iframe. Two copies of four hundred lines would drift.
+ */
+---
+
+<div class="cascade">
+  <div class="controls">
+    <fieldset>
+      <legend>Scenario</legend>
+      <div class="scen" id="scen">
+        <button type="button" data-v="gas" >Gas-heavy</button>
+        <button type="button" data-v="balanced" class="on">Balanced</button>
+        <button type="button" data-v="solar">Solar + storage</button>
+        <button type="button" data-v="wind">Wind-heavy</button>
+      </div>
+      <p class="hint" id="scen-hint"></p>
+    </fieldset>
+
+    <fieldset>
+      <legend>Demand</legend>
+      <label>Load growth <output data-for="demandGrowth"></output>
+        <input type="range" id="demandGrowth" min="0" max="40" step="1" value="20">
+      </label>
+    </fieldset>
+
+    <fieldset>
+      <legend>Mix in ten years</legend>
+      <label>Gas share <output data-for="gasShare"></output>
+        <input type="range" id="gasShare" min="0" max="90" step="5" value="30">
+      </label>
+      <p class="hint" id="mix-hint"></p>
+    </fieldset>
+
+    <fieldset>
+      <legend>Storage</legend>
+      <label>Built per GW of wind + solar <output data-for="storageHours"></output>
+        <input type="range" id="storageHours" min="0" max="8" step="1" value="3">
+      </label>
+      <label>LFP share of cells <output data-for="lfpShare"></output>
+        <input type="range" id="lfpShare" min="0" max="100" step="5" value="60">
+      </label>
+    </fieldset>
+
+    <fieldset>
+      <legend>Period</legend>
+      <div class="seg" id="period">
+        <button type="button" data-v="0">Today</button>
+        <button type="button" data-v="1">+5 yr</button>
+        <button type="button" data-v="2" class="on">+10 yr</button>
+      </div>
+      <p class="hint" id="period-hint"></p>
+    </fieldset>
+
+    <button type="button" id="reset" class="reset">Reset</button>
+  </div>
+
+  <div class="output">
+    <svg id="flow" viewBox="0 0 760 440" role="img" aria-labelledby="flow-title flow-desc">
+      <title id="flow-title">Material flow from generation built to ore moved</title>
+      <desc id="flow-desc">
+        Four columns — capacity built, component, material and ore — with bands
+        between them whose width is the tonnage flowing. Bands are coloured by
+        material so one metal can be followed across the whole diagram.
+      </desc>
+    </svg>
+    <div class="legend" id="legend"></div>
+    <dl class="readout" id="readout"></dl>
+  </div>
+</div>
+
+<style>
+  .cascade {
+    display: grid;
+    grid-template-columns: 15rem 1fr;
+    gap: 1.5rem;
+    margin: 1.5rem 0;
+
+    --m-copper: #b0642f;
+    --m-aluminum: #5f7d8c;
+    --m-steel: #565f6b;
+    --m-lithium: #0d6b4f;
+    --m-nickel: #7d4fa0;
+  }
+  @media (prefers-color-scheme: dark) {
+    .cascade {
+      --m-copper: #d18a52;
+      --m-aluminum: #8fabb9;
+      --m-steel: #8a929c;
+      --m-lithium: #5fc9a4;
+      --m-nickel: #b98ed6;
+    }
+  }
+  @media (max-width: 820px) { .cascade { grid-template-columns: 1fr; } }
+
+  .controls fieldset {
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    padding: .6rem .8rem .8rem;
+    margin: 0 0 .8rem;
+  }
+  .controls legend {
+    font-family: system-ui, sans-serif;
+    font-size: .78rem;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--accent);
+    padding: 0 .3rem;
+  }
+  .controls label {
+    display: block;
+    font-family: system-ui, sans-serif;
+    font-size: .82rem;
+    color: var(--muted);
+    margin-top: .5rem;
+  }
+  .controls input[type=range] { width: 100%; margin-top: .2rem; accent-color: var(--accent); }
+  .controls output { float: right; font-variant-numeric: tabular-nums; color: var(--text); }
+
+  .seg, .scen { display: flex; gap: .25rem; }
+  .scen { flex-wrap: wrap; }
+  .scen button { flex: 1 1 45%; }
+  .seg button, .scen button {
+    font: inherit;
+    font-family: system-ui, sans-serif;
+    font-size: .78rem;
+    padding: .3rem .2rem;
+    background: var(--bg);
+    color: var(--muted);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  .seg button.on, .scen button.on { background: var(--accent); border-color: var(--accent); color: var(--bg); }
+  .reset {
+    font-family: system-ui, sans-serif;
+    font-size: .8rem;
+    background: none;
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: .3rem .7rem;
+    color: var(--muted);
+    cursor: pointer;
+  }
+  .hint { font-family: system-ui, sans-serif; font-size: .76rem; color: var(--muted); margin: .5rem 0 0; }
+
+  #flow { width: 100%; height: auto; display: block; }
+</style>
+
+<style is:global>
+  /* These rules target elements the script creates at runtime. Astro scopes
+     component styles with a data attribute that only markup gets, so a
+     scoped rule silently never matches a JS-built node -- which is how the
+     readout boxes, the legend swatches and every diagram transition came
+     out unstyled. Global, but held under .cascade so nothing escapes. */
+  .cascade #flow .ribbon { transition: d .45s ease, opacity .45s ease; }
+  .cascade #flow .node { transition: y .45s ease, height .45s ease; }
+  .cascade #flow .nlabel { transition: transform .45s ease, opacity .45s ease; }
+  @media (prefers-reduced-motion: reduce) {
+    .cascade #flow .ribbon, .cascade #flow .node, .cascade #flow .nlabel { transition: none; }
+  }
+
+  .cascade .legend {
+    display: flex; flex-wrap: wrap; gap: .2rem 1rem;
+    font-family: system-ui, sans-serif; font-size: .78rem; color: var(--muted);
+    margin-top: .5rem;
+  }
+  .cascade .legend .sw { display: inline-block; width: .7rem; height: .7rem; margin-right: .3rem; vertical-align: -1px; border-radius: 2px; }
+  .cascade .legend .scale-note { flex-basis: 100%; font-size: .74rem; opacity: .85; }
+
+  .cascade .readout {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+    gap: .6rem; margin: 1rem 0 0;
+    font-family: system-ui, sans-serif;
+  }
+  .cascade .readout div { border: 1px solid var(--rule); border-radius: 6px; padding: .5rem .7rem; }
+  .cascade .readout div.wide { grid-column: 1 / -1; border-color: var(--accent); }
+  .cascade .readout dt { font-size: .72rem; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+  .cascade .readout dd { margin: .15rem 0 0; font-size: 1.15rem; font-variant-numeric: tabular-nums; }
+  .cascade .readout dd small { font-size: .8rem; color: var(--muted); font-variant-numeric: normal; }
+</style>
+
+<script>
+  import { run, DEFAULTS, MIX_TODAY } from "../scripts/materialModel.js";
+  import { COMPONENTS, MATERIALS, ORES, LABELS, ORE, CAPACITY_FACTOR } from "../scripts/materialData.js";
+
+  const NS = "http://www.w3.org/2000/svg";
+  const svg = document.getElementById("flow");
+  const $ = (s) => document.querySelector(s);
+
+  // --- geometry -----------------------------------------------------------
+  const W = 760, H = 440, TOP = 56, BOT = 402, NODE_W = 12, GAP_MIN = 7;
+  const BAND = BOT - TOP;
+  const COLS = [
+    { key: "tech", x: 36, nodes: ["gas", "solar", "wind", "battery", "grid"], title: "Built" },
+    { key: "component", x: 246, nodes: COMPONENTS, title: "Component" },
+    { key: "material", x: 456, nodes: MATERIALS, title: "Material" },
+    { key: "ore", x: 650, nodes: ORES, title: "Ore moved" },
+  ];
+  const LAYERS = [
+    { edge: "tech-component", from: 0, to: 1 },
+    { edge: "component-material", from: 1, to: 2 },
+    { edge: "material-ore", from: 2, to: 3 },
+  ];
+  const colorOf = (m) => `var(--m-${m})`;
+  const nameOf = (k) => LABELS[k] ?? (k.charAt(0).toUpperCase() + k.slice(1));
+
+  function el(name, attrs, text) {
+    const n = document.createElementNS(NS, name);
+    for (const k in attrs) n.setAttribute(k, attrs[k]);
+    if (text != null) n.textContent = text;
+    return n;
+  }
+
+  // Reused elements, keyed, so the browser can transition between states
+  // instead of the diagram flickering out and back on every slider move.
+  const keep = { ribbon: new Map(), node: new Map(), label: new Map() };
+  let chrome = null;
+
+  const fmtT = (t) =>
+    t >= 1e9 ? `${(t / 1e9).toFixed(2)} Gt`
+    : t >= 1e6 ? `${(t / 1e6).toFixed(1)} Mt`
+    : t >= 1e3 ? `${Math.round(t / 1e3).toLocaleString()} kt`
+    : `${Math.round(t).toLocaleString()} t`;
+  const pct = (v) => `${Math.round(v * 100)}%`;
+
+  // --- state --------------------------------------------------------------
+  const SCENARIOS = {
+    gas: { label: "Gas-heavy", gasShare: 70, swRatio: 0.5, storageHours: 1, lfpShare: 60, demandGrowth: 20,
+      hint: "The fleet we know how to build. Least metal, and still the most copper-intensive rock per tonne of metal." },
+    balanced: { label: "Balanced", gasShare: 30, swRatio: 0.5, storageHours: 3, lfpShare: 60, demandGrowth: 20,
+      hint: "Gas roughly halves, wind and solar split the rest evenly." },
+    solar: { label: "Solar + storage", gasShare: 15, swRatio: 0.7, storageHours: 6, lfpShare: 80, demandGrowth: 25,
+      hint: "The lowest capacity factor in the set, so the most nameplate per terawatt-hour — and storage on top of it." },
+    wind: { label: "Wind-heavy", gasShare: 15, swRatio: 0.25, storageHours: 3, lfpShare: 60, demandGrowth: 20,
+      hint: "The most metal of any scenario here, and not the most rock. Wind is steel, and steel ore is rich." },
+  };
+  const state = { scenario: "balanced", period: 2, ...SCENARIOS.balanced };
+  delete state.label; delete state.hint;
+
+  function params() {
+    const gas = state.gasShare / 100;
+    const rest = 1 - gas;
+    return {
+      demandGrowth: state.demandGrowth / 1000,
+      storageHours: state.storageHours,
+      lfpShare: state.lfpShare / 100,
+      mixTarget: { gas, solar: rest * state.swRatio, wind: rest * (1 - state.swRatio) },
+    };
+  }
+
+  // --- layout -------------------------------------------------------------
+  /**
+   * Node totals per column, read off the edges so a node's height and the bands
+   * touching it cannot disagree.
+   *
+   * Each column is measured on exactly ONE side. The middle two could be
+   * measured on either — conservation makes inflow and outflow equal — but
+   * adding both counts every tonne twice, and for the material column it adds
+   * tonnes of metal to tonnes of ore, which is not even a quantity.
+   */
+  const SIDE = [
+    { layer: "tech-component", end: "from" },
+    { layer: "tech-component", end: "to" },
+    { layer: "component-material", end: "to" },
+    { layer: "material-ore", end: "to" },
+  ];
+
+  function totalsFor(period) {
+    const t = COLS.map((c) => Object.fromEntries(c.nodes.map((n) => [n, 0])));
+    for (const [i, { layer, end }] of SIDE.entries()) {
+      for (const e of period.edges) {
+        if (e.layer !== layer) continue;
+        const node = e[end];
+        if (node in t[i]) t[i][node] += e.value;
+      }
+    }
+    return t;
+  }
+
+  function place(nodes, totals, scale) {
+    const total = nodes.reduce((s, n) => s + totals[n], 0);
+    const drawn = total * scale;
+    const gap = nodes.length > 1 ? (BAND - drawn) / (nodes.length - 1) : 0;
+    let y = TOP;
+    const pos = {};
+    for (const n of nodes) {
+      const h = totals[n] * scale;
+      pos[n] = { y0: y, y1: y + h, h };
+      y += h + gap;
+    }
+    return pos;
+  }
+
+  /**
+   * Columns 1–3 share one scale — conservation makes their totals identical,
+   * so a band that looks the same width is the same tonnage. The ore column
+   * cannot: it is roughly twenty times the tonnage and would run off the page.
+   * It gets its own scale, and the header prints both totals so the break is
+   * stated rather than hidden.
+   */
+  function layout(period) {
+    const totals = totalsFor(period);
+    const metal = Object.values(totals[2]).reduce((s, v) => s + v, 0);
+    const rock = Object.values(totals[3]).reduce((s, v) => s + v, 0);
+    const maxGaps = Math.max(...COLS.slice(0, 3).map((c) => c.nodes.length - 1));
+    const sMetal = metal > 0 ? (BAND - maxGaps * GAP_MIN) / metal : 0;
+    const sOre = rock > 0 ? (BAND - (COLS[3].nodes.length - 1) * GAP_MIN) / rock : 0;
+    return {
+      totals, metal, rock,
+      scales: [sMetal, sMetal, sMetal, sOre],
+      pos: COLS.map((c, i) => place(c.nodes, totals[i], i === 3 ? sOre : sMetal)),
+    };
+  }
+
+  /**
+   * Stack the bands leaving each source and arriving at each target. Both ends
+   * are ordered by the node they connect to, which is what keeps the ribbons
+   * from braiding: outgoing sorted by where they land, incoming by where they
+   * came from, material as the tiebreak so a metal keeps its lane.
+   */
+  function ribbonGeometry(period, L) {
+    const out = [];
+    for (const [li, { edge, from, to }] of LAYERS.entries()) {
+      const src = COLS[from], dst = COLS[to];
+      const scale = L.scales[to];
+      const edges = period.edges.filter((e) => e.layer === edge && e.value > 0);
+      const oi = (n) => src.nodes.indexOf(n), ii = (n) => dst.nodes.indexOf(n);
+      const mi = (m) => MATERIALS.indexOf(m);
+
+      const offOut = {}, offIn = {};
+      const bySrc = [...edges].sort((a, b) =>
+        oi(a.from) - oi(b.from) || ii(a.to) - ii(b.to) || mi(a.material) - mi(b.material));
+      const byDst = [...edges].sort((a, b) =>
+        ii(a.to) - ii(b.to) || oi(a.from) - oi(b.from) || mi(a.material) - mi(b.material));
+
+      // The source side of layer 3 is drawn at the material scale but the
+      // target side at the ore scale, so each end is offset in its own units.
+      const srcScale = L.scales[from];
+      const startAt = {}, endAt = {};
+      for (const e of bySrc) {
+        const k = e.from;
+        offOut[k] = offOut[k] ?? 0;
+        startAt[`${e.from}|${e.to}|${e.material}`] = offOut[k];
+        offOut[k] += (li === 2 ? e.value / ORE[e.to].tPerT : e.value) * srcScale;
+      }
+      for (const e of byDst) {
+        const k = e.to;
+        offIn[k] = offIn[k] ?? 0;
+        endAt[`${e.from}|${e.to}|${e.material}`] = offIn[k];
+        offIn[k] += e.value * scale;
+      }
+
+      for (const e of edges) {
+        const k = `${e.from}|${e.to}|${e.material}`;
+        const sp = L.pos[from][e.from], dp = L.pos[to][e.to];
+        if (!sp || !dp) continue;
+        const hs = (li === 2 ? e.value / ORE[e.to].tPerT : e.value) * srcScale;
+        const hd = e.value * scale;
+        out.push({
+          key: `${edge}|${k}`,
+          material: e.material,
+          value: e.value,
+          x1: src.x + NODE_W, x2: dst.x,
+          y1a: sp.y0 + startAt[k], y1b: sp.y0 + startAt[k] + hs,
+          y2a: dp.y0 + endAt[k], y2b: dp.y0 + endAt[k] + hd,
+        });
+      }
+    }
+    return out;
+  }
+
+  const pathFor = (r) => {
+    const xm = (r.x1 + r.x2) / 2;
+    return `M ${r.x1} ${r.y1a} C ${xm} ${r.y1a}, ${xm} ${r.y2a}, ${r.x2} ${r.y2a}`
+         + ` L ${r.x2} ${r.y2b} C ${xm} ${r.y2b}, ${xm} ${r.y1b}, ${r.x1} ${r.y1b} Z`;
+  };
+
+  // --- draw ---------------------------------------------------------------
+  function draw(period, L) {
+    if (!chrome) {
+      chrome = { headers: [], ribbons: el("g"), nodes: el("g"), labels: el("g") };
+      svg.append(chrome.ribbons, chrome.nodes, chrome.labels);
+      for (const c of COLS) {
+        const t = el("text", {
+          x: c.x, y: 26, "font-size": 11, fill: "var(--muted)",
+          "font-family": "system-ui, sans-serif", "letter-spacing": ".06em",
+        }, c.title.toUpperCase());
+        const s = el("text", {
+          x: c.x, y: 41, "font-size": 11, fill: "var(--text)",
+          "font-family": "system-ui, sans-serif", "font-variant-numeric": "tabular-nums",
+        });
+        svg.append(t, s);
+        chrome.headers.push(s);
+      }
+    }
+    chrome.headers[0].textContent = "";
+    chrome.headers[1].textContent = "";
+    chrome.headers[2].textContent = fmtT(L.metal);
+    chrome.headers[3].textContent = fmtT(L.rock);
+
+    // ribbons
+    const seen = new Set();
+    for (const r of ribbonGeometry(period, L)) {
+      seen.add(r.key);
+      let p = keep.ribbon.get(r.key);
+      if (!p) {
+        p = el("path", { class: "ribbon", fill: colorOf(r.material), "fill-opacity": .42, d: pathFor(r) });
+        p.append(el("title", {}, ""));
+        chrome.ribbons.appendChild(p);
+        keep.ribbon.set(r.key, p);
+      }
+      p.setAttribute("d", pathFor(r));
+      p.setAttribute("fill", colorOf(r.material));
+      p.style.opacity = "1";
+      const [, from, to] = r.key.split("|");
+      p.firstChild.textContent = `${nameOf(from)} → ${nameOf(to)}: ${fmtT(r.value)} of ${r.material}`;
+    }
+    for (const [k, p] of keep.ribbon) if (!seen.has(k)) p.style.opacity = "0";
+
+    // nodes and labels
+    for (const [ci, c] of COLS.entries()) {
+      for (const n of c.nodes) {
+        const pos = L.pos[ci][n];
+        const nk = `${ci}|${n}`;
+        let rect = keep.node.get(nk);
+        if (!rect) {
+          rect = el("rect", { class: "node", x: c.x, width: NODE_W, rx: 2, fill: "var(--text)", "fill-opacity": .5 });
+          chrome.nodes.appendChild(rect);
+          keep.node.set(nk, rect);
+        }
+        rect.setAttribute("y", pos.y0);
+        rect.setAttribute("height", Math.max(0, pos.h));
+        if (ci === 2 || ci === 3) rect.setAttribute("fill", colorOf(ci === 2 ? n : ORE[n].material));
+
+        let lab = keep.label.get(nk);
+        if (!lab) {
+          lab = el("text", {
+            class: "nlabel", x: 0, y: 0, "font-size": 11.5,
+            fill: "var(--text)", stroke: "var(--bg)", "stroke-width": 3.5,
+            "paint-order": "stroke", "font-family": "system-ui, sans-serif",
+          });
+          chrome.labels.appendChild(lab);
+          keep.label.set(nk, lab);
+        }
+        lab.textContent = nameOf(n);
+        lab.setAttribute("transform", `translate(${c.x + NODE_W + 6}, ${(pos.y0 + pos.y1) / 2 + 4})`);
+        lab.style.opacity = pos.h > 1.2 ? "1" : "0.28";
+      }
+    }
+  }
+
+  // --- legend and readout -------------------------------------------------
+  function legend(L) {
+    const box = document.getElementById("legend");
+    box.innerHTML = "";
+    for (const m of MATERIALS) {
+      const s = document.createElement("span");
+      s.innerHTML = `<i class="sw" style="background:${colorOf(m)}"></i>${nameOf(m)}`;
+      box.appendChild(s);
+    }
+    const note = document.createElement("span");
+    note.className = "scale-note";
+    const ratio = L.metal > 0 ? L.rock / L.metal : 0;
+    note.textContent =
+      `Band width is tonnage, on one scale for the first three columns. The ore column is `
+      + `${ratio.toFixed(0)}× the tonnage of the metal column and is drawn to the same height `
+      + `so it fits — compare within a column, not across that last gap.`;
+    box.appendChild(note);
+  }
+
+  function readout(r, period) {
+    const s = r.summary;
+    const items = [
+      ["Serving", `${Math.round(period.demandTWh).toLocaleString()} <small>TWh/yr</small>`],
+      ["Capacity standing", `${Math.round(Object.values(period.capacityGW).reduce((a, b) => a + b, 0)).toLocaleString()} <small>GW</small>`],
+      ["Metal, this period", fmtT(period.totalMetal)],
+      ["Rock moved", fmtT(period.totalOre)],
+      ["Lithium", fmtT(period.byMaterial.lithium)],
+    ];
+    const dl = document.getElementById("readout");
+    dl.innerHTML = "";
+
+    const head = document.createElement("div");
+    head.className = "wide";
+    head.innerHTML =
+      `<dt>Copper, across the whole build ahead</dt>`
+      + `<dd>${pct(s.copperShareOfMetal)} of the metal, ${pct(s.copperShareOfRock)} of the rock `
+      + `<small>— steel dominates the tonnage; copper dominates the mining</small></dd>`;
+    dl.appendChild(head);
+
+    for (const [k, v] of items) {
+      const d = document.createElement("div");
+      d.innerHTML = `<dt>${k}</dt><dd>${v}</dd>`;
+      dl.appendChild(d);
+    }
+  }
+
+  // --- wiring -------------------------------------------------------------
+  function syncLabels() {
+    const o = (id, text) => { const e = document.querySelector(`output[data-for=${id}]`); if (e) e.textContent = text; };
+    o("demandGrowth", `${(state.demandGrowth / 10).toFixed(1)}%/yr`);
+    o("gasShare", `${state.gasShare}%`);
+    o("storageHours", state.storageHours === 0 ? "none" : `${state.storageHours} GWh/GW`);
+    o("lfpShare", `${state.lfpShare}%`);
+
+    const p = params().mixTarget;
+    $("#mix-hint").textContent =
+      `Gas ${pct(p.gas)} · solar ${pct(p.solar)} · wind ${pct(p.wind)}. `
+      + `Capacity factors ${pct(CAPACITY_FACTOR.gas.value)} / ${pct(CAPACITY_FACTOR.solar.value)} / `
+      + `${pct(CAPACITY_FACTOR.wind.value)} — that spread is the first multiplier.`;
+
+    const s = SCENARIOS[state.scenario];
+    $("#scen-hint").textContent = s ? s.hint : "Custom mix — the scenario buttons will set it back.";
+    $("#period-hint").textContent = state.period === 0
+      ? "The fleet already standing, priced as if it were built now. A reference point, not a purchase."
+      : "Materials for what gets built in this period — the increase in capacity, not the capacity itself.";
+  }
+
+  function update() {
+    const r = run(params());
+    const period = r.periods[state.period];
+    const L = layout(period);
+    draw(period, L);
+    legend(L);
+    readout(r, period);
+    syncLabels();
+  }
+
+  function applyScenario(key) {
+    Object.assign(state, SCENARIOS[key], { scenario: key });
+    delete state.label; delete state.hint;
+    for (const id of ["demandGrowth", "gasShare", "storageHours", "lfpShare"]) {
+      const inp = document.getElementById(id);
+      if (inp) inp.value = state[id];
+    }
+    document.querySelectorAll("#scen button").forEach((b) => b.classList.toggle("on", b.dataset.v === key));
+    update();
+  }
+
+  document.querySelectorAll(".controls input[type=range]").forEach((inp) => {
+    inp.addEventListener("input", () => {
+      state[inp.id] = Number(inp.value);
+      state.scenario = null;
+      document.querySelectorAll("#scen button").forEach((b) => b.classList.remove("on"));
+      update();
+    });
+  });
+
+  document.querySelectorAll("#scen button").forEach((b) =>
+    b.addEventListener("click", () => applyScenario(b.dataset.v)));
+
+  document.querySelectorAll("#period button").forEach((b) =>
+    b.addEventListener("click", () => {
+      document.querySelectorAll("#period button").forEach((o) => o.classList.remove("on"));
+      b.classList.add("on");
+      state.period = Number(b.dataset.v);
+      update();
+    }));
+
+  $("#reset").addEventListener("click", () => {
+    state.period = 2;
+    document.querySelectorAll("#period button").forEach((o) => o.classList.toggle("on", o.dataset.v === "2"));
+    applyScenario("balanced");
+  });
+
+  update();
+
+  // Let a host page size the iframe to the content instead of guessing.
+  const post = () => parent.postMessage({ type: "cascade-height", height: document.body.scrollHeight }, "*");
+  if (window.parent !== window) {
+    post();
+    new ResizeObserver(post).observe(document.body);
+  }
+</script>

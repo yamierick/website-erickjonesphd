@@ -1,0 +1,94 @@
+---
+import Base from "../layouts/Base.astro";
+import MaterialCascade from "../components/MaterialCascade.astro";
+---
+
+<Base title="What a Grid Is Made Of" wide={true}>
+  <p class="subhead">Energy demand → the generation that meets it → components → metal → rock. Pick a scenario.</p>
+
+  <p class="disclaimer">
+    <strong>This is a teaching toy, not research.</strong> It runs in one
+    direction with fixed coefficients and nothing in it is optimized: you hand
+    it a generation mix and it tells you what that mix is made of. There is no
+    cost, no siting, no lead time, no substitution and no recycling. Roughly a
+    third of the coefficients are order-of-magnitude estimates rather than
+    published figures, and each one says which it is. No number here should be
+    cited.
+  </p>
+
+  <MaterialCascade />
+
+  <h2>What this is showing</h2>
+  <p>
+    There are two multipliers in this chain and they sit at opposite ends of
+    it. Neither is an addition, which is why both are easy to miss.
+  </p>
+  <p>
+    <strong>Capacity factor, at the top.</strong> Demand is energy, but metal is
+    bought per unit of capacity. Solar runs about a quarter of the hours in a
+    year and a gas plant better than half, so the same terawatt-hour asks for
+    more than twice the nameplate from one as from the other — before a single
+    kilogram of anything has been counted. Move the gas share and watch the
+    capacity number move faster than the demand number does.
+  </p>
+  <p>
+    <strong>Ore grade, at the bottom.</strong> Copper ore runs near half a
+    percent, so a tonne of copper is a couple of hundred tonnes of rock. Iron
+    ore runs above fifty percent, so a tonne of steel is under two. The last
+    gap in the diagram is where a modest difference in metal becomes an
+    enormous difference in mining.
+  </p>
+  <p>
+    Between them they produce the one result on this page worth remembering,
+    and it holds in every scenario here: <strong>copper is a few percent of the
+    metal and the large majority of the rock.</strong> Steel dominates the
+    tonnage — a wind tower is a very heavy object — while copper, which nobody
+    weighs, dominates the mining. Those are two true sentences about the same
+    build, and a model that stops at the metal column only tells you the first
+    one.
+  </p>
+  <p>
+    Try it: start on <em>Wind-heavy</em> and note the metal. Switch to
+    <em>Solar + storage</em>. The metal falls and the rock goes up, because
+    wind's mass is steel and steel ore is rich. Then take gas to ninety percent
+    and watch the copper refuse to leave — the grid connection is charged on
+    every megawatt regardless of what built it, so there is no mix that routes
+    around it. Finally set LFP to zero and watch a nickel band appear out of the
+    storage column that was not there a moment ago.
+  </p>
+
+  <h2>What it leaves out</h2>
+  <p>
+    Everything that makes the real problem hard. There is no recycling here, no
+    substitution when a metal gets expensive, no lead time between deciding to
+    open a mine and the metal arriving twelve years later, and no cost at all —
+    the mix is given rather than chosen. The companion toy on
+    <a href="/model/">the linked model page</a> covers one of those omissions,
+    the decade-scale lag on end-of-life recovery, and ignores everything this
+    one shows.
+  </p>
+  <p>
+    Putting them together — a mix that is chosen rather than given, under
+    capacity limits, lead times and recovery — is the actual research, and it
+    does not fit on a web page. That work lives in
+    <a href="/labs/">the lab</a> and in <a href="/publications/">the papers</a>.
+  </p>
+  <p class="hint">
+    Coefficients: <code>src/scripts/materialData.js</code>, one table, every
+    entry labelled with its source. Model:
+    <code>src/scripts/materialModel.js</code>, about two hundred lines and no
+    dependencies. Capacity factors from EIA fleet averages, mineral intensities
+    from the IEA's 2021 critical minerals annex, grades from USGS; bulk steel,
+    aluminum and the grid allowance are engineering estimates made for this page.
+  </p>
+</Base>
+
+<style>
+  .disclaimer {
+    border-left: 3px solid var(--accent);
+    padding: .6rem .9rem;
+    background: var(--code-bg);
+    font-size: .92rem;
+  }
+  .hint { font-family: system-ui, sans-serif; font-size: .82rem; color: var(--muted); }
+</style>
