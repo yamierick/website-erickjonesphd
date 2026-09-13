@@ -47,8 +47,19 @@ body {
   color: var(--text);
   margin-right: auto;
 }
+/* The nav is a flex item, so min-width:auto stopped it shrinking below its
+   content and it ran off the right edge on a phone — 541px of links in a 335px
+   box, with Resources and Beyond simply unreachable. Making it a wrapping flex
+   container is the fix; inline wrapping could never have worked because the
+   links are rendered with no whitespace between them, so the line had no break
+   opportunity at all. Spacing moves from margin to gap for the same reason. */
+.site-header nav {
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: .15rem .8rem;
+}
 .site-header nav a {
-  margin-left: .8rem;
   text-decoration: none;
   color: var(--muted);
   font-size: .95rem;
