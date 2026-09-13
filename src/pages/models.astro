@@ -44,6 +44,17 @@ const artRecovery = `
   <line x1="12" y1="74" x2="228" y2="74" stroke="var(--rule)" stroke-width="1"/>
 </svg>`;
 
+// Stages laid end to end against a target that sits before the last one ends:
+// the decision date is already behind the dashed line.
+const artLead = `
+<svg viewBox="0 0 240 86" class="thumb" aria-hidden="true" focusable="false">
+  <rect x="14" y="16" width="86" height="14" rx="3" fill="var(--accent)" fill-opacity=".35"/>
+  <rect x="14" y="36" width="132" height="14" rx="3" fill="var(--accent)" fill-opacity=".55"/>
+  <rect x="14" y="56" width="188" height="14" rx="3" fill="var(--accent)" fill-opacity=".8"/>
+  <line x1="150" y1="8" x2="150" y2="78" stroke="var(--text)" stroke-width="2" stroke-dasharray="4 3"/>
+  <rect x="14" y="8" width="136" height="70" fill="var(--muted)" fill-opacity=".22"/>
+</svg>`;
+
 const models = [
   {
     title: "What a Grid Is Made Of",
@@ -71,6 +82,19 @@ const models = [
       "A deterministic stock-and-flow sketch. Push demand growth until a shortfall opens, then "
       + "try to close it by raising the recovery yield — the material simply is not in the waste "
       + "stream yet.",
+  },
+  {
+    title: "Too Late to Decide",
+    url: "/lead-time/",
+    art: artLead,
+    line: "A mine takes about sixteen years. Work backwards from the year you want metal.",
+    thesis:
+      "For any target inside the next decade and a half, the decision is already behind us. A 2030 "
+      + "target needed work under way in 2014; a 2035 target needed 2019. The date does not move "
+      + "because the target is important.",
+    detail:
+      "Drag the target year toward the present and watch the required schedule slide back past "
+      + "today. The shaded region is the part that has already gone.",
   },
 ];
 ---

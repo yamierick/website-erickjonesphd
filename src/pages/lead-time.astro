@@ -1,0 +1,84 @@
+---
+import Base from "../layouts/Base.astro";
+import LeadTime from "../components/LeadTime.astro";
+---
+
+<Base title="Too Late to Decide" wide={true} og="lead-time">
+  <p class="subhead">A mine takes about sixteen years. Pick a year you want metal, and see when the decision had to be made.</p>
+
+  <p class="disclaimer">
+    <strong>This is a teaching toy, not research.</strong> It is arithmetic on
+    calendar years — lay the stages of a mine end to end, put the last one's
+    finish on your target, read off when the first had to start. There is no
+    uncertainty, no chance of failure, no financing market, and no option to buy
+    speed. The total is a published average; the split between stages is an
+    apportionment made for this page, and each figure says which it is. No
+    number here should be cited.
+  </p>
+
+  <LeadTime />
+
+  <h2>What this is showing</h2>
+  <p>
+    The lead time on new primary supply is long enough that it crosses from a
+    planning problem into a historical one. S&amp;P Global put the average at
+    <strong>15.7 years</strong> from discovery to production for mines that
+    opened in the 2010s, and the IEA uses a comparable figure. Sixteen years is
+    not a delay you manage. It is longer than most policy horizons, longer than
+    most political terms, and longer than the interval between a target being
+    announced and the year it falls due.
+  </p>
+  <p>
+    Which produces the result worth sitting with: <strong>for any target inside
+    the next decade and a half, the decision is already behind us.</strong> A
+    2030 target needed work under way in 2014. A 2035 target needed 2019. Not
+    "needs urgent action" — needed it, years ago, and the date does not move
+    because the target is important.
+  </p>
+  <p>
+    Try it: drag the target year down toward the present and watch the required
+    schedule slide backwards past the dashed line marking today. The shaded
+    region is the part of the schedule that has already gone. Then push
+    <em>Permitting</em> to its upper end — the single widest stage, and where
+    most of the difference between two otherwise identical projects lives — and
+    watch how much further back the start date goes.
+  </p>
+  <p>
+    None of which says the targets are wrong. It says that anything they need
+    inside that window has to come from somewhere other than a new mine:
+    <a href="/recovery-loop/">recovery from what is already built</a>,
+    expansion of mines that already exist, substitution toward materials that
+    are easier to get — or less demand. Those are the only doors left, and
+    <a href="/materials/">how much is needed in the first place</a> depends
+    heavily on which technologies get built.
+  </p>
+
+  <h2>What it leaves out</h2>
+  <p>
+    Almost everything that makes a mine hard. Projects fail, and most
+    discoveries never become mines at all — the sixteen-year average is drawn
+    from the ones that made it, which flatters it badly. There is no price
+    signal here, and price is what actually starts and stops these projects. No
+    community consent, no water, no tailings, no ore body that turns out worse
+    than the drill core promised. Expansions of existing mines are faster than
+    greenfield and are not modelled. Nor is the possibility that permitting
+    reform genuinely shortens the middle of this chain.
+  </p>
+  <p class="hint">
+    Stage durations: <code>src/scripts/leadTimeData.js</code>, each labelled
+    with its source. Model: <code>src/scripts/leadTimeModel.js</code>, about a
+    hundred lines of calendar arithmetic and no dependencies. The total comes
+    from S&amp;P Global Market Intelligence; the stage split is an
+    order-of-magnitude apportionment made for this page that sums to it.
+  </p>
+</Base>
+
+<style>
+  .disclaimer {
+    border-left: 3px solid var(--accent);
+    padding: .6rem .9rem;
+    background: var(--code-bg);
+    font-size: .92rem;
+  }
+  .hint { font-family: system-ui, sans-serif; font-size: .82rem; color: var(--muted); }
+</style>

@@ -1,0 +1,434 @@
+---
+/**
+ * Two timelines and the gap between them.
+ *
+ * The upper one runs backwards from the year you want metal: the schedule that
+ * would have had to be followed. The lower one runs forwards from today: the
+ * schedule still available. When the upper one starts in the past — which it
+ * does for every target inside the next decade and a half — the shaded region
+ * is the part of it that has already gone, and no decision taken now recovers
+ * it.
+ *
+ * Stages use one hue at increasing intensity rather than five separate colours,
+ * because they are a sequence rather than categories: the progression is the
+ * meaning, and it needs no new palette to carry.
+ */
+---
+
+<div class="lead">
+  <div class="controls">
+    <fieldset>
+      <legend>Target</legend>
+      <label>First metal by <output data-for="targetYear"></output>
+        <input type="range" id="targetYear" min="2028" max="2060" step="1" value="2035">
+      </label>
+      <p class="hint" id="verdict"></p>
+    </fieldset>
+
+    <fieldset>
+      <legend>How long each stage takes</legend>
+      <div id="stage-controls"></div>
+    </fieldset>
+
+    <div class="actions">
+      <button type="button" id="lt-reset" class="reset">Reset</button>
+      <button type="button" id="lt-share" class="reset">Copy link</button>
+    </div>
+  </div>
+
+  <div class="output">
+    <svg id="timeline" viewBox="0 0 760 196" role="img" aria-labelledby="lt-title lt-desc">
+      <title id="lt-title">The schedule a target requires, against the schedule still available</title>
+      <desc id="lt-desc"></desc>
+    </svg>
+    <figcaption id="lt-cap"></figcaption>
+
+    <dl class="readout" id="lt-readout"></dl>
+
+    <details class="numbers" id="lt-numbers">
+      <summary>Show the numbers</summary>
+      <div id="lt-tables"></div>
+    </details>
+  </div>
+</div>
+
+<style>
+  .lead { display: grid; grid-template-columns: 15rem 1fr; gap: 1.5rem; margin: 1.5rem 0; }
+  @media (max-width: 820px) { .lead { grid-template-columns: 1fr; } }
+
+  .controls fieldset {
+    border: 1px solid var(--rule); border-radius: 6px;
+    padding: .6rem .8rem .8rem; margin: 0 0 .8rem;
+  }
+  .controls legend {
+    font-family: system-ui, sans-serif; font-size: .78rem; text-transform: uppercase;
+    letter-spacing: .06em; color: var(--accent); padding: 0 .3rem;
+  }
+  .controls label {
+    display: block; font-family: system-ui, sans-serif; font-size: .82rem;
+    color: var(--muted); margin-top: .5rem;
+  }
+  .controls input[type=range] { width: 100%; margin-top: .2rem; accent-color: var(--accent); }
+  .controls output { float: right; font-variant-numeric: tabular-nums; color: var(--text); }
+  .actions { display: flex; gap: .4rem; }
+  .reset {
+    font-family: system-ui, sans-serif; font-size: .8rem; background: none;
+    border: 1px solid var(--rule); border-radius: 4px; padding: .3rem .7rem;
+    color: var(--muted); cursor: pointer;
+  }
+  .hint { font-family: system-ui, sans-serif; font-size: .76rem; color: var(--muted); margin: .6rem 0 0; }
+
+  #timeline { width: 100%; height: auto; display: block; }
+  .lead figcaption {
+    font-family: system-ui, sans-serif; font-size: .78rem; color: var(--muted); margin-top: .3rem;
+  }
+  .numbers { margin-top: 1rem; }
+  .numbers summary {
+    font-family: system-ui, sans-serif; font-size: .82rem; color: var(--accent);
+    cursor: pointer; padding: .3rem 0;
+  }
+
+  /* Below this the timeline's type lands too small to read, and the table says
+     the same thing in words. */
+  @media (max-width: 600px) {
+    #timeline { display: none; }
+    .numbers summary { display: none; }
+  }
+</style>
+
+<style is:global>
+  /* Built by the script, so scoped selectors would never match these. */
+  .lead .readout {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+    gap: .6rem; margin: 1rem 0 0; font-family: system-ui, sans-serif;
+  }
+  .lead .readout div { border: 1px solid var(--rule); border-radius: 6px; padding: .5rem .7rem; }
+  .lead .readout div.wide { grid-column: 1 / -1; border-color: var(--accent); }
+  .lead .readout div.late { border-color: #b23a2e; }
+  .lead .readout dt {
+    font-size: .72rem; text-transform: uppercase; letter-spacing: .05em; color: var(--muted);
+  }
+  .lead .readout dd { margin: .15rem 0 0; font-size: 1.15rem; font-variant-numeric: tabular-nums; }
+  .lead .readout dd small { font-size: .8rem; color: var(--muted); font-variant-numeric: normal; }
+
+  .lead .stage-row { margin-top: .55rem; }
+  .lead .stage-row label { margin-top: 0; }
+  .lead .stage-note {
+    font-family: system-ui, sans-serif; font-size: .72rem; color: var(--muted);
+    margin: .15rem 0 0; opacity: .85;
+  }
+
+  .lead .numbers .tw { overflow-x: auto; }
+  .lead .numbers table {
+    width: 100%; min-width: 26rem; border-collapse: collapse; margin: .6rem 0 1rem;
+    font-family: system-ui, sans-serif; font-size: .82rem; font-variant-numeric: tabular-nums;
+  }
+  .lead .numbers caption {
+    text-align: left; font-size: .76rem; text-transform: uppercase; letter-spacing: .05em;
+    color: var(--accent); padding-bottom: .3rem;
+  }
+  .lead .numbers th, .lead .numbers td {
+    border-bottom: 1px solid var(--rule); padding: .3rem .5rem; text-align: right;
+  }
+  .lead .numbers th:first-child, .lead .numbers td:first-child { text-align: left; }
+  .lead .numbers thead th { color: var(--muted); font-weight: normal; font-size: .74rem; }
+  .lead .numbers tfoot td { font-weight: bold; border-bottom: none; }
+  .lead .numbers .note {
+    font-family: system-ui, sans-serif; font-size: .78rem; color: var(--muted); margin: 0 0 1rem;
+  }
+</style>
+
+<script>
+  import { run, DEFAULTS, totalYears, currentYear } from "../scripts/leadTimeModel.js";
+  import { STAGES, PUBLISHED_TOTAL } from "../scripts/leadTimeData.js";
+
+  const NS = "http://www.w3.org/2000/svg";
+  const svg = document.getElementById("timeline");
+  const $ = (s) => document.querySelector(s);
+  const el = (n, a, t) => {
+    const e = document.createElementNS(NS, n);
+    for (const k in a) e.setAttribute(k, a[k]);
+    if (t != null) e.textContent = t;
+    return e;
+  };
+
+  const TODAY = currentYear();
+  const state = { targetYear: DEFAULTS.targetYear, durations: { ...DEFAULTS.durations } };
+  const BASE = { targetYear: DEFAULTS.targetYear, durations: { ...DEFAULTS.durations } };
+
+  // --- stage sliders, built from the data so the two cannot disagree --------
+  const holder = document.getElementById("stage-controls");
+  for (const s of STAGES) {
+    const row = document.createElement("div");
+    row.className = "stage-row";
+    row.innerHTML =
+      `<label>${s.label} <output data-for="${s.key}"></output>`
+      + `<input type="range" id="${s.key}" min="${s.min}" max="${s.max}" step="1" value="${s.years}"></label>`
+      + `<p class="stage-note">${s.note}</p>`;
+    holder.appendChild(row);
+  }
+
+  // --- geometry ------------------------------------------------------------
+  const X0 = 132, X1 = 742, ROW_H = 26;
+  const Y_REQ = 44, Y_NOW = 110;
+  const SHADE = ["0.30", "0.42", "0.55", "0.68", "0.85"];
+
+  let chrome = null;
+
+  function draw(r) {
+    const lo = Math.min(r.requiredStart, r.today) - 1;
+    const hi = Math.max(r.earliestDelivery, r.targetYear) + 1;
+    const sx = (y) => X0 + ((y - lo) / (hi - lo)) * (X1 - X0);
+
+    if (!chrome) {
+      chrome = { bars: el("g"), over: el("g"), text: el("g"), keyed: new Map() };
+      svg.append(chrome.bars, chrome.over, chrome.text);
+      for (const [t, y] of [["To deliver by target", Y_REQ + 17], ["If you start today", Y_NOW + 17]]) {
+        chrome.text.appendChild(el("text", {
+          x: X0 - 10, y, "text-anchor": "end", "font-size": 11,
+          fill: "var(--muted)", "font-family": "system-ui, sans-serif",
+        }, t));
+      }
+      chrome.past = el("rect", { y: Y_REQ - 8, height: ROW_H + 16, fill: "var(--muted)", "fill-opacity": .3 });
+      chrome.pastLabel = el("text", {
+        "font-size": 10.5, fill: "var(--text)", "text-anchor": "middle",
+        "font-family": "system-ui, sans-serif", stroke: "var(--bg)",
+        "stroke-width": 3, "paint-order": "stroke",
+      });
+      chrome.todayLine = el("line", {
+        y1: Y_REQ - 14, y2: Y_NOW + ROW_H + 10, stroke: "var(--text)",
+        "stroke-width": 1.5, "stroke-dasharray": "4 3",
+      });
+      chrome.todayLabel = el("text", {
+        "font-size": 10.5, fill: "var(--text)", "text-anchor": "middle",
+        "font-family": "system-ui, sans-serif",
+      });
+      chrome.targetLine = el("line", {
+        y1: Y_REQ - 14, y2: Y_NOW + ROW_H + 10, stroke: "var(--accent)", "stroke-width": 2,
+      });
+      chrome.targetLabel = el("text", {
+        "font-size": 10.5, fill: "var(--accent)", "text-anchor": "middle",
+        "font-family": "system-ui, sans-serif",
+      });
+      // Sits on top of the last bar once delivery runs past the target, so it
+      // needs the same background halo the other overlaid labels use.
+      chrome.deliverLabel = el("text", {
+        "font-size": 10.5, fill: "var(--text)", "text-anchor": "start",
+        "font-family": "system-ui, sans-serif", "font-variant-numeric": "tabular-nums",
+        stroke: "var(--bg)", "stroke-width": 3, "paint-order": "stroke",
+      });
+      chrome.over.append(chrome.past, chrome.todayLine, chrome.targetLine);
+      chrome.text.append(chrome.pastLabel, chrome.todayLabel, chrome.targetLabel, chrome.deliverLabel);
+    }
+
+    const rows = [["req", r.required, Y_REQ], ["now", r.earliest, Y_NOW]];
+    const seen = new Set();
+    for (const [which, stages, y] of rows) {
+      stages.forEach((s, i) => {
+        const key = `${which}|${s.key}`;
+        seen.add(key);
+        let g = chrome.keyed.get(key);
+        if (!g) {
+          g = {
+            rect: el("rect", { y, height: ROW_H, rx: 2, fill: "var(--accent)", "fill-opacity": SHADE[i] }),
+            lab: el("text", {
+              "font-size": 10, "text-anchor": "middle", fill: "var(--bg)",
+              "font-family": "system-ui, sans-serif", "font-weight": "600",
+            }),
+          };
+          chrome.bars.appendChild(g.rect);
+          chrome.text.appendChild(g.lab);
+          chrome.keyed.set(key, g);
+        }
+        const x = sx(s.start), w = Math.max(0, sx(s.end) - sx(s.start));
+        g.rect.setAttribute("x", x);
+        g.rect.setAttribute("width", w);
+        g.lab.textContent = w > 44 ? `${s.years}y` : "";
+        g.lab.setAttribute("x", x + w / 2);
+        g.lab.setAttribute("y", y + 17);
+      });
+    }
+    for (const [k, g] of chrome.keyed) {
+      const vis = seen.has(k) ? "1" : "0";
+      g.rect.style.opacity = vis; g.lab.style.opacity = vis;
+    }
+
+    // The part of the required schedule that is already behind us.
+    const pastW = Math.max(0, sx(r.today) - sx(r.requiredStart));
+    chrome.past.setAttribute("x", sx(r.requiredStart));
+    chrome.past.setAttribute("width", pastW);
+    chrome.past.style.opacity = pastW > 1 ? "1" : "0";
+    chrome.pastLabel.textContent = pastW > 120 ? `${r.yearsLate} years already gone` : "";
+    chrome.pastLabel.setAttribute("x", sx(r.requiredStart) + pastW / 2);
+    chrome.pastLabel.setAttribute("y", Y_REQ - 14);
+
+    for (const [line, label, year, text] of [
+      [chrome.todayLine, chrome.todayLabel, r.today, String(r.today)],
+      [chrome.targetLine, chrome.targetLabel, r.targetYear, `target ${r.targetYear}`],
+    ]) {
+      line.setAttribute("x1", sx(year));
+      line.setAttribute("x2", sx(year));
+      label.textContent = text;
+      label.setAttribute("x", sx(year));
+      label.setAttribute("y", Y_NOW + ROW_H + 24);
+    }
+
+    chrome.deliverLabel.textContent = `first metal ${r.earliestDelivery}`;
+    chrome.deliverLabel.setAttribute("x", Math.min(sx(r.earliestDelivery) + 8, X1 - 118));
+    chrome.deliverLabel.setAttribute("y", Y_NOW + 17);
+  }
+
+  function readout(r) {
+    const dl = document.getElementById("lt-readout");
+    dl.innerHTML = "";
+    const head = document.createElement("div");
+    head.className = r.reachable ? "wide" : "wide late";
+    head.innerHTML = r.reachable
+      ? `<dt>Verdict</dt><dd>Still reachable — work would have to start in ${r.requiredStart} `
+        + `<small>(${r.requiredStart - r.today} years from now)</small></dd>`
+      : `<dt>Verdict</dt><dd>Out of reach for a new mine — the start date was ${r.requiredStart}, `
+        + `${r.yearsLate} years ago <small>— earliest new primary supply is ${r.earliestDelivery}</small></dd>`;
+    dl.appendChild(head);
+
+    for (const [k, v] of [
+      ["Total lead time", `${r.total} <small>years</small>`],
+      ["Had to start", String(r.requiredStart)],
+      ["Start today, metal by", String(r.earliestDelivery)],
+      [r.reachable ? "Slack" : "Missed by", `${Math.abs(r.missedBy)} <small>years</small>`],
+    ]) {
+      const d = document.createElement("div");
+      d.innerHTML = `<dt>${k}</dt><dd>${v}</dd>`;
+      dl.appendChild(d);
+    }
+  }
+
+  function tables(r) {
+    const rows = r.required.map((s, i) => `<tr>
+      <td>${s.label}</td><td>${s.years}</td>
+      <td>${s.start} – ${s.end}</td>
+      <td>${r.earliest[i].start} – ${r.earliest[i].end}</td></tr>`).join("");
+    document.getElementById("lt-tables").innerHTML = `
+      <p class="note">Two schedules for the same ${r.total}-year sequence: the one a
+        ${r.targetYear} target requires, and the one available starting today.
+        ${r.reachable
+          ? `The required start is ${r.requiredStart}, still ahead.`
+          : `The required start was ${r.requiredStart}, ${r.yearsLate} years ago.`}</p>
+      <div class="tw"><table>
+        <caption>Stage by stage</caption>
+        <thead><tr><th>Stage</th><th>Years</th><th>To hit ${r.targetYear}</th><th>Starting today</th></tr></thead>
+        <tbody>${rows}</tbody>
+        <tfoot><tr><td>Total</td><td>${r.total}</td>
+          <td>${r.requiredStart} – ${r.targetYear}</td>
+          <td>${r.today} – ${r.earliestDelivery}</td></tr></tfoot>
+      </table></div>`;
+  }
+
+  function describe(r) {
+    document.getElementById("lt-desc").textContent =
+      `Two horizontal timelines of the same ${r.total}-year sequence. The upper one is the `
+      + `schedule a ${r.targetYear} target requires, running from ${r.requiredStart} to `
+      + `${r.targetYear}. ${r.reachable
+        ? `It starts ${r.requiredStart - r.today} years from now, so the target is still reachable.`
+        : `It starts ${r.yearsLate} years before today, and that portion is shaded as already gone.`} `
+      + `The lower one runs forward from ${r.today} and delivers first metal in ${r.earliestDelivery}.`;
+
+    document.getElementById("lt-cap").textContent = r.reachable
+      ? `A mine takes about ${r.total} years. To have metal by ${r.targetYear}, work would need to `
+        + `start in ${r.requiredStart} — ${r.requiredStart - r.today} years from now. Still possible, `
+        + `and only just: the window closes in ${r.requiredStart - r.today} years.`
+      : `A mine takes about ${r.total} years. To have metal by ${r.targetYear}, work had to start in `
+        + `${r.requiredStart} — ${r.yearsLate} years ago. Nothing decided today changes that date. `
+        + `Starting now, the earliest new primary supply is ${r.earliestDelivery}, missing the target by `
+        + `${r.missedBy} years; anything sooner has to come from mines that already exist, from `
+        + `recycling, from substitution, or from less demand.`;
+  }
+
+  // --- shareable state -----------------------------------------------------
+  let shareTimer = null;
+  function writeShare() {
+    clearTimeout(shareTimer);
+    shareTimer = setTimeout(() => {
+      const q = new URLSearchParams();
+      if (state.targetYear !== BASE.targetYear) q.set("y", String(state.targetYear));
+      for (const s of STAGES) {
+        if (state.durations[s.key] !== BASE.durations[s.key]) q.set(s.key, String(state.durations[s.key]));
+      }
+      const qs = q.toString();
+      history.replaceState(null, "", qs ? `${location.pathname}?${qs}` : location.pathname);
+    }, 150);
+  }
+
+  function readShare() {
+    const q = new URLSearchParams(location.search);
+    const clamp = (id, v) => {
+      const inp = document.getElementById(id);
+      return inp ? Math.min(Number(inp.max), Math.max(Number(inp.min), v)) : v;
+    };
+    let any = false;
+    if (q.has("y")) {
+      const v = Number(q.get("y"));
+      if (Number.isFinite(v)) { state.targetYear = clamp("targetYear", Math.round(v)); any = true; }
+    }
+    for (const s of STAGES) {
+      if (!q.has(s.key)) continue;
+      const v = Number(q.get(s.key));
+      if (Number.isFinite(v)) { state.durations[s.key] = clamp(s.key, Math.round(v)); any = true; }
+    }
+    if (any) syncControls();
+    return any;
+  }
+
+  function syncControls() {
+    document.getElementById("targetYear").value = state.targetYear;
+    for (const s of STAGES) document.getElementById(s.key).value = state.durations[s.key];
+  }
+
+  // --- wiring --------------------------------------------------------------
+  function update() {
+    const r = run({ targetYear: state.targetYear, durations: state.durations, today: TODAY });
+    draw(r);
+    readout(r);
+    tables(r);
+    describe(r);
+
+    $('output[data-for="targetYear"]').textContent = String(state.targetYear);
+    for (const s of STAGES) {
+      $(`output[data-for="${s.key}"]`).textContent = `${state.durations[s.key]} yr`;
+    }
+    document.getElementById("verdict").textContent = r.reachable
+      ? `Reachable. The decision window closes in ${r.requiredStart - r.today} years.`
+      : `Already too late for a new mine by ${r.yearsLate} years.`;
+    writeShare();
+  }
+
+  document.getElementById("targetYear").addEventListener("input", (e) => {
+    state.targetYear = Number(e.target.value);
+    update();
+  });
+  for (const s of STAGES) {
+    document.getElementById(s.key).addEventListener("input", (e) => {
+      state.durations[s.key] = Number(e.target.value);
+      update();
+    });
+  }
+  $("#lt-reset").addEventListener("click", () => {
+    state.targetYear = BASE.targetYear;
+    state.durations = { ...BASE.durations };
+    syncControls();
+    update();
+  });
+  $("#lt-share").addEventListener("click", async (e) => {
+    const b = e.currentTarget, said = b.textContent;
+    try { await navigator.clipboard.writeText(location.href); b.textContent = "Copied"; }
+    catch { b.textContent = "Copy failed"; }
+    setTimeout(() => { b.textContent = said; }, 1600);
+  });
+
+  const narrow = window.matchMedia("(max-width: 600px)");
+  const syncDisclosure = () => { document.getElementById("lt-numbers").open = narrow.matches; };
+  narrow.addEventListener("change", syncDisclosure);
+  syncDisclosure();
+
+  readShare();
+  update();
+</script>
