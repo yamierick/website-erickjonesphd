@@ -58,7 +58,10 @@ import Base from "../layouts/Base.astro";
         </label>
       </fieldset>
 
-      <button type="button" id="reset" class="reset">Reset</button>
+      <div class="actions">
+        <button type="button" id="reset" class="reset">Reset</button>
+        <button type="button" id="share" class="reset">Copy link</button>
+      </div>
     </div>
 
     <div class="output">
@@ -154,6 +157,7 @@ import Base from "../layouts/Base.astro";
     cursor: pointer;
   }
   .seg button.on { background: var(--accent); border-color: var(--accent); color: var(--bg); }
+  .actions { display: flex; gap: .4rem; }
   .reset {
     font-family: system-ui, sans-serif;
     font-size: .8rem;
@@ -333,11 +337,59 @@ import Base from "../layouts/Base.astro";
       : `At this chemistry mix: ${Math.round(inten)} t per GWh.`;
   }
 
+  // --- shareable state ------------------------------------------------------
+  /**
+   * Same contract as the cascade model: the controls live in the query string,
+   * so "push demand growth until a shortfall opens" can be a link rather than
+   * an instruction. Only values differing from the default are written, and
+   * everything read back is clamped against the control that owns it.
+   */
+  const SHARE_KEYS = { m: "mineral", dg: "demandGrowth", pg: "primaryGrowth",
+                       lfp: "lfpShare", rec: "recovery", col: "collection",
+                       life: "life", sl: "secondLifeShare" };
+  const MINERALS_OK = new Set(["lithium", "nickel", "cobalt"]);
+
+  function readShareState() {
+    const q = new URLSearchParams(location.search);
+    if (![...q.keys()].some((k) => k in SHARE_KEYS)) return false;
+    for (const [key, prop] of Object.entries(SHARE_KEYS)) {
+      if (!q.has(key)) continue;
+      const raw = q.get(key);
+      if (prop === "mineral") {
+        if (MINERALS_OK.has(raw)) state.mineral = raw;
+        continue;
+      }
+      const v = Number(raw);
+      if (!Number.isFinite(v)) continue;
+      const inp = document.getElementById(prop);
+      state[prop] = inp ? Math.min(Number(inp.max), Math.max(Number(inp.min), v)) : v;
+    }
+    document.querySelectorAll(".controls input[type=range]").forEach((i) => { i.value = state[i.id]; });
+    document.querySelectorAll("#mineral button").forEach((o) =>
+      o.classList.toggle("on", o.dataset.v === state.mineral));
+    return true;
+  }
+
+  let shareTimer = null;
+  function writeShareState() {
+    // replaceState, debounced: a slider drag must not fill the back button.
+    clearTimeout(shareTimer);
+    shareTimer = setTimeout(() => {
+      const q = new URLSearchParams();
+      for (const [key, prop] of Object.entries(SHARE_KEYS)) {
+        if (state[prop] !== INITIAL[prop]) q.set(key, String(state[prop]));
+      }
+      const qs = q.toString();
+      history.replaceState(null, "", qs ? `${location.pathname}?${qs}` : location.pathname);
+    }, 150);
+  }
+
   function update() {
     const r = run(params(), state.mineral);
     draw(r);
     readout(r);
     syncLabels();
+    writeShareState();
   }
 
   document.querySelectorAll(".controls input[type=range]").forEach((inp) => {
@@ -356,6 +408,18 @@ import Base from "../layouts/Base.astro";
     });
   });
 
+  $("#share").addEventListener("click", async (e) => {
+    const btn = e.currentTarget;
+    const said = btn.textContent;
+    try {
+      await navigator.clipboard.writeText(location.href);
+      btn.textContent = "Copied";
+    } catch {
+      btn.textContent = "Copy failed";
+    }
+    setTimeout(() => { btn.textContent = said; }, 1600);
+  });
+
   $("#reset").addEventListener("click", () => {
     Object.assign(state, INITIAL);
     document.querySelectorAll(".controls input[type=range]").forEach((i) => { i.value = state[i.id]; });
@@ -363,6 +427,8 @@ import Base from "../layouts/Base.astro";
       o.classList.toggle("on", o.dataset.v === state.mineral));
     update();
   });
+
+  readShareState();
 
   update();
 </script>

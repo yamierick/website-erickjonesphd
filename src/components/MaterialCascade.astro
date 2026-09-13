@@ -73,7 +73,10 @@
       <p class="hint" id="period-hint"></p>
     </fieldset>
 
-    <button type="button" id="reset" class="reset">Reset</button>
+    <div class="actions">
+      <button type="button" id="reset" class="reset">Reset</button>
+      <button type="button" id="share" class="reset">Copy link</button>
+    </div>
   </div>
 
   <div class="output">
@@ -228,6 +231,7 @@
     cursor: pointer;
   }
   .seg button.on, .scen button.on { background: var(--accent); border-color: var(--accent); color: var(--bg); }
+  .actions { display: flex; gap: .4rem; }
   .reset {
     font-family: system-ui, sans-serif;
     font-size: .8rem;
@@ -1184,6 +1188,95 @@
     readout(r, period);
     buildTables(r, period);
     syncLabels();
+    writeShareState();
+  }
+
+  // --- shareable state ------------------------------------------------------
+  /**
+   * The page argues "take gas to ninety percent and watch the copper refuse to
+   * leave" -- an instruction the reader has to carry out by hand. With the
+   * controls in the query string that becomes a link, which is the difference
+   * between a demo and something an instructor can assign or a talk can cite.
+   *
+   * Only values that differ from the default are written, so a scenario button
+   * gives a short readable URL (?s=solar) and an untouched page gives none at
+   * all. Everything read back is clamped against the control that owns it --
+   * a query string is user input and arrives from anywhere.
+   */
+  const SHARE_KEYS = { g: "gasShare", sw: "swRatio", st: "storageHours",
+                       lfp: "lfpShare", dg: "demandGrowth" };
+  const BASE_STATE = (() => {
+    const b = { scenario: "balanced", period: 2, ...SCENARIOS.balanced };
+    delete b.label; delete b.hint;
+    return b;
+  })();
+
+  const clampToControl = (id, v) => {
+    const inp = document.getElementById(id);
+    if (!inp) return v;
+    const lo = Number(inp.min), hi = Number(inp.max);
+    return Math.min(hi, Math.max(lo, v));
+  };
+
+  function readShareState() {
+    const q = new URLSearchParams(location.search);
+    if (![...q.keys()].some((k) => k === "s" || k === "p" || k in SHARE_KEYS)) return false;
+
+    const scen = q.get("s");
+    if (scen && SCENARIOS[scen]) {
+      Object.assign(state, SCENARIOS[scen], { scenario: scen });
+      delete state.label; delete state.hint;
+    }
+    let custom = false;
+    for (const [key, prop] of Object.entries(SHARE_KEYS)) {
+      if (!q.has(key)) continue;
+      const raw = Number(q.get(key));
+      if (!Number.isFinite(raw)) continue;
+      state[prop] = prop === "swRatio"
+        ? Math.min(1, Math.max(0, raw / 100))
+        : clampToControl(prop, raw);
+      custom = true;
+    }
+    if (custom) state.scenario = null;
+
+    const per = Number(q.get("p"));
+    if (Number.isInteger(per) && per >= 0 && per <= 2) state.period = per;
+    return true;
+  }
+
+  /** Push the controls' values back into the DOM after a URL-driven load. */
+  function syncControlsToState() {
+    for (const id of ["demandGrowth", "gasShare", "storageHours", "lfpShare"]) {
+      const inp = document.getElementById(id);
+      if (inp) inp.value = state[id];
+    }
+    document.querySelectorAll("#scen button").forEach((b) =>
+      b.classList.toggle("on", b.dataset.v === state.scenario));
+    document.querySelectorAll("#period button").forEach((b) =>
+      b.classList.toggle("on", Number(b.dataset.v) === state.period));
+  }
+
+  let shareTimer = null;
+  function writeShareState() {
+    // replaceState rather than pushState: a slider drag must not fill the back
+    // button with a hundred entries. Debounced because Safari throttles it.
+    clearTimeout(shareTimer);
+    shareTimer = setTimeout(() => {
+      const q = new URLSearchParams();
+      const named = state.scenario && SCENARIOS[state.scenario];
+      if (named) {
+        if (state.scenario !== BASE_STATE.scenario) q.set("s", state.scenario);
+      } else {
+        for (const [key, prop] of Object.entries(SHARE_KEYS)) {
+          const v = prop === "swRatio" ? Math.round(state[prop] * 100) : state[prop];
+          const base = prop === "swRatio" ? Math.round(BASE_STATE[prop] * 100) : BASE_STATE[prop];
+          if (v !== base) q.set(key, String(v));
+        }
+      }
+      if (state.period !== BASE_STATE.period) q.set("p", String(state.period));
+      const qs = q.toString();
+      history.replaceState(null, "", qs ? `${location.pathname}?${qs}` : location.pathname);
+    }, 150);
   }
 
   function applyScenario(key) {
@@ -1217,6 +1310,20 @@
       update();
     }));
 
+  $("#share").addEventListener("click", async (e) => {
+    const btn = e.currentTarget;
+    const said = btn.textContent;
+    try {
+      await navigator.clipboard.writeText(location.href);
+      btn.textContent = "Copied";
+    } catch {
+      // Clipboard access can be refused outright (insecure context, denied
+      // permission). Selecting the URL is a worse fallback than saying so.
+      btn.textContent = "Copy failed";
+    }
+    setTimeout(() => { btn.textContent = said; }, 1600);
+  });
+
   $("#reset").addEventListener("click", () => {
     state.period = 2;
     document.querySelectorAll("#period button").forEach((o) => o.classList.toggle("on", o.dataset.v === "2"));
@@ -1229,6 +1336,8 @@
   const syncDisclosure = () => { document.getElementById("numbers").open = narrow.matches; };
   narrow.addEventListener("change", syncDisclosure);
   syncDisclosure();
+
+  if (readShareState()) syncControlsToState();
 
   update();
   drawSchematic();
