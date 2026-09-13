@@ -861,13 +861,21 @@
         fill: "var(--t-storage)", "fill-opacity": .34,
       }));
     }
-    const evening = pts.filter((h) => h >= 17.5 && h <= 22);
-    const ev = evening.map((h) => `L ${x(h).toFixed(1)} ${y(demand(h)).toFixed(1)}`).join(" ");
-    svg.appendChild(el("path", {
-      d: `M ${x(evening[0]).toFixed(1)} ${y(0).toFixed(1)} ${ev} `
-         + `L ${x(evening[evening.length - 1]).toFixed(1)} ${y(0).toFixed(1)} Z`,
-      fill: "var(--t-storage)", "fill-opacity": .2,
-    }));
+    // Only the PEAK, not the whole evening. Shading from the demand curve down
+    // to the baseline would say the battery carries every evening watt, which
+    // is a much larger claim than anyone makes for it -- gas and wind are
+    // still running. The band sits above the level demand runs at the rest of
+    // the day, so it reads as the peak the battery shaves.
+    const BASE = 0.62;
+    const evening = pts.filter((h) => h >= 16.5 && h <= 23 && demand(h) > BASE);
+    if (evening.length > 1) {
+      const over = evening.map((h) => `L ${x(h).toFixed(1)} ${y(demand(h)).toFixed(1)}`).join(" ");
+      svg.appendChild(el("path", {
+        d: `M ${x(evening[0]).toFixed(1)} ${y(BASE).toFixed(1)} ${over} `
+           + `L ${x(evening[evening.length - 1]).toFixed(1)} ${y(BASE).toFixed(1)} Z`,
+        fill: "var(--t-storage)", "fill-opacity": .28,
+      }));
+    }
 
     svg.appendChild(el("path", { d: path(solar), fill: "none", stroke: "var(--t-solar)", "stroke-width": 2 }));
     svg.appendChild(el("path", {
@@ -891,7 +899,7 @@
     // outside the viewBox: the surplus label sat at 1.30 and was clipped
     // entirely. It belongs inside the wedge it names anyway.
     note(x(12), y(0.90), "surplus charges the battery", "var(--text)");
-    note(x(20.4), y(0.26), "and covers the evening peak", "var(--text)");
+    note(x(19.1), y(0.70), "battery shaves the evening peak", "var(--text)");
     note(x(2.6), y(0.60), "demand", "var(--text)", "start");
     note(x(7.8), y(0.46), "solar", "var(--t-solar)", "start");
   }
