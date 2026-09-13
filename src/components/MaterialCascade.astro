@@ -60,16 +60,28 @@
   </div>
 
   <div class="output">
-    <svg id="flow" viewBox="0 0 760 440" role="img" aria-labelledby="flow-title flow-desc">
-      <title id="flow-title">Material flow from generation built to ore moved</title>
-      <desc id="flow-desc">
-        Four columns — capacity built, component, material and ore — with bands
-        between them whose width is the tonnage flowing. Bands are coloured by
-        material so one metal can be followed across the whole diagram.
-      </desc>
-    </svg>
-    <div class="legend" id="legend"></div>
+    <figure class="mult">
+      <svg id="mult" viewBox="0 0 760 104" role="img" aria-labelledby="mult-title mult-desc">
+        <title id="mult-title">Share of energy served against share of capacity standing</title>
+        <desc id="mult-desc"></desc>
+      </svg>
+      <figcaption id="mult-cap"></figcaption>
+    </figure>
+
+    <div id="flow-wrap">
+      <svg id="flow" viewBox="0 0 760 440" role="img" aria-labelledby="flow-title flow-desc">
+        <title id="flow-title">Material flow from capacity built to ore moved</title>
+        <desc id="flow-desc"></desc>
+      </svg>
+      <div class="legend" id="legend"></div>
+    </div>
+
     <dl class="readout" id="readout"></dl>
+
+    <details class="numbers" id="numbers">
+      <summary id="numbers-summary">Show the numbers</summary>
+      <div id="tables"></div>
+    </details>
   </div>
 </div>
 
@@ -80,19 +92,33 @@
     gap: 1.5rem;
     margin: 1.5rem 0;
 
-    --m-copper: #b0642f;
-    --m-aluminum: #5f7d8c;
-    --m-steel: #565f6b;
-    --m-lithium: #0d6b4f;
-    --m-nickel: #7d4fa0;
+    /* Spread by lightness as well as hue, and every entry clears 3:1 against
+       its own background -- which is the constraint that actually binds.
+       Requiring that of five colours confines them to a narrow lightness band
+       (below L=0.30 on white, above L=0.16 on the dark ground), and inside
+       that band the best achievable contrast between ADJACENT pairs is about
+       1.5:1. Measured, not guessed: an earlier attempt at "just separate the
+       lightness" scored 1.02 between copper and nickel, worse than what it
+       replaced.
+
+       So colour cannot be made sufficient here, and is not asked to be. The
+       ore links carry their multiplier as text, every column node is labelled,
+       and the table below states all of it in words. That redundancy is the
+       accessibility mechanism; the palette is only there to help the reader
+       who can already see it. Do not "fix" this by flattening the hues. */
+    --m-copper: #9c4f1c;
+    --m-aluminum: #7b8b96;
+    --m-steel: #39424b;
+    --m-lithium: #0f7a58;
+    --m-nickel: #6b2e99;
   }
   @media (prefers-color-scheme: dark) {
     .cascade {
-      --m-copper: #d18a52;
-      --m-aluminum: #8fabb9;
-      --m-steel: #8a929c;
-      --m-lithium: #5fc9a4;
-      --m-nickel: #b98ed6;
+      --m-copper: #f0b57e;
+      --m-aluminum: #cdd8de;
+      --m-steel: #6b7682;
+      --m-lithium: #34ab80;
+      --m-nickel: #c99ae9;
     }
   }
   @media (max-width: 820px) { .cascade { grid-template-columns: 1fr; } }
@@ -148,7 +174,30 @@
   }
   .hint { font-family: system-ui, sans-serif; font-size: .76rem; color: var(--muted); margin: .5rem 0 0; }
 
-  #flow { width: 100%; height: auto; display: block; }
+  #flow, #mult { width: 100%; height: auto; display: block; }
+
+  .mult { margin: 0 0 1rem; }
+  .mult figcaption {
+    font-family: system-ui, sans-serif; font-size: .78rem; color: var(--muted); margin-top: .2rem;
+  }
+
+  .numbers { margin-top: 1rem; }
+  .numbers summary {
+    font-family: system-ui, sans-serif; font-size: .82rem; color: var(--accent);
+    cursor: pointer; padding: .3rem 0;
+  }
+
+  /* Below this width the flow diagram is not merely cramped, it is unreadable:
+     a four-column diagram with twenty-one labels renders its type at about
+     five pixels on a phone. The table is not a fallback here -- it is the
+     better view, so the diagram gets out of its way. */
+  @media (max-width: 600px) {
+    #flow-wrap, #mult { display: none; }
+    .numbers summary { display: none; }
+    /* The caption stays. It is the sentence the bar was drawing, and the
+       capacity table below carries the numbers it was drawing them from. */
+    .mult figcaption { margin-top: 0; }
+  }
 </style>
 
 <style is:global>
@@ -182,11 +231,51 @@
   .cascade .readout dt { font-size: .72rem; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
   .cascade .readout dd { margin: .15rem 0 0; font-size: 1.15rem; font-variant-numeric: tabular-nums; }
   .cascade .readout dd small { font-size: .8rem; color: var(--muted); font-variant-numeric: normal; }
+
+  .cascade #mult .bar { transition: x .45s ease, width .45s ease; }
+  .cascade #mult .tie { transition: d .45s ease; }
+  @media (prefers-reduced-motion: reduce) {
+    .cascade #mult .bar, .cascade #mult .tie { transition: none; }
+  }
+
+  .cascade .numbers .tw { overflow-x: auto; }
+  .cascade .numbers table {
+    width: 100%; min-width: 28rem; border-collapse: collapse; margin: .6rem 0 1rem;
+    font-family: system-ui, sans-serif; font-size: .82rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .cascade .numbers caption {
+    text-align: left; font-size: .76rem; text-transform: uppercase;
+    letter-spacing: .05em; color: var(--accent); padding-bottom: .3rem;
+  }
+  .cascade .numbers th, .cascade .numbers td {
+    border-bottom: 1px solid var(--rule); padding: .3rem .5rem; text-align: right;
+  }
+  .cascade .numbers th:first-child, .cascade .numbers td:first-child { text-align: left; }
+  .cascade .numbers thead th { color: var(--muted); font-weight: normal; font-size: .74rem; }
+  .cascade .numbers tfoot td { font-weight: bold; border-bottom: none; }
+  .cascade .numbers .swatch {
+    display: inline-block; width: .6rem; height: .6rem; border-radius: 2px;
+    margin-right: .4rem; vertical-align: -1px;
+  }
+  .cascade .numbers .note {
+    font-family: system-ui, sans-serif; font-size: .78rem; color: var(--muted); margin: 0 0 1rem;
+  }
+  .cascade .spark { display: flex; gap: 2px; align-items: flex-end; height: 2.1rem; margin-top: .3rem; }
+  .cascade .spark i {
+    flex: 1; background: var(--muted); opacity: .35; border-radius: 2px 2px 0 0;
+    transition: height .3s ease;
+  }
+  .cascade .spark i.on { background: var(--accent); opacity: 1; }
+  .cascade .spark-labels {
+    display: flex; gap: 2px; font-size: .68rem; color: var(--muted); margin-top: .15rem;
+  }
+  .cascade .spark-labels span { flex: 1; text-align: center; }
 </style>
 
 <script>
   import { run, DEFAULTS, MIX_TODAY } from "../scripts/materialModel.js";
-  import { COMPONENTS, MATERIALS, ORES, LABELS, ORE, CAPACITY_FACTOR } from "../scripts/materialData.js";
+  import { COMPONENTS, MATERIALS, ORES, ORE_OF, LABELS, ORE, CAPACITY_FACTOR } from "../scripts/materialData.js";
 
   const NS = "http://www.w3.org/2000/svg";
   const svg = document.getElementById("flow");
@@ -218,14 +307,22 @@
 
   // Reused elements, keyed, so the browser can transition between states
   // instead of the diagram flickering out and back on every slider move.
-  const keep = { ribbon: new Map(), node: new Map(), label: new Map() };
+  const keep = { ribbon: new Map(), node: new Map(), label: new Map(), orelab: new Map() };
   let chrome = null;
 
-  const fmtT = (t) =>
-    t >= 1e9 ? `${(t / 1e9).toFixed(2)} Gt`
-    : t >= 1e6 ? `${(t / 1e6).toFixed(1)} Mt`
-    : t >= 1e3 ? `${Math.round(t / 1e3).toLocaleString()} kt`
-    : `${Math.round(t).toLocaleString()} t`;
+  /**
+   * One decimal is enough at 600 Mt and not enough at 3 Mt: on a small total
+   * the rows of the table below round so coarsely that they visibly fail to
+   * add up to their own footer, which reads as an arithmetic error rather than
+   * as rounding. Two decimals under ten units, one above.
+   */
+  const fmtT = (t) => {
+    const [v, unit] = t >= 1e9 ? [t / 1e9, "Gt"] : t >= 1e6 ? [t / 1e6, "Mt"]
+      : t >= 1e3 ? [t / 1e3, "kt"] : [t, "t"];
+    if (unit === "t") return `${Math.round(v).toLocaleString()} t`;
+    if (unit === "kt" && v >= 10) return `${Math.round(v).toLocaleString()} kt`;
+    return `${v.toFixed(v < 10 ? 2 : 1)} ${unit}`;
+  };
   const pct = (v) => `${Math.round(v * 100)}%`;
 
   // --- state --------------------------------------------------------------
@@ -404,8 +501,9 @@
     chrome.headers[3].textContent = fmtT(L.rock);
 
     // ribbons
+    const geo = ribbonGeometry(period, L);
     const seen = new Set();
-    for (const r of ribbonGeometry(period, L)) {
+    for (const r of geo) {
       seen.add(r.key);
       let p = keep.ribbon.get(r.key);
       if (!p) {
@@ -421,6 +519,28 @@
       p.firstChild.textContent = `${nameOf(from)} → ${nameOf(to)}: ${fmtT(r.value)} of ${r.material}`;
     }
     for (const [k, p] of keep.ribbon) if (!seen.has(k)) p.style.opacity = "0";
+
+    // The ore multiplier, printed on the link that applies it. Two jobs: it is
+    // the actual mechanism of the last column, and it lets the ribbons be told
+    // apart without relying on their colour.
+    for (const r of geo) {
+      if (!r.key.startsWith("material-ore|")) continue;
+      const ore = r.key.split("|")[2];
+      let t = keep.orelab.get(ore);
+      if (!t) {
+        t = el("text", {
+          "font-size": 10.5, fill: "var(--text)", stroke: "var(--bg)", "stroke-width": 3,
+          "paint-order": "stroke", "text-anchor": "middle",
+          "font-family": "system-ui, sans-serif",
+        });
+        chrome.labels.appendChild(t);
+        keep.orelab.set(ore, t);
+      }
+      t.textContent = `×${ORE[ore].tPerT}`;
+      t.setAttribute("x", (r.x1 + r.x2) / 2);
+      t.setAttribute("y", (r.y1a + r.y1b + r.y2a + r.y2b) / 4 + 4);
+      t.style.opacity = r.y2b - r.y2a > 11 ? "1" : "0";
+    }
 
     // nodes and labels
     for (const [ci, c] of COLS.entries()) {
@@ -454,6 +574,87 @@
     }
   }
 
+
+  // --- multiplier one: the step the flow diagram starts after ----------------
+  /**
+   * Demand is energy; metal is bought per unit of capacity. Between those two
+   * sits the capacity factor, and it is not a small correction -- solar serves
+   * about a third of the electricity and is about half of the machine. The
+   * flow diagram below begins at capacity, so without this strip the page
+   * asserts that step in prose and never shows it.
+   */
+  const multSvg = document.getElementById("mult");
+  let multChrome = null;
+  const GEN = ["gas", "solar", "wind"];
+  const GEN_OPACITY = { gas: 0.22, solar: 0.5, wind: 0.35 };
+
+  function drawMultiplier(period) {
+    const X0 = 62, X1 = 748, TOP1 = 20, H = 18, TOP2 = 70;
+    const W = X1 - X0;
+    const totGW = GEN.reduce((a, t) => a + period.capacityGW[t], 0);
+    const shares = GEN.map((t) => ({
+      tech: t,
+      energy: period.mix[t],
+      capacity: totGW > 0 ? period.capacityGW[t] / totGW : 0,
+    }));
+
+    if (!multChrome) {
+      multChrome = { bands: el("g"), bars: el("g"), text: el("g") };
+      multSvg.append(multChrome.bands, multChrome.bars, multChrome.text);
+      for (const [i, label] of [["Energy", TOP1 + 13], ["Capacity", TOP2 + 13]]) {
+        multChrome.text.appendChild(el("text", {
+          x: X0 - 8, y: label, "text-anchor": "end", "font-size": 11,
+          fill: "var(--muted)", "font-family": "system-ui, sans-serif",
+        }, i));
+      }
+      multChrome.keyed = new Map();
+    }
+
+    let e0 = X0, c0 = X0;
+    for (const sh of shares) {
+      const ew = sh.energy * W, cw = sh.capacity * W;
+      const k = sh.tech;
+      let g = multChrome.keyed.get(k);
+      if (!g) {
+        g = {
+          top: el("rect", { class: "bar", y: TOP1, height: H, fill: "var(--text)", "fill-opacity": GEN_OPACITY[k] }),
+          bot: el("rect", { class: "bar", y: TOP2, height: H, fill: "var(--text)", "fill-opacity": GEN_OPACITY[k] }),
+          band: el("path", { class: "tie", fill: "var(--text)", "fill-opacity": GEN_OPACITY[k] * 0.55 }),
+          lab: el("text", { "font-size": 11, fill: "var(--text)", "font-family": "system-ui, sans-serif", "text-anchor": "middle" }),
+          num: el("text", { "font-size": 10.5, fill: "var(--muted)", "font-family": "system-ui, sans-serif", "text-anchor": "middle" }),
+        };
+        multChrome.bands.appendChild(g.band);
+        multChrome.bars.append(g.top, g.bot);
+        multChrome.text.append(g.lab, g.num);
+        multChrome.keyed.set(k, g);
+      }
+      g.top.setAttribute("x", e0); g.top.setAttribute("width", Math.max(0, ew));
+      g.bot.setAttribute("x", c0); g.bot.setAttribute("width", Math.max(0, cw));
+      g.band.setAttribute("d",
+        `M ${e0} ${TOP1 + H} L ${e0 + ew} ${TOP1 + H} L ${c0 + cw} ${TOP2} L ${c0} ${TOP2} Z`);
+
+      const wide = ew > 46 && cw > 46;
+      g.lab.textContent = wide ? nameOf(sh.tech) : "";
+      g.lab.setAttribute("x", e0 + ew / 2);
+      g.lab.setAttribute("y", TOP1 - 5);
+      g.num.textContent = wide ? `${pct(sh.energy)} → ${pct(sh.capacity)}` : "";
+      g.num.setAttribute("x", c0 + cw / 2);
+      g.num.setAttribute("y", TOP2 + H + 14);
+      e0 += ew; c0 += cw;
+    }
+
+    const worst = shares.reduce((a, b) =>
+      (b.energy > 0 ? b.capacity / b.energy : 0) > (a.energy > 0 ? a.capacity / a.energy : 0) ? b : a);
+    const ratio = worst.energy > 0 ? worst.capacity / worst.energy : 1;
+    document.getElementById("mult-cap").textContent =
+      `Multiplier one. ${nameOf(worst.tech)} serves ${pct(worst.energy)} of the energy and is `
+      + `${pct(worst.capacity)} of the capacity — ${ratio.toFixed(2)}× its share — because it runs `
+      + `${pct(CAPACITY_FACTOR[worst.tech].value)} of the time. Everything below is bought per unit of capacity.`;
+    document.getElementById("mult-desc").textContent =
+      "Two stacked bars. " + shares.map((x) =>
+        `${nameOf(x.tech)} is ${pct(x.energy)} of energy served and ${pct(x.capacity)} of capacity`).join("; ") + ".";
+  }
+
   // --- legend and readout -------------------------------------------------
   function legend(L) {
     const box = document.getElementById("legend");
@@ -473,31 +674,126 @@
     box.appendChild(note);
   }
 
+  /**
+   * The numbers as text.
+   *
+   * This is not a debugging aid bolted on afterwards. A figure that carries
+   * the whole argument has to be readable by someone who is not reading it
+   * with their eyes, and on a phone it is the only readable form there is --
+   * the diagram's type lands at about five pixels at 375px wide. So the table
+   * is the diagram's equal, not its fallback, and it is built from the same
+   * period object rather than from a second pass over the model.
+   */
+  function buildTables(r, period) {
+    const box = document.getElementById("tables");
+    const rows = MATERIALS
+      .map((m) => ({
+        m, ore: ORE_OF[m],
+        t: period.byMaterial[m],
+        rock: period.byOre[ORE_OF[m]],
+        mult: ORE[ORE_OF[m]].tPerT,
+      }))
+      .filter((x) => x.t > 0)
+      .sort((a, b) => b.rock - a.rock);
+
+    // Rounding a real quantity to "0%" reads as absent rather than small, and
+    // lithium is genuinely tiny by mass and the reason the page exists.
+    const sh = (v, tot) => {
+      if (tot <= 0) return "—";
+      const f = v / tot;
+      return f > 0 && f < 0.005 ? "<1%" : pct(f);
+    };
+    const matRows = rows.map((x) => `<tr>
+      <td><i class="swatch" style="background:${colorOf(x.m)}"></i>${nameOf(x.m)}</td>
+      <td>${fmtT(x.t)}</td><td>${sh(x.t, period.totalMetal)}</td>
+      <td>${nameOf(x.ore)}</td><td>×${x.mult}</td>
+      <td>${fmtT(x.rock)}</td><td>${sh(x.rock, period.totalOre)}</td></tr>`).join("");
+
+    const capRows = ["gas", "solar", "wind"].map((t) => `<tr>
+      <td>${nameOf(t)}</td><td>${pct(period.mix[t])}</td>
+      <td>${pct(CAPACITY_FACTOR[t].value)}</td>
+      <td>${Math.round(period.capacityGW[t]).toLocaleString()} GW</td>
+      <td>${Math.round(period.builtGW[t]).toLocaleString()} GW</td></tr>`).join("");
+
+    box.innerHTML = `
+      <p class="note">${period.isExisting
+        ? "The fleet already standing, priced as if it were bought now."
+        : `Built between the previous period and ${period.label}.`}
+        Serving ${Math.round(period.demandTWh).toLocaleString()} TWh a year.</p>
+
+      <div class="tw"><table>
+        <caption>Metal, and the rock it came out of</caption>
+        <thead><tr><th>Material</th><th>Tonnes</th><th>Share of metal</th>
+          <th>Ore</th><th>Rock per tonne</th><th>Rock</th><th>Share of rock</th></tr></thead>
+        <tbody>${matRows}</tbody>
+        <tfoot><tr><td>Total</td><td>${fmtT(period.totalMetal)}</td><td>100%</td>
+          <td></td><td></td><td>${fmtT(period.totalOre)}</td><td>100%</td></tr></tfoot>
+      </table></div>
+
+      <div class="tw"><table>
+        <caption>Capacity — multiplier one</caption>
+        <thead><tr><th>Technology</th><th>Share of energy</th><th>Capacity factor</th>
+          <th>Standing</th><th>Built this period</th></tr></thead>
+        <tbody>${capRows}</tbody>
+      </table></div>`;
+  }
+
+  /** One sentence saying what the diagram SHOWS, regenerated on every change. */
+  function describeFlow(period) {
+    const top = MATERIALS.reduce((a, b) =>
+      period.byMaterial[b] > period.byMaterial[a] ? b : a);
+    const topOre = ORES.reduce((a, b) => (period.byOre[b] > period.byOre[a] ? b : a));
+    const cuM = period.totalMetal > 0 ? period.byMaterial.copper / period.totalMetal : 0;
+    const cuR = period.totalOre > 0 ? period.byOre["copper ore"] / period.totalOre : 0;
+    document.getElementById("flow-desc").textContent =
+      `${period.label}: building this capacity takes ${fmtT(period.totalMetal)} of metal and moves `
+      + `${fmtT(period.totalOre)} of rock. The largest share of the metal is ${nameOf(top).toLowerCase()}, `
+      + `but the largest share of the rock is ${nameOf(topOre).toLowerCase()} — the ranking changes `
+      + `between the two columns. Copper is ${pct(cuM)} of the metal and ${pct(cuR)} of the rock. `
+      + `Full figures in the table below.`;
+  }
+
   function readout(r, period) {
-    const s = r.summary;
-    const items = [
-      ["Serving", `${Math.round(period.demandTWh).toLocaleString()} <small>TWh/yr</small>`],
-      ["Capacity standing", `${Math.round(Object.values(period.capacityGW).reduce((a, b) => a + b, 0)).toLocaleString()} <small>GW</small>`],
-      ["Metal, this period", fmtT(period.totalMetal)],
-      ["Rock moved", fmtT(period.totalOre)],
-      ["Lithium", fmtT(period.byMaterial.lithium)],
-    ];
+    // Per-period, not per-build-ahead. The card used to quote the whole
+    // horizon while every cell beside it quoted one period, so on "Today" the
+    // big number and the small ones were describing different decades.
+    const cuM = period.totalMetal > 0 ? period.byMaterial.copper / period.totalMetal : 0;
+    const cuR = period.totalOre > 0 ? period.byOre["copper ore"] / period.totalOre : 0;
+
     const dl = document.getElementById("readout");
     dl.innerHTML = "";
 
     const head = document.createElement("div");
     head.className = "wide";
     head.innerHTML =
-      `<dt>Copper, across the whole build ahead</dt>`
-      + `<dd>${pct(s.copperShareOfMetal)} of the metal, ${pct(s.copperShareOfRock)} of the rock `
+      `<dt>Copper, ${period.isExisting ? "in the fleet already standing" : period.label}</dt>`
+      + `<dd>${pct(cuM)} of the metal, ${pct(cuR)} of the rock `
       + `<small>— steel dominates the tonnage; copper dominates the mining</small></dd>`;
     dl.appendChild(head);
 
-    for (const [k, v] of items) {
+    for (const [k, v] of [
+      ["Serving", `${Math.round(period.demandTWh).toLocaleString()} <small>TWh/yr</small>`],
+      ["Capacity standing", `${Math.round(Object.values(period.capacityGW).reduce((a, b) => a + b, 0)).toLocaleString()} <small>GW</small>`],
+      ["Metal", fmtT(period.totalMetal)],
+      ["Rock moved", fmtT(period.totalOre)],
+      ["Lithium", fmtT(period.byMaterial.lithium)],
+    ]) {
       const d = document.createElement("div");
       d.innerHTML = `<dt>${k}</dt><dd>${v}</dd>`;
       dl.appendChild(d);
     }
+
+    // Three periods at once, so the horizon is visible without clicking
+    // through it. Read-only -- the segmented control above is still the way
+    // to change period, rather than two controls doing one job.
+    const peak = Math.max(...r.periods.map((x) => x.totalOre), 1);
+    const spark = document.createElement("div");
+    spark.innerHTML = `<dt>Rock moved, by period</dt>
+      <dd class="spark">${r.periods.map((x, i) =>
+        `<i class="${i === state.period ? "on" : ""}" style="height:${Math.max(3, (x.totalOre / peak) * 100)}%"
+            title="${x.label}: ${fmtT(x.totalOre)}"></i>`).join("")}</dd>
+      <div class="spark-labels">${r.periods.map((x) => `<span>${x.label}</span>`).join("")}</div>`;
+    dl.appendChild(spark);
   }
 
   // --- wiring -------------------------------------------------------------
@@ -525,9 +821,12 @@
     const r = run(params());
     const period = r.periods[state.period];
     const L = layout(period);
+    drawMultiplier(period);
     draw(period, L);
+    describeFlow(period);
     legend(L);
     readout(r, period);
+    buildTables(r, period);
     syncLabels();
   }
 
@@ -567,6 +866,13 @@
     document.querySelectorAll("#period button").forEach((o) => o.classList.toggle("on", o.dataset.v === "2"));
     applyScenario("balanced");
   });
+
+  // On a phone the table is the only readable view, so it is not left behind a
+  // disclosure the reader has to think to open.
+  const narrow = window.matchMedia("(max-width: 600px)");
+  const syncDisclosure = () => { document.getElementById("numbers").open = narrow.matches; };
+  narrow.addEventListener("change", syncDisclosure);
+  syncDisclosure();
 
   update();
 

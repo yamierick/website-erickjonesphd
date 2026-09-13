@@ -181,9 +181,18 @@ import Base from "../layouts/Base.astro";
     gap: .6rem; margin: 1rem 0 0;
     font-family: system-ui, sans-serif;
   }
-  .readout div { border: 1px solid var(--rule); border-radius: 6px; padding: .5rem .7rem; }
-  .readout dt { font-size: .72rem; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
-  .readout dd { margin: .15rem 0 0; font-size: 1.15rem; font-variant-numeric: tabular-nums; }
+</style>
+
+<style is:global>
+  /* The readout's cells are built by the script below with createElement, and
+     an Astro-scoped rule is an attribute selector that only markup satisfies --
+     so these three never matched anything and the readout has been rendering
+     as plain body text since this page shipped. Verified on the live site
+     2026-09-06: border 0px, padding 0px, dt at 17px instead of ~11.5px.
+     Global, held under .model so nothing leaks. */
+  .model .readout div { border: 1px solid var(--rule); border-radius: 6px; padding: .5rem .7rem; }
+  .model .readout dt { font-size: .72rem; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+  .model .readout dd { margin: .15rem 0 0; font-size: 1.15rem; font-variant-numeric: tabular-nums; }
 </style>
 
 <script>
