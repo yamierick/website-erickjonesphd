@@ -61,11 +61,31 @@
 
   <div class="output">
     <figure class="mult">
-      <svg id="mult" viewBox="0 0 760 104" role="img" aria-labelledby="mult-title mult-desc">
-        <title id="mult-title">Share of energy served against share of capacity standing</title>
+      <svg id="mult" viewBox="0 0 760 156" role="img" aria-labelledby="mult-title mult-desc">
+        <title id="mult-title">Energy served, capacity built and storage, against average demand</title>
         <desc id="mult-desc"></desc>
       </svg>
       <figcaption id="mult-cap"></figcaption>
+    </figure>
+
+    <figure class="schematic">
+      <svg id="schematic" viewBox="0 0 760 124" role="img" aria-labelledby="sch-title sch-desc">
+        <title id="sch-title">Schematic of a day: surplus solar charging storage</title>
+        <desc id="sch-desc">An illustrative diagram, not model output. A dashed
+          demand curve across one day with a morning ramp and an evening peak,
+          and a solar curve that rises above it in the middle of the day. The
+          area where solar exceeds demand is shaded as surplus charging the
+          battery; the evening peak after sunset is shaded as the battery
+          discharging. There are no values on either axis because the model has
+          no time resolution and did not compute this.</desc>
+      </svg>
+      <figcaption>
+        <strong>Schematic — not model output.</strong> The model has no time
+        resolution: one annual figure per technology is the whole of it. This is
+        here because storage's job cannot be shown on an annual axis, where its
+        net contribution is zero. It does not respond to the controls, for the
+        same reason. Shapes are illustrative.
+      </figcaption>
     </figure>
 
     <div id="flow-wrap">
@@ -198,6 +218,13 @@
     font-family: system-ui, sans-serif; font-size: .78rem; color: var(--muted); margin-top: .2rem;
   }
 
+  .schematic { margin: .25rem 0 1rem; }
+  .schematic figcaption {
+    font-family: system-ui, sans-serif; font-size: .76rem; color: var(--muted);
+    margin-top: .2rem; border-left: 2px solid var(--rule); padding-left: .6rem;
+  }
+  .schematic figcaption strong { color: var(--text); }
+
   .numbers { margin-top: 1rem; }
   .numbers summary {
     font-family: system-ui, sans-serif; font-size: .82rem; color: var(--accent);
@@ -209,11 +236,16 @@
      five pixels on a phone. The table is not a fallback here -- it is the
      better view, so the diagram gets out of its way. */
   @media (max-width: 600px) {
-    #flow-wrap, #mult { display: none; }
+    /* The schematic goes too: at 375px its type lands around five pixels, the
+       same reason the flow diagram and the bars step aside. Its caption is
+       the whole point anyway -- the diagram illustrates a sentence, and the
+       sentence survives on its own. */
+    #flow-wrap, #mult, #schematic { display: none; }
     .numbers summary { display: none; }
-    /* The caption stays. It is the sentence the bar was drawing, and the
-       capacity table below carries the numbers it was drawing them from. */
+    /* The captions stay. They are what the bars were drawing, and the
+       capacity table below carries the numbers they were drawing them from. */
     .mult figcaption { margin-top: 0; }
+    .schematic { margin-top: 0; }
   }
 </style>
 
@@ -605,100 +637,263 @@
   }
 
 
-  // --- multiplier one: the step the flow diagram starts after ----------------
+  // --- multiplier one, on an absolute axis ---------------------------------
   /**
-   * Demand is energy; metal is bought per unit of capacity. Between those two
-   * sits the capacity factor, and it is not a small correction -- solar serves
-   * about a third of the electricity and is about half of the machine. The
-   * flow diagram below begins at capacity, so without this strip the page
-   * asserts that step in prose and never shows it.
+   * Rebuilt for v2. The shipped version drew two rows each normalised to 100%
+   * of its own total, which made them share-charts -- and that normalisation
+   * is precisely what excluded storage, because storage has no share of
+   * annual energy to draw.
+   *
+   * Here both generation rows sit on ONE absolute gigawatt axis, anchored by a
+   * dashed box at average load. Row one decomposes demand by who serves it and
+   * therefore ends exactly at the dashed box. Row two is the nameplate that has
+   * to exist to do it, and overshoots the box by two to three and a half times.
+   * Each technology's segment stretches by exactly 1/capacity-factor between
+   * the rows, so the chart draws multiplier one rather than asserting it.
+   *
+   * Storage then gets its own row, its own unit (GWh) and its own dashed
+   * reference (one day of average demand), because a gigawatt-hour is not a
+   * gigawatt and putting them on one axis would be the kind of false
+   * comparison this page exists to argue against.
    */
   const multSvg = document.getElementById("mult");
   let multChrome = null;
   const GEN = ["gas", "solar", "wind"];
-  const GEN_OPACITY = { gas: 0.22, solar: 0.5, wind: 0.35 };
+  const HOURS_PER_YEAR = 8760;
+
+  const X0 = 104, X1 = 748, ROW_H = 20;
+  const Y_ENERGY = 30, Y_CAPACITY = 62, Y_STORAGE = 122;
+  const AXIS_W = X1 - X0;
 
   function drawMultiplier(period) {
-    const X0 = 62, X1 = 748, TOP1 = 20, H = 18, TOP2 = 70;
-    const W = X1 - X0;
-    const totGW = GEN.reduce((a, t) => a + period.capacityGW[t], 0);
-    const shares = GEN.map((t) => ({
+    const avgLoadGW = (period.demandTWh * 1000) / HOURS_PER_YEAR;
+    const rows = GEN.map((t) => ({
       tech: t,
-      energy: period.mix[t],
-      capacity: totGW > 0 ? period.capacityGW[t] / totGW : 0,
+      avg: period.mix[t] * avgLoadGW,          // average load this tech serves
+      cap: period.capacityGW[t],               // nameplate it needs to do that
     }));
+    const totalCap = rows.reduce((a, b) => a + b.cap, 0);
+
+    // One gigawatt scale for both generation rows -- that shared scale is the
+    // entire point, so it is never recomputed per row.
+    const gwMax = Math.max(totalCap, avgLoadGW) * 1.04;
+    const sx = (gw) => X0 + (gw / gwMax) * AXIS_W;
+
+    // Storage: gigawatt-hours, against one day of average demand.
+    const dayGWh = avgLoadGW * 24;
+    const stMax = Math.max(dayGWh, period.storageGWh) * 1.04;
+    const sxS = (gwh) => X0 + (gwh / stMax) * AXIS_W;
+    const storageHrs = avgLoadGW > 0 ? period.storageGWh / avgLoadGW : 0;
 
     if (!multChrome) {
-      multChrome = { bands: el("g"), bars: el("g"), text: el("g") };
-      multSvg.append(multChrome.bands, multChrome.bars, multChrome.text);
-      for (const [i, label] of [["Energy", TOP1 + 13], ["Capacity", TOP2 + 13]]) {
+      multChrome = {
+        bands: el("g"), bars: el("g"), boxes: el("g"), text: el("g"), keyed: new Map(),
+      };
+      multSvg.append(multChrome.bands, multChrome.bars, multChrome.boxes, multChrome.text);
+
+      for (const [label, y] of [["Energy served", Y_ENERGY], ["Capacity built", Y_CAPACITY],
+                                ["Storage", Y_STORAGE]]) {
         multChrome.text.appendChild(el("text", {
-          x: X0 - 8, y: label, "text-anchor": "end", "font-size": 11,
+          x: X0 - 10, y: y + 14, "text-anchor": "end", "font-size": 11,
           fill: "var(--muted)", "font-family": "system-ui, sans-serif",
-        }, i));
+        }, label));
       }
-      multChrome.keyed = new Map();
+
+      // Dashed demand references. Never filled, drawn over the bars, so a bar
+      // crossing one is unmistakable.
+      multChrome.demandBox = el("rect", {
+        fill: "none", stroke: "var(--text)", "stroke-width": 1.5,
+        "stroke-dasharray": "5 3", rx: 2,
+        y: Y_ENERGY - 6, height: (Y_CAPACITY + ROW_H) - (Y_ENERGY - 6) + 6,
+      });
+      multChrome.dayBox = el("rect", {
+        fill: "none", stroke: "var(--text)", "stroke-width": 1.5,
+        "stroke-dasharray": "5 3", rx: 2,
+        y: Y_STORAGE - 6, height: ROW_H + 12,
+      });
+      multChrome.boxes.append(multChrome.demandBox, multChrome.dayBox);
+
+      multChrome.demandLabel = el("text", {
+        "font-size": 10, fill: "var(--muted)", "text-anchor": "middle",
+        "font-family": "system-ui, sans-serif",
+      });
+      multChrome.dayLabel = el("text", {
+        "font-size": 10, fill: "var(--muted)", "text-anchor": "middle",
+        "font-family": "system-ui, sans-serif",
+      });
+      multChrome.capLabel = el("text", {
+        "font-size": 10.5, fill: "var(--text)", "text-anchor": "start",
+        "font-family": "system-ui, sans-serif", "font-variant-numeric": "tabular-nums",
+      });
+      multChrome.stLabel = el("text", {
+        "font-size": 10.5, fill: "var(--text)", "text-anchor": "start",
+        "font-family": "system-ui, sans-serif", "font-variant-numeric": "tabular-nums",
+      });
+      multChrome.text.append(multChrome.demandLabel, multChrome.dayLabel,
+                             multChrome.capLabel, multChrome.stLabel);
+
+      multChrome.storageBar = el("rect", {
+        class: "bar", y: Y_STORAGE, height: ROW_H,
+        fill: "var(--t-storage)", "fill-opacity": .8, rx: 1,
+      });
+      multChrome.bars.appendChild(multChrome.storageBar);
     }
 
+    // Generation rows.
     let e0 = X0, c0 = X0;
-    for (const sh of shares) {
-      const ew = sh.energy * W, cw = sh.capacity * W;
-      const k = sh.tech;
-      let g = multChrome.keyed.get(k);
+    for (const r of rows) {
+      let g = multChrome.keyed.get(r.tech);
       if (!g) {
         g = {
-          top: el("rect", { class: "bar", y: TOP1, height: H, fill: `var(--t-${k})`, "fill-opacity": .8 }),
-          bot: el("rect", { class: "bar", y: TOP2, height: H, fill: `var(--t-${k})`, "fill-opacity": .8 }),
-          band: el("path", { class: "tie", fill: `var(--t-${k})`, "fill-opacity": .32 }),
-          lab: el("text", { "font-size": 11, fill: "var(--text)", "font-family": "system-ui, sans-serif", "text-anchor": "middle" }),
-          num: el("text", { "font-size": 10.5, fill: "var(--muted)", "font-family": "system-ui, sans-serif", "text-anchor": "middle" }),
+          top: el("rect", { class: "bar", y: Y_ENERGY, height: ROW_H, fill: `var(--t-${r.tech})`, "fill-opacity": .8 }),
+          bot: el("rect", { class: "bar", y: Y_CAPACITY, height: ROW_H, fill: `var(--t-${r.tech})`, "fill-opacity": .8 }),
+          band: el("path", { class: "tie", fill: `var(--t-${r.tech})`, "fill-opacity": .22 }),
+          lab: el("text", { "font-size": 10.5, fill: "var(--bg)", "text-anchor": "middle",
+                            "font-family": "system-ui, sans-serif", "font-weight": "600" }),
         };
         multChrome.bands.appendChild(g.band);
         multChrome.bars.append(g.top, g.bot);
-        multChrome.text.append(g.lab, g.num);
-        multChrome.keyed.set(k, g);
+        multChrome.text.append(g.lab);
+        multChrome.keyed.set(r.tech, g);
       }
-      g.top.setAttribute("x", e0); g.top.setAttribute("width", Math.max(0, ew));
-      g.bot.setAttribute("x", c0); g.bot.setAttribute("width", Math.max(0, cw));
+      const ex = sx(r.avg) - X0, cx = sx(r.cap) - X0;
+      g.top.setAttribute("x", e0); g.top.setAttribute("width", Math.max(0, ex));
+      g.bot.setAttribute("x", c0); g.bot.setAttribute("width", Math.max(0, cx));
       g.band.setAttribute("d",
-        `M ${e0} ${TOP1 + H} L ${e0 + ew} ${TOP1 + H} L ${c0 + cw} ${TOP2} L ${c0} ${TOP2} Z`);
+        `M ${e0} ${Y_ENERGY + ROW_H} L ${e0 + ex} ${Y_ENERGY + ROW_H} `
+        + `L ${c0 + cx} ${Y_CAPACITY} L ${c0} ${Y_CAPACITY} Z`);
 
-      const wide = ew > 46 && cw > 46;
-      g.lab.textContent = wide ? nameOf(sh.tech) : "";
-      g.lab.setAttribute("x", e0 + ew / 2);
-      g.lab.setAttribute("y", TOP1 - 5);
-      g.num.textContent = wide ? `${pct(sh.energy)} → ${pct(sh.capacity)}` : "";
-      g.num.setAttribute("x", c0 + cw / 2);
-      g.num.setAttribute("y", TOP2 + H + 14);
-      e0 += ew; c0 += cw;
+      // The stretch factor is 1/capacity-factor exactly. Printed on the
+      // capacity segment when it fits, because it IS the mechanism.
+      const stretch = r.avg > 0 ? r.cap / r.avg : 0;
+      g.lab.textContent = cx > 60 ? `${nameOf(r.tech)} ×${stretch.toFixed(1)}` : "";
+      g.lab.setAttribute("x", c0 + cx / 2);
+      g.lab.setAttribute("y", Y_CAPACITY + 14);
+      e0 += ex; c0 += cx;
     }
 
-    const worst = shares.reduce((a, b) =>
-      (b.energy > 0 ? b.capacity / b.energy : 0) > (a.energy > 0 ? a.capacity / a.energy : 0) ? b : a);
-    const ratio = worst.energy > 0 ? worst.capacity / worst.energy : 1;
+    // Dashed references and their labels.
+    const dx = sx(avgLoadGW);
+    multChrome.demandBox.setAttribute("x", X0);
+    multChrome.demandBox.setAttribute("width", Math.max(1, dx - X0));
+    multChrome.demandLabel.textContent = `average load ${Math.round(avgLoadGW).toLocaleString()} GW`;
+    multChrome.demandLabel.setAttribute("x", (X0 + dx) / 2);
+    multChrome.demandLabel.setAttribute("y", Y_ENERGY - 12);
 
-    // Storage has no capacity factor and no share of annual energy served --
-    // it is sized off the wind+solar fleet, not off demand -- so it cannot
-    // sit in a chart whose two rows are both "share of the same total".
-    // Silently dropping it read as a bug rather than a boundary, so it gets
-    // its own line instead of a slot in the stack it does not belong in.
-    const vreGW = period.capacityGW.solar + period.capacityGW.wind;
-    const storageRatio = vreGW > 0 ? period.storageGWh / vreGW : 0;
+    const dayX = sxS(dayGWh);
+    multChrome.dayBox.setAttribute("x", X0);
+    multChrome.dayBox.setAttribute("width", Math.max(1, dayX - X0));
+    multChrome.dayLabel.textContent = "one day of average demand";
+    multChrome.dayLabel.setAttribute("x", (X0 + dayX) / 2);
+    multChrome.dayLabel.setAttribute("y", Y_STORAGE - 12);
+
+    multChrome.storageBar.setAttribute("x", X0);
+    multChrome.storageBar.setAttribute("width", Math.max(0, sxS(period.storageGWh) - X0));
+
+    const overshoot = avgLoadGW > 0 ? totalCap / avgLoadGW : 0;
+    multChrome.capLabel.textContent =
+      `${Math.round(totalCap).toLocaleString()} GW — ${overshoot.toFixed(1)}× average load`;
+    multChrome.capLabel.setAttribute("x", Math.min(sx(totalCap) + 8, X1 - 150));
+    multChrome.capLabel.setAttribute("y", Y_CAPACITY - 6);
+
+    multChrome.stLabel.textContent =
+      `${Math.round(period.storageGWh).toLocaleString()} GWh — ${storageHrs.toFixed(1)} h of average load`;
+    multChrome.stLabel.setAttribute("x", Math.min(sxS(period.storageGWh) + 8, X1 - 200));
+    multChrome.stLabel.setAttribute("y", Y_STORAGE + 14);
 
     document.getElementById("mult-cap").textContent =
-      `Serving ${Math.round(period.demandTWh).toLocaleString()} TWh/yr from `
-      + `${Math.round(totGW).toLocaleString()} GW of capacity. Multiplier one: `
-      + `${nameOf(worst.tech)} serves ${pct(worst.energy)} of the energy and is `
-      + `${pct(worst.capacity)} of the capacity — ${ratio.toFixed(2)}× its share — because it runs `
-      + `${pct(CAPACITY_FACTOR[worst.tech].value)} of the time. Storage isn't shown above: it has no `
-      + `capacity factor of its own, so it can't be a share of this chart's total. It's sized as a `
-      + `multiple of solar+wind capacity — here, ${Math.round(period.storageGWh).toLocaleString()} GWh, `
-      + `${storageRatio.toFixed(1)}× the ${Math.round(vreGW).toLocaleString()} GW of solar and wind standing.`;
+      `Serving ${Math.round(period.demandTWh).toLocaleString()} TWh/yr — an average load of `
+      + `${Math.round(avgLoadGW).toLocaleString()} GW, the dashed box. Meeting it takes `
+      + `${Math.round(totalCap).toLocaleString()} GW of nameplate, ${overshoot.toFixed(1)}× that box, `
+      + `because every technology is overbuilt by 1/its capacity factor. Storage holds `
+      + `${Math.round(period.storageGWh).toLocaleString()} GWh — ${storageHrs.toFixed(1)} hours of `
+      + `average demand. It serves no net annual energy: it moves energy in time rather than `
+      + `generating it, which is why it has no segment in the two bars above and a row of its own below.`;
+
     document.getElementById("mult-desc").textContent =
-      "Two stacked bars, plus a storage figure that is not part of either bar. " + shares.map((x) =>
-        `${nameOf(x.tech)} is ${pct(x.energy)} of energy served and ${pct(x.capacity)} of capacity`).join("; ")
-      + `. Storage: ${Math.round(period.storageGWh).toLocaleString()} GWh, `
-      + `${storageRatio.toFixed(1)} times the standing solar and wind capacity, not a share of the chart above.`;
+      `Three horizontal bars on two axes. Energy served, decomposed by technology, ending at the `
+      + `dashed average-load reference of ${Math.round(avgLoadGW).toLocaleString()} GW. Capacity built, `
+      + `same scale, reaching ${Math.round(totalCap).toLocaleString()} GW — ${overshoot.toFixed(1)} times `
+      + `the dashed box. ` + rows.map((r) =>
+        `${nameOf(r.tech)} stretches ${(r.avg > 0 ? r.cap / r.avg : 0).toFixed(1)} times between the two`).join("; ")
+      + `. Below, on a gigawatt-hour axis, storage of ${Math.round(period.storageGWh).toLocaleString()} GWh `
+      + `against a dashed box of one day of average demand — ${storageHrs.toFixed(1)} hours' worth.`;
+  }
+
+  // --- why storage exists, as a diagram rather than a chart -----------------
+  /**
+   * SCHEMATIC. Every shape below comes from a formula chosen to look like a
+   * plausible day. None of it is model output: the model has no time
+   * resolution at all, just one annual figure per technology.
+   *
+   * It is here because storage's job is invisible on any annual axis -- over a
+   * year it serves zero net energy -- so the only way to show what it does is
+   * to show a shape the model cannot compute. Drawn deliberately without a
+   * value axis, labelled illustrative, and NOT wired to the controls, because
+   * a diagram that responded to the sliders would be claiming to have
+   * calculated something it has not.
+   */
+  function drawSchematic() {
+    const svg = document.getElementById("schematic");
+    if (!svg || svg.dataset.drawn) return;
+    svg.dataset.drawn = "1";
+
+    const L = 56, R = 730, T = 22, B = 104, W = R - L, H = B - T;
+    const x = (h) => L + (h / 24) * W;
+    const y = (v) => B - v * H;                    // v is unitless, 0..1.35
+
+    // Illustrative shapes: a load curve with a morning ramp and an evening
+    // peak, and a solar bell that overshoots it in the middle of the day.
+    const demand = (h) =>
+      0.52 + 0.20 * Math.exp(-((h - 9) ** 2) / 12) + 0.34 * Math.exp(-((h - 19) ** 2) / 8);
+    const solar = (h) => (h > 6 && h < 18 ? 1.18 * Math.sin((Math.PI * (h - 6)) / 12) ** 1.4 : 0);
+
+    const pts = [];
+    for (let h = 0; h <= 24; h += 0.25) pts.push(h);
+    const path = (f) => pts.map((h, i) => `${i ? "L" : "M"} ${x(h).toFixed(1)} ${y(f(h)).toFixed(1)}`).join(" ");
+
+    const surplus = pts.filter((h) => solar(h) > demand(h));
+    if (surplus.length) {
+      const up = surplus.map((h) => `L ${x(h).toFixed(1)} ${y(solar(h)).toFixed(1)}`).join(" ");
+      const down = [...surplus].reverse().map((h) => `L ${x(h).toFixed(1)} ${y(demand(h)).toFixed(1)}`).join(" ");
+      svg.appendChild(el("path", {
+        d: `M ${x(surplus[0]).toFixed(1)} ${y(demand(surplus[0])).toFixed(1)} ${up} ${down} Z`,
+        fill: "var(--t-storage)", "fill-opacity": .34,
+      }));
+    }
+    const evening = pts.filter((h) => h >= 17.5 && h <= 22);
+    const ev = evening.map((h) => `L ${x(h).toFixed(1)} ${y(demand(h)).toFixed(1)}`).join(" ");
+    svg.appendChild(el("path", {
+      d: `M ${x(evening[0]).toFixed(1)} ${y(0).toFixed(1)} ${ev} `
+         + `L ${x(evening[evening.length - 1]).toFixed(1)} ${y(0).toFixed(1)} Z`,
+      fill: "var(--t-storage)", "fill-opacity": .2,
+    }));
+
+    svg.appendChild(el("path", { d: path(solar), fill: "none", stroke: "var(--t-solar)", "stroke-width": 2 }));
+    svg.appendChild(el("path", {
+      d: path(demand), fill: "none", stroke: "var(--text)", "stroke-width": 1.8, "stroke-dasharray": "5 3",
+    }));
+
+    svg.appendChild(el("line", { x1: L, x2: R, y1: B, y2: B, stroke: "var(--rule)", "stroke-width": 1 }));
+    for (const [h, t] of [[0, "midnight"], [12, "noon"], [24, "midnight"]]) {
+      svg.appendChild(el("text", {
+        x: x(h), y: B + 14, "text-anchor": "middle", "font-size": 10,
+        fill: "var(--muted)", "font-family": "system-ui, sans-serif",
+      }, t));
+    }
+
+    const note = (tx, ty, text, fill, anchor) => svg.appendChild(el("text", {
+      x: tx, y: ty, "text-anchor": anchor || "middle", "font-size": 10.5, fill,
+      "font-family": "system-ui, sans-serif", stroke: "var(--bg)", "stroke-width": 3,
+      "paint-order": "stroke",
+    }, text));
+    // Value 1.0 maps to the top of the drawing area, so anything above it is
+    // outside the viewBox: the surplus label sat at 1.30 and was clipped
+    // entirely. It belongs inside the wedge it names anyway.
+    note(x(12), y(0.90), "surplus charges the battery", "var(--text)");
+    note(x(20.4), y(0.26), "and covers the evening peak", "var(--text)");
+    note(x(2.6), y(0.60), "demand", "var(--text)", "start");
+    note(x(7.8), y(0.46), "solar", "var(--t-solar)", "start");
   }
 
   // --- legend and readout -------------------------------------------------
@@ -938,6 +1133,7 @@
   syncDisclosure();
 
   update();
+  drawSchematic();
 
   // Let a host page size the iframe to the content instead of guessing.
   const post = () => parent.postMessage({ type: "cascade-height", height: document.body.scrollHeight }, "*");
