@@ -4,7 +4,7 @@ import MaterialCascade from "../components/MaterialCascade.astro";
 ---
 
 <Base title="What a Grid Is Made Of" wide={true}>
-  <p class="subhead">Energy demand → the generation that meets it → components → metal → rock. Pick a scenario.</p>
+  <p class="subhead">Ore mined → material refined → components → the generation it becomes. Pick a scenario.</p>
 
   <p class="disclaimer">
     <strong>This is a teaching toy, not research.</strong> It runs in one
@@ -24,19 +24,24 @@ import MaterialCascade from "../components/MaterialCascade.astro";
     it. Neither is an addition, which is why both are easy to miss.
   </p>
   <p>
-    <strong>Capacity factor, at the top.</strong> Demand is energy, but metal is
-    bought per unit of capacity. Solar runs about a quarter of the hours in a
-    year and a gas plant better than half, so the same terawatt-hour asks for
-    more than twice the nameplate from one as from the other — before a single
-    kilogram of anything has been counted. Move the gas share and watch the
-    capacity number move faster than the demand number does.
+    <strong>Capacity factor, at the top of the page.</strong> Demand is
+    energy, but metal is bought per unit of capacity. Solar runs about a
+    quarter of the hours in a year and a gas plant better than half, so the
+    same terawatt-hour asks for more than twice the nameplate from one as from
+    the other — before a single kilogram of anything has been counted. Move
+    the gas share and watch the capacity number move faster than the demand
+    number does. Storage doesn't appear in that chart, and the caption below
+    it says why: it has no capacity factor of its own, so it can't be a share
+    of a total the other two rows are shares of.
   </p>
   <p>
-    <strong>Ore grade, at the bottom.</strong> Copper ore runs near half a
-    percent, so a tonne of copper is a couple of hundred tonnes of rock. Iron
-    ore runs above fifty percent, so a tonne of steel is under two. The last
-    gap in the diagram is where a modest difference in metal becomes an
-    enormous difference in mining.
+    <strong>Ore grade, where the diagram begins.</strong> Copper ore runs near
+    half a percent, so a tonne of copper is a couple of hundred tonnes of
+    rock. Iron ore runs above fifty percent, so a tonne of steel is under two.
+    The first gap in the diagram — ore into material — is where a modest
+    difference in metal becomes an enormous difference in mining, and reading
+    the diagram left to right now means meeting that gap first, before
+    anything else.
   </p>
   <p>
     Between them they produce the one result on this page worth remembering,
@@ -48,13 +53,15 @@ import MaterialCascade from "../components/MaterialCascade.astro";
     one.
   </p>
   <p>
-    Try it: start on <em>Wind-heavy</em> and note the metal. Switch to
+    Try it: start on <em>Wind-heavy</em> and note the metal, in the amber-gold
+    "Wind" band at the diagram's right end. Switch to
     <em>Solar + storage</em>. The metal falls and the rock goes up, because
-    wind's mass is steel and steel ore is rich. Then take gas to ninety percent
-    and watch the copper refuse to leave — the grid connection is charged on
-    every megawatt regardless of what built it, so there is no mix that routes
-    around it. Finally set LFP to zero and watch a nickel band appear out of the
-    storage column that was not there a moment ago.
+    wind's mass is steel and steel ore is rich. Then take gas to ninety
+    percent and watch the copper refuse to leave the leftmost column — the
+    grid connection is charged on every megawatt regardless of what built it,
+    so there is no mix that routes around it. Finally set LFP to zero and
+    watch a nickel band appear out of the storage column that was not there a
+    moment ago.
   </p>
 
   <h2>What it leaves out</h2>
@@ -77,9 +84,10 @@ import MaterialCascade from "../components/MaterialCascade.astro";
     Coefficients: <code>src/scripts/materialData.js</code>, one table, every
     entry labelled with its source. Model:
     <code>src/scripts/materialModel.js</code>, about two hundred lines and no
-    dependencies. Capacity factors from EIA fleet averages, mineral intensities
-    from the IEA's 2021 critical minerals annex, grades from USGS; bulk steel,
-    aluminum and the grid allowance are engineering estimates made for this page.
+    dependencies.
+    Capacity factors from EIA fleet averages, mineral intensities from the
+    IEA's 2021 critical minerals annex, grades from USGS; bulk steel, aluminum
+    and the grid allowance are engineering estimates made for this page.
   </p>
 </Base>
 

@@ -11,3 +11,6 @@
 /about_org/*          /about/          301
 /talk/*               /publications/   301
 /home/*               /                301
+
+# Preview page, promoted to /materials/ once its changes were accepted
+/materials-v2/*       /materials/      301
