@@ -1,0 +1,120 @@
+---
+import Base from "../layouts/Base.astro";
+import MaterialCascadeV2 from "../components/MaterialCascadeV2.astro";
+---
+
+<Base title="What a Grid Is Made Of (preview)" wide={true}>
+  <p class="preview-banner">
+    <strong>Preview — not linked from navigation.</strong> Four changes on top
+    of the shipped <a href="/materials/">/materials/</a> page: technology
+    colour carried into the multiplier bar and the diagram's capacity column,
+    the diagram read left-to-right as ore → capacity instead of
+    capacity → ore, an explanation for why storage isn't in the multiplier
+    chart, and totals that don't depend on a segment being wide enough to hold
+    text. The standard page is untouched — this is a separate component
+    (<code>MaterialCascadeV2.astro</code>) so the two can sit side by side.
+  </p>
+
+  <p class="subhead">Ore mined → material refined → components → the generation it becomes. Pick a scenario.</p>
+
+  <p class="disclaimer">
+    <strong>This is a teaching toy, not research.</strong> It runs in one
+    direction with fixed coefficients and nothing in it is optimized: you hand
+    it a generation mix and it tells you what that mix is made of. There is no
+    cost, no siting, no lead time, no substitution and no recycling. Roughly a
+    third of the coefficients are order-of-magnitude estimates rather than
+    published figures, and each one says which it is. No number here should be
+    cited.
+  </p>
+
+  <MaterialCascadeV2 />
+
+  <h2>What this is showing</h2>
+  <p>
+    There are two multipliers in this chain and they sit at opposite ends of
+    it. Neither is an addition, which is why both are easy to miss.
+  </p>
+  <p>
+    <strong>Capacity factor, at the top of the page.</strong> Demand is
+    energy, but metal is bought per unit of capacity. Solar runs about a
+    quarter of the hours in a year and a gas plant better than half, so the
+    same terawatt-hour asks for more than twice the nameplate from one as from
+    the other — before a single kilogram of anything has been counted. Move
+    the gas share and watch the capacity number move faster than the demand
+    number does. Storage doesn't appear in that chart, and the caption below
+    it says why: it has no capacity factor of its own, so it can't be a share
+    of a total the other two rows are shares of.
+  </p>
+  <p>
+    <strong>Ore grade, where the diagram begins.</strong> Copper ore runs near
+    half a percent, so a tonne of copper is a couple of hundred tonnes of
+    rock. Iron ore runs above fifty percent, so a tonne of steel is under two.
+    The first gap in the diagram — ore into material — is where a modest
+    difference in metal becomes an enormous difference in mining, and reading
+    the diagram left to right now means meeting that gap first, before
+    anything else.
+  </p>
+  <p>
+    Between them they produce the one result on this page worth remembering,
+    and it holds in every scenario here: <strong>copper is a few percent of the
+    metal and the large majority of the rock.</strong> Steel dominates the
+    tonnage — a wind tower is a very heavy object — while copper, which nobody
+    weighs, dominates the mining. Those are two true sentences about the same
+    build, and a model that stops at the metal column only tells you the first
+    one.
+  </p>
+  <p>
+    Try it: start on <em>Wind-heavy</em> and note the metal, in the amber-gold
+    "Wind" band at the diagram's right end. Switch to
+    <em>Solar + storage</em>. The metal falls and the rock goes up, because
+    wind's mass is steel and steel ore is rich. Then take gas to ninety
+    percent and watch the copper refuse to leave the leftmost column — the
+    grid connection is charged on every megawatt regardless of what built it,
+    so there is no mix that routes around it. Finally set LFP to zero and
+    watch a nickel band appear out of the storage column that was not there a
+    moment ago.
+  </p>
+
+  <h2>What it leaves out</h2>
+  <p>
+    Everything that makes the real problem hard. There is no recycling here, no
+    substitution when a metal gets expensive, no lead time between deciding to
+    open a mine and the metal arriving twelve years later, and no cost at all —
+    the mix is given rather than chosen. The companion toy on
+    <a href="/model/">the linked model page</a> covers one of those omissions,
+    the decade-scale lag on end-of-life recovery, and ignores everything this
+    one shows.
+  </p>
+  <p>
+    Putting them together — a mix that is chosen rather than given, under
+    capacity limits, lead times and recovery — is the actual research, and it
+    does not fit on a web page. That work lives in
+    <a href="/labs/">the lab</a> and in <a href="/publications/">the papers</a>.
+  </p>
+  <p class="hint">
+    Coefficients: <code>src/scripts/materialData.js</code>, one table, every
+    entry labelled with its source. Model:
+    <code>src/scripts/materialModel.js</code>, about two hundred lines and no
+    dependencies — untouched by this preview; only presentation changed.
+    Capacity factors from EIA fleet averages, mineral intensities from the
+    IEA's 2021 critical minerals annex, grades from USGS; bulk steel, aluminum
+    and the grid allowance are engineering estimates made for this page.
+  </p>
+</Base>
+
+<style>
+  .preview-banner {
+    border-left: 3px solid #b23a2e;
+    padding: .6rem .9rem;
+    background: var(--code-bg);
+    font-size: .88rem;
+    margin-bottom: 1rem;
+  }
+  .disclaimer {
+    border-left: 3px solid var(--accent);
+    padding: .6rem .9rem;
+    background: var(--code-bg);
+    font-size: .92rem;
+  }
+  .hint { font-family: system-ui, sans-serif; font-size: .82rem; color: var(--muted); }
+</style>
