@@ -1,0 +1,118 @@
+---
+import Base from "../layouts/Base.astro";
+
+/**
+ * The index is meant to be read, not just clicked through. Each model here
+ * exists to make exactly one mechanism visible, so the card states that
+ * mechanism rather than describing the interface — a visitor should be able to
+ * tell which model answers their question without opening either.
+ */
+const models = [
+  {
+    title: "What a Grid Is Made Of",
+    url: "/materials/",
+    line: "Energy demand → the generation that meets it → components → metal → rock.",
+    thesis:
+      "Copper is a few percent of the metal and the large majority of the rock. Steel dominates "
+      + "the tonnage — a wind tower is a very heavy object — while copper, which nobody weighs, "
+      + "dominates the mining.",
+    detail:
+      "Pick a generation mix and it tells you what that mix is made of. Two timescales: over a "
+      + "year, the fleet run flat out against annual demand; over one day, the share of demand "
+      + "the battery carries.",
+  },
+  {
+    title: "A Toy Linked Model",
+    url: "/model/",
+    line: "Battery demand → critical mineral demand → primary mining and end-of-life recovery.",
+    thesis:
+      "The recovery loop is a supply source whose size was set by decisions taken ten to fifteen "
+      + "years earlier. You cannot ramp it in the year you discover you need it.",
+    detail:
+      "A deterministic stock-and-flow sketch. Push demand growth until a shortfall opens, then "
+      + "try to close it by raising the recovery yield — the material simply is not in the waste "
+      + "stream yet.",
+  },
+];
+---
+
+<Base title="Models" wide={true}>
+  <p class="subhead">Small interactive models, each built to make one mechanism visible.</p>
+
+  <p class="disclaimer">
+    <strong>These are teaching toys, not research.</strong> They run on fixed
+    coefficients, nothing in them is optimized, and no number they produce
+    should be cited. What they are good for is the shape of an argument — the
+    thing that is hard to see in a table and obvious once you can move it.
+  </p>
+
+  <ul class="models">
+    {models.map((m) => (
+      <li>
+        <h2><a href={m.url}>{m.title}</a></h2>
+        <p class="line">{m.line}</p>
+        <p class="thesis">{m.thesis}</p>
+        <p class="detail">{m.detail}</p>
+      </li>
+    ))}
+  </ul>
+
+  <h2 class="plain">Where the numbers come from</h2>
+  <p>
+    Every coefficient in these models says which kind it is — a published
+    figure from the IEA, EIA or USGS, or an order-of-magnitude estimate made
+    for the page. Roughly a third are estimates. That is fine for arguments
+    that turn on ratios of two hundred to one rather than on ten percent
+    accuracy, but it is not fine to hide, so the label travels with the number
+    and every model carries its figures as a table as well as a picture.
+  </p>
+  <p>
+    Where a model cannot compute something, it says so and does not draw it.
+    The day-shape diagram on <a href="/materials/">What a Grid Is Made Of</a>
+    is a schematic that deliberately does not respond to the controls, because
+    the model underneath has no time resolution and a diagram that reacted to
+    the sliders would be claiming to have calculated something it has not.
+  </p>
+  <p class="hint">
+    The real versions of these questions — a mix that is chosen rather than
+    given, under capacity limits, lead times and recovery — are the actual
+    research, and do not fit on a web page. That work lives in
+    <a href="/labs/">the lab</a> and in <a href="/publications/">the papers</a>.
+  </p>
+</Base>
+
+<style>
+  .disclaimer {
+    border-left: 3px solid var(--accent);
+    padding: .6rem .9rem;
+    background: var(--code-bg);
+    font-size: .92rem;
+  }
+  .models { list-style: none; padding: 0; margin: 1.5rem 0; display: grid; gap: 1.1rem; }
+  @media (min-width: 52rem) {
+    .models { grid-template-columns: 1fr 1fr; }
+  }
+  .models li {
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    padding: 1rem 1.1rem 1.1rem;
+  }
+  .models h2 { margin: 0 0 .3rem; font-size: 1.18rem; }
+  .models h2 a { text-decoration: none; }
+  .models h2 a:hover { text-decoration: underline; }
+  .models .line {
+    font-family: system-ui, sans-serif;
+    font-size: .82rem;
+    color: var(--muted);
+    margin: 0 0 .7rem;
+  }
+  .models .thesis { margin: 0 0 .6rem; font-size: .96rem; }
+  .models .detail {
+    font-family: system-ui, sans-serif;
+    font-size: .84rem;
+    color: var(--muted);
+    margin: 0;
+  }
+  h2.plain { margin-top: 2rem; }
+  .hint { font-family: system-ui, sans-serif; font-size: .82rem; color: var(--muted); }
+</style>
