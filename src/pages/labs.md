@@ -5,6 +5,8 @@ title: "Labs"
 
 <h2 id="sear">SEAR — Sustainable and Efficient Allocation of Resources</h2>
 
+**The lab has its own site: [searlab.uta.edu](https://searlab.uta.edu/)** — people, projects, and what is currently running.
+
 The SEAR Lab studies energy and critical mineral systems and the communities they serve — end to end and back, from extraction through manufacturing and deployment to end-of-life recovery. The lab builds the physical, digital, and institutional infrastructure that lets organizations allocate limited resources sustainably, efficiently, and resiliently.
 
 - **Physical:** reverse logistics and bench-scale critical-metal recovery from end-of-life batteries; battery degradation, charge/discharge characterization, and cell assembly; microgrid prototyping.

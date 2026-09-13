@@ -1,0 +1,175 @@
+/* ============================================================================
+   SEAR Lab — restyle to match erickjonesphd.com
+   ============================================================================
+
+   WHERE THIS GOES
+   searlab.uta.edu → Appearance → Customize → Additional CSS → paste → Publish.
+   That panel is already in use on the site, so nothing needs enabling and no
+   file access is required. It is also fully reversible: clear the box and the
+   site returns exactly to how it looks now. Nothing here touches content,
+   plugins, or the theme itself.
+
+   WHY IT WORKS WITHOUT A CHILD THEME
+   GeneratePress defines its whole palette as CSS custom properties on :root —
+   --contrast, --base, --accent and friends — and everything else on the site
+   refers to those rather than to literal colours. Redefining them in one block
+   therefore re-skins the site wholesale. Additional CSS loads after the theme,
+   so a :root block here wins on order at equal specificity.
+
+   WHAT IT CHANGES
+   Colour and type only, to match erickjonesphd.com: the same dark green accent,
+   the same Georgia serif at the same measure, the same rules and spacing.
+   Layout, menus and structure are left alone.
+
+   ONE THING TO CHECK FIRST
+   The panel is not empty. It already holds a rule setting every heading to
+   Noto Serif JP in blue (#0064b1) — that is what colours the headings today,
+   not the theme. Section 2 below replaces it. Delete the old rule while you
+   are there, or put this block underneath it so this one wins.
+
+   ONE THING TO DECIDE
+   erickjonesphd.com follows the reader's light/dark setting. This does the
+   same, via the block at the bottom. If you would rather SEAR always stayed
+   light — reasonable for a lab site that gets projected in talks — delete that
+   final block and everything else still applies.
+   ========================================================================= */
+
+
+/* --- 1. The palette ------------------------------------------------------ */
+/* Light theme, matching erickjonesphd.com's :root exactly.                   */
+
+:root {
+  --contrast: #1c211e;        /* body text            (was #222222) */
+  --contrast-2: #66716b;      /* muted text           (was #575760) */
+  --contrast-3: #97a29b;      /* faintest text        (was #b2b2be) */
+  --base: #e3e8e5;            /* rules and borders    (was #f0f0f0) */
+  --base-2: #ffffff;          /* page background      (was #f7f8f9) */
+  --base-3: #f4f7f5;          /* panels, code, cards  (was #ffffff) */
+  --accent: #0d6b4f;          /* links and buttons    (was #1e73be) */
+}
+
+
+/* --- 2. Typography ------------------------------------------------------- */
+/* erickjonesphd.com sets 17px/1.65 Georgia for prose and system-ui for
+   interface chrome. Serif body is the single biggest part of the family
+   resemblance — more than the colour.                                       */
+
+body,
+.entry-content,
+.entry-content p,
+.entry-content li {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 17px;
+  line-height: 1.65;
+}
+
+/* Headings share the body serif but tighten up, as on the other site.
+   NOTE: your Additional CSS panel ALREADY contains this rule —
+
+       h1, h2, h3, h4, h5, h6 { font-family: Noto Serif JP; color: #0064b1; }
+
+   which is what currently makes headings blue. This block replaces it, and
+   covers h5 and h6 so nothing is left behind. Cleanest is to delete the old
+   rule while you are in there; if you leave it, paste this block BELOW it and
+   this one wins on order. Headings take the body colour rather than the accent,
+   which is what erickjonesphd.com does — there, green is for links and the
+   accent rule, not for headings. */
+h1, h2, h3, h4, h5, h6,
+.entry-title,
+.site-title {
+  font-family: Georgia, "Times New Roman", serif;
+  color: var(--contrast);
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+
+/* Navigation, buttons and captions are interface, not prose. */
+.main-navigation a,
+.site-description,
+.widget-area,
+button,
+input,
+select,
+textarea,
+.wp-block-button__link {
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+.main-navigation a { font-size: 0.95rem; }
+
+
+/* --- 3. Rules, links and edges ------------------------------------------- */
+
+a { color: var(--accent); }
+a:hover { color: var(--accent); text-decoration: underline; }
+
+.site-header { border-bottom: 1px solid var(--base); }
+.site-footer { border-top: 1px solid var(--base); }
+
+/* GeneratePress buttons pick up the accent from the variable above; this just
+   softens the corners to match. */
+.wp-block-button__link,
+button,
+.button {
+  border-radius: 4px;
+}
+
+/* Blockquotes on erickjonesphd.com are a left rule in the accent colour. */
+blockquote {
+  border-left: 3px solid var(--accent);
+  background: var(--base-3);
+  padding: 0.6rem 0.9rem;
+  font-style: normal;
+}
+
+/* Tables, which WordPress leaves unstyled by default. */
+.entry-content table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: system-ui, sans-serif;
+  font-size: 0.9rem;
+}
+.entry-content th,
+.entry-content td {
+  border-bottom: 1px solid var(--base);
+  padding: 0.4rem 0.5rem;
+  text-align: left;
+}
+
+
+/* --- 4. Reading measure -------------------------------------------------- */
+/* Long lines are the most common reason a WordPress page feels unlike a
+   designed one. erickjonesphd.com holds prose to about 46rem.               */
+
+.entry-content > p,
+.entry-content > ul,
+.entry-content > ol,
+.entry-content > blockquote,
+.entry-content > h2,
+.entry-content > h3 {
+  max-width: 46rem;
+}
+
+
+/* --- 5. Dark mode (optional — delete this block to stay light always) ----- */
+/* Follows the reader's own system setting, as erickjonesphd.com does. The
+   same variables, re-pointed; nothing else has to change.                   */
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --contrast: #d9e0dc;
+    --contrast-2: #8fa097;
+    --contrast-3: #6b7a71;
+    --base: #2a332e;
+    --base-2: #151a17;
+    --base-3: #1d2420;
+    --accent: #5fc9a4;
+  }
+
+  /* Images and logos built for a light page can glare on a dark one. This
+     takes the edge off without inverting anything. */
+  .site-header img,
+  .site-logo img {
+    filter: brightness(0.92);
+  }
+}
