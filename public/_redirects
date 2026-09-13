@@ -14,3 +14,6 @@
 
 # Preview page, promoted to /materials/ once its changes were accepted
 /materials-v2/*       /materials/      301
+
+# Renamed: /model/ was one letter from the /models/ index, and said nothing
+/model/               /recovery-loop/  301

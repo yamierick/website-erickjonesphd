@@ -6,11 +6,49 @@ import Base from "../layouts/Base.astro";
  * exists to make exactly one mechanism visible, so the card states that
  * mechanism rather than describing the interface — a visitor should be able to
  * tell which model answers their question without opening either.
+ *
+ * The thumbnails are hand-drawn abstractions of each model's actual chart, not
+ * screenshots. Screenshots would go stale the moment a model changed, would
+ * need regenerating by hand, and would not follow the reader's theme. These are
+ * a few hundred bytes, track light and dark, and each one shows the shape that
+ * IS the argument: proportions inverting across the cascade, and a supply band
+ * arriving too late to close a gap. They are decorative — the card text carries
+ * the meaning — so they are hidden from assistive technology rather than given
+ * alt text that would only repeat the heading.
  */
+
+// Ore narrowing to metal while the ranking flips: thick copper band thinning
+// out, thin steel band thickening, crossing on the way.
+const artCascade = `
+<svg viewBox="0 0 240 86" class="thumb" aria-hidden="true" focusable="false">
+  <path d="M 19 8 C 116 8, 116 30, 214 30 L 214 40 C 116 40, 116 50, 19 50 Z"
+        fill="var(--th-copper)" fill-opacity=".55"/>
+  <path d="M 19 56 C 116 56, 116 44, 214 44 L 214 72 C 116 72, 116 68, 19 68 Z"
+        fill="var(--th-steel)" fill-opacity=".55"/>
+  <rect x="14" y="6" width="5" height="64" rx="1.5" fill="var(--th-copper)" fill-opacity=".9"/>
+  <rect x="76" y="14" width="5" height="52" rx="1.5" fill="var(--muted)" fill-opacity=".8"/>
+  <rect x="148" y="20" width="5" height="46" rx="1.5" fill="var(--muted)" fill-opacity=".8"/>
+  <rect x="214" y="28" width="5" height="46" rx="1.5" fill="var(--th-steel)" fill-opacity=".9"/>
+</svg>`;
+
+// Demand climbing away from supply, with the recovered band arriving late and
+// too small to close the gap it opens.
+const artRecovery = `
+<svg viewBox="0 0 240 86" class="thumb" aria-hidden="true" focusable="false">
+  <path d="M 12 74 L 12 58 L 84 54 L 156 50 L 228 46 L 228 74 Z"
+        fill="var(--muted)" fill-opacity=".38"/>
+  <path d="M 12 58 L 84 54 L 156 44 L 228 32 L 228 46 L 156 50 L 84 54 Z"
+        fill="var(--accent)" fill-opacity=".65"/>
+  <path d="M 12 60 L 84 44 L 156 28 L 228 12"
+        fill="none" stroke="var(--text)" stroke-width="2" stroke-linejoin="round"/>
+  <line x1="12" y1="74" x2="228" y2="74" stroke="var(--rule)" stroke-width="1"/>
+</svg>`;
+
 const models = [
   {
     title: "What a Grid Is Made Of",
     url: "/materials/",
+    art: artCascade,
     line: "Energy demand → the generation that meets it → components → metal → rock.",
     thesis:
       "Copper is a few percent of the metal and the large majority of the rock. Steel dominates "
@@ -23,7 +61,8 @@ const models = [
   },
   {
     title: "A Toy Linked Model",
-    url: "/model/",
+    url: "/recovery-loop/",
+    art: artRecovery,
     line: "Battery demand → critical mineral demand → primary mining and end-of-life recovery.",
     thesis:
       "The recovery loop is a supply source whose size was set by decisions taken ten to fifteen "
@@ -49,6 +88,7 @@ const models = [
   <ul class="models">
     {models.map((m) => (
       <li>
+        <div class="art"><Fragment set:html={m.art} /></div>
         <h2><a href={m.url}>{m.title}</a></h2>
         <p class="line">{m.line}</p>
         <p class="thesis">{m.thesis}</p>
@@ -88,31 +128,57 @@ const models = [
     background: var(--code-bg);
     font-size: .92rem;
   }
-  .models { list-style: none; padding: 0; margin: 1.5rem 0; display: grid; gap: 1.1rem; }
+
+  .models {
+    list-style: none; padding: 0; margin: 1.5rem 0; display: grid; gap: 1.1rem;
+    --th-copper: #9c4f1c;
+    --th-steel: #39424b;
+  }
+  @media (prefers-color-scheme: dark) {
+    .models { --th-copper: #f0b57e; --th-steel: #6b7682; }
+  }
   @media (min-width: 52rem) {
     .models { grid-template-columns: 1fr 1fr; }
   }
+
   .models li {
     border: 1px solid var(--rule);
     border-radius: 8px;
-    padding: 1rem 1.1rem 1.1rem;
+    padding: 0 0 1.1rem;
+    overflow: hidden;
+    /* The whole card is the click target — see the stretched link below. */
+    position: relative;
+    transition: border-color .15s ease, background-color .15s ease;
   }
-  .models h2 { margin: 0 0 .3rem; font-size: 1.18rem; }
+  .models li:hover { border-color: var(--accent); background: var(--code-bg); }
+
+  .art {
+    background: var(--code-bg);
+    border-bottom: 1px solid var(--rule);
+    padding: .5rem .9rem;
+  }
+  .art :global(svg.thumb) { display: block; width: 100%; height: auto; }
+
+  .models h2 { margin: .9rem 1.1rem .3rem; font-size: 1.18rem; }
   .models h2 a { text-decoration: none; }
   .models h2 a:hover { text-decoration: underline; }
+  /* Stretched link: one link in the accessibility tree, a whole card to click. */
+  .models h2 a::after { content: ""; position: absolute; inset: 0; }
+
   .models .line {
     font-family: system-ui, sans-serif;
     font-size: .82rem;
     color: var(--muted);
-    margin: 0 0 .7rem;
+    margin: 0 1.1rem .7rem;
   }
-  .models .thesis { margin: 0 0 .6rem; font-size: .96rem; }
+  .models .thesis { margin: 0 1.1rem .6rem; font-size: .96rem; }
   .models .detail {
     font-family: system-ui, sans-serif;
     font-size: .84rem;
     color: var(--muted);
-    margin: 0;
+    margin: 0 1.1rem;
   }
+
   h2.plain { margin-top: 2rem; }
   .hint { font-family: system-ui, sans-serif; font-size: .82rem; color: var(--muted); }
 </style>
