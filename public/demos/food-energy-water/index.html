@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Food, energy and water under climate risk · Erick C. Jones Jr., Ph.D.</title>
+<meta name="description" content="Explore two published SEAR Lab studies: what neighborhoods save by sharing home solar and water systems, and what a farm facing an unknown climate would pay to know the future.">
+<link rel="canonical" href="https://www.erickjonesphd.com/demos/food-energy-water/">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="stylesheet" href="../css/demos.css">
+<style>
+  /* Categorical palette, defined once (validated light and dark steps). */
+  :root {
+    --c-blue: #2a78d6; --c-orange: #eb6834; --c-aqua: #1baf7a; --c-violet: #4a3aa7;
+    --r1: #9ec5f4; --r2: #6da7ec; --r3: #3987e5; --r4: #256abf; --r5: #184f95;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --c-blue: #3987e5; --c-orange: #d95926; --c-aqua: #199e70; --c-violet: #9085e9; }
+  }
+  .output { position: relative; min-width: 0; }
+  .model .readout div { border: 1px solid var(--rule); border-radius: 6px; padding: .5rem .7rem; }
+  .readout dd small { font-size: .72rem; color: var(--muted); display: block; margin-top: .1rem; }
+  .seg { flex-wrap: wrap; }
+  .seg.stack { flex-direction: column; }
+  .seg.stack button { text-align: left; padding: .35rem .6rem; }
+  .seg button:focus-visible, .reset:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .chart-title { font-family: system-ui, sans-serif; font-size: .82rem; color: var(--text); font-weight: 600; margin: 0 0 .2rem; }
+  .chart + .chart-title, .legend + .chart-title { margin-top: 1.1rem; }
+  .table-view { font-family: system-ui, sans-serif; font-size: .8rem; margin-top: .8rem; }
+  .table-view summary { cursor: pointer; color: var(--muted); }
+  .table-view .scroll { overflow-x: auto; max-width: 100%; }
+  .table-view table { margin-top: .4rem; font-size: .76rem; font-variant-numeric: tabular-nums; }
+  .table-view th, .table-view td { padding: .2rem .45rem; text-align: right; white-space: nowrap; }
+  .table-view th:first-child, .table-view td:first-child { text-align: left; }
+  .built { font-family: system-ui, sans-serif; font-size: .82rem; color: var(--muted); margin: .8rem 0 0; }
+  .built ul { display: flex; flex-wrap: wrap; gap: .3rem; list-style: none; padding: 0; margin: .3rem 0 0; }
+  .built li { border: 1px solid var(--rule); border-radius: 999px; padding: .1rem .55rem; color: var(--text); font-size: .78rem; }
+  .sw-sel { background: var(--c-blue); } .sw-other { background: var(--muted); opacity: .5; }
+  .sw-line { background: none; border-top: 2px dashed var(--text); height: 0; width: 1rem; border-radius: 0; vertical-align: 3px; }
+  .sw-elec { background: var(--c-orange); } .sw-water { background: var(--c-blue); }
+  .sw-ep { background: var(--c-blue); } .sw-dml { background: var(--c-orange); }
+  .sw-known { background: var(--c-aqua); } .sw-hedged { background: var(--c-violet); }
+  .sw-r1 { background: var(--r1); } .sw-r2 { background: var(--r2); } .sw-r3 { background: var(--r3); } .sw-r4 { background: var(--r4); } .sw-r5 { background: var(--r5); }
+  .star { color: #c2410c; }
+</style>
+</head>
+<body>
+<header class="site-header">
+  <a class="site-title" href="/">Erick C. Jones Jr.</a>
+  <nav><a href="/about/">About</a><a href="/research/">Research</a><a href="/labs/">Labs</a><a href="/publications/">Publications</a><a href="/teaching/">Teaching</a><a href="/resources/">Resources</a><a href="/models/">Models</a><a href="/beyond/">Beyond</a></nav>
+</header>
+<main class="wide">
+<article>
+  <h1>Food, energy and water under climate risk</h1>
+  <p class="subhead">Making your own power and water pays when you share it and plan both together. Planning for a climate you cannot know costs more than bad weather.</p>
+
+  <p class="note-published"><strong>Every number here comes from published SEAR Lab papers</strong>, listed at the bottom
+  with the table or figure each one comes from. Where a paper has an error, the demo shows the corrected value and says so.
+  Cite the papers, not this page.</p>
+
+  <section class="panel" id="coop">
+    <h2>A. An Austin neighborhood: does it pay to make your own electricity and water?</h2>
+    <p class="lede">Rooftop solar, batteries, rainwater tanks and graywater recycling can cut utility bills. Choose how many homes
+    pool their investment and what they plan for, and compare the yearly cost per home with buying everything from the utilities.</p>
+    <div class="model">
+      <div class="controls">
+        <fieldset>
+          <legend>Homes that invest together</legend>
+          <div class="seg" id="coop-size" role="group" aria-label="Homes that invest together">
+            <button type="button" data-v="1">Alone</button>
+            <button type="button" data-v="32">32</button>
+            <button type="button" data-v="320">320</button>
+            <button type="button" data-v="3200">3,200</button>
+          </div>
+          <p class="hint">The paper's 32 homes; 320 and 3,200 are 10 and 100 copies of each.</p>
+        </fieldset>
+        <fieldset>
+          <legend>What they plan for</legend>
+          <div class="seg stack" id="coop-plan" role="group" aria-label="What they plan for">
+            <button type="button" data-v="coop">Electricity and water together</button>
+            <button type="button" data-v="elc">Electricity only</button>
+            <button type="button" data-v="water">Water only</button>
+            <button type="button" data-v="cap">Together, utility purchases capped</button>
+          </div>
+          <p class="hint">Capped: each home may buy at most 500 kWh and 20,000 gallons a month from the utilities.</p>
+        </fieldset>
+        <div class="actions">
+          <button type="button" class="reset" id="coop-reset">Reset</button>
+          <button type="button" class="reset copy-link">Copy link</button>
+        </div>
+      </div>
+      <div class="output">
+        <p class="chart-title">Yearly cost of electricity and water per home</p>
+        <svg class="chart" id="coop-chart" viewBox="0 0 720 320" role="img" aria-labelledby="coop-title coop-desc">
+          <title id="coop-title">Annual cost per home by community size and planning approach</title><desc id="coop-desc"></desc>
+        </svg>
+        <div class="legend">
+          <span><i class="sw sw-sel"></i><span id="coop-leg-sel">Selected approach</span></span>
+          <span><i class="sw sw-other"></i>Other approaches</span>
+          <span><i class="sw sw-line"></i>Buy everything from the utilities</span>
+        </div>
+        <p class="chart-title">Share produced by the homes' own systems</p>
+        <svg class="chart" id="coop-share" viewBox="0 0 720 220" role="img" aria-labelledby="coop-share-title coop-share-desc">
+          <title id="coop-share-title">Share of electricity and water produced locally, by community size</title><desc id="coop-share-desc"></desc>
+        </svg>
+        <div class="legend">
+          <span><i class="sw sw-elec"></i>Electricity</span>
+          <span><i class="sw sw-water"></i>Water</span>
+        </div>
+        <dl class="readout" id="coop-readout"></dl>
+        <div class="built"><span id="coop-built-head">What gets built</span><ul id="coop-built"></ul></div>
+        <details class="table-view"><summary>Show the numbers as a table</summary><div class="scroll" id="coop-table"></div></details>
+      </div>
+    </div>
+    <p class="hint">Costs are the paper's Fig. 1 bar heights (the optimized yearly cost divided by the number of homes) and the
+    local shares its Electricity and Water Fractions, read from the scenario totals in the paper's public repository.
+    Those fractions count stored and curtailed output, so they are not exactly the share of demand met. The household
+    usage data behind the model are licensed and are not shown or used here.</p>
+  </section>
+
+  <section class="panel" id="farm">
+    <h2>B. A Texas wheat farm: what is it worth to know the climate in advance?</h2>
+    <p class="lede">A 200-hectare farm short of water can pay to desalinate brackish groundwater, powered by the utility or its own
+    solar panels, but it must build before it knows whether the next 25 years will be wet or dry. Choose what the farmer
+    believes, then see how each climate would play out.</p>
+    <div class="model">
+      <div class="controls">
+        <fieldset>
+          <legend>The farmer believes</legend>
+          <div class="seg stack" id="farm-belief" role="group" aria-label="The farmer believes">
+            <button type="button" data-v="ep">All four climates equally likely</button>
+            <button type="button" data-v="dml">Dry most likely (60%)</button>
+          </div>
+          <p class="hint" id="farm-belief-hint"></p>
+        </fieldset>
+        <fieldset>
+          <legend>The climate that arrives</legend>
+          <div class="seg" id="farm-clim" role="group" aria-label="The climate that arrives">
+            <button type="button" data-v="dry">Dry</button>
+            <button type="button" data-v="dm">Dry-mod.</button>
+            <button type="button" data-v="mod">Moderate</button>
+            <button type="button" data-v="wet">Wet</button>
+          </div>
+        </fieldset>
+        <div class="actions">
+          <button type="button" class="reset" id="farm-reset">Reset</button>
+          <button type="button" class="reset copy-link">Copy link</button>
+        </div>
+      </div>
+      <div class="output">
+        <p class="chart-title">What advance knowledge adds to expected 25-year profit</p>
+        <svg class="chart" id="farm-values" viewBox="0 0 720 230" role="img" aria-labelledby="farm-values-title farm-values-desc">
+          <title id="farm-values-title">Value of knowing the climate, the weather, and of hedging, for both beliefs</title><desc id="farm-values-desc"></desc>
+        </svg>
+        <div class="legend">
+          <span><i class="sw sw-ep"></i>Equally likely</span>
+          <span><i class="sw sw-dml"></i>Dry most likely</span>
+        </div>
+        <p class="chart-title">The four climate futures: share of years at each rainfall level</p>
+        <svg class="chart" id="farm-rain" viewBox="0 0 720 230" role="img" aria-labelledby="farm-rain-title farm-rain-desc">
+          <title id="farm-rain-title">Probability of each annual rainfall level in the four climates</title><desc id="farm-rain-desc"></desc>
+        </svg>
+        <div class="legend">
+          <span><i class="sw sw-r1"></i>5 in</span><span><i class="sw sw-r2"></i>15 in</span><span><i class="sw sw-r3"></i>30 in</span>
+          <span><i class="sw sw-r4"></i>45 in</span><span><i class="sw sw-r5"></i>60 in a year</span>
+        </div>
+        <p class="chart-title">25-year profit in each climate</p>
+        <svg class="chart" id="farm-profit" viewBox="0 0 720 240" role="img" aria-labelledby="farm-profit-title farm-profit-desc">
+          <title id="farm-profit-title">Profit in each climate with a plan made knowing the climate and with the plan made under the belief</title><desc id="farm-profit-desc"></desc>
+        </svg>
+        <div class="legend">
+          <span><i class="sw sw-known"></i>Built knowing the climate</span>
+          <span><i class="sw sw-hedged"></i>Built for the belief (hedged)</span>
+        </div>
+        <dl class="readout" id="farm-readout"></dl>
+        <details class="table-view"><summary>Show the numbers as a table</summary><div class="scroll" id="farm-table"></div></details>
+      </div>
+    </div>
+    <p class="correction"><strong>Correction note.</strong> Under the “dry most likely” belief, the paper's Table 4 gives the value of
+    hedging (its Value of the Stochastic Solution) as $940.90. Re-running the paper's public code gives $964.89: the plan built
+    for the average climate sits on a very flat objective, and a 0.08% difference in its capacities moves realized profit by
+    about $20. The demo shows the published $940.90 (marked <span class="star">*</span>). Every other value in Table 4
+    reproduces to within about $1.</p>
+  </section>
+
+  <h2>What this shows</h2>
+  <p>Both studies are about the same trade: water that is scarce or expensive can be made locally, but making it takes
+  electricity, and the investment has to be made before you know how things will turn out.</p>
+  <p>In the neighborhood study, a home acting alone saves a little (about $3,056 a year against $3,442 from the utilities)
+  and mostly from water, not solar. Pooling changes the picture: community solar and wind turbines become worthwhile,
+  and at 3,200 homes a shared water recycling facility does too, cutting the cost to about $2,418 per home, 30% below the
+  utilities. Planning electricity and water together is the cheapest choice at every size, and only at 3,200 homes does it
+  save more than the electricity-only and water-only savings added up. The paper also finds that home water systems running on
+  grid power always raise emissions, because small systems use more energy than city water plants, while planning them with
+  local solar and wind always lowers emissions.</p>
+  <p>On the farm, what the farmer believes about the climate sets the plan, and a plan built for one climate can do badly in
+  another. With all four climates equally likely, knowing the climate in advance is worth about $98,000 of expected 25-year
+  profit; knowing each year's weather as well adds only about $10,000. Hedging carefully across climates gains almost nothing
+  over simply planning for the average one. Believe a dry future is most likely, then pick “Wet”: the farm that built for
+  drought earns about $502,000 less than one that knew the rain was coming.</p>
+  <p>Put together, the lesson is about when and at what scale to commit. Sharing spreads the cost of lumpy investments like
+  wind turbines and recycling plants; being right about the climate matters far more than being ready for any single year.</p>
+
+  <h2>Behind this demo</h2>
+  <ul class="behind">
+    <li><a href="../../projects/food-energy-water/">Food, Energy and Water Systems</a></li>
+  </ul>
+
+  <h2>Sources</h2>
+  <ol class="sources">
+    <li>Jones, E.C., &amp; Leibowicz, B.D. (2021). Co-optimization and community: Maximizing the benefits of distributed
+      electricity and water technologies. <em>Sustainable Cities and Society</em>, 64, 102515.
+      <a href="https://doi.org/10.1016/j.scs.2020.102515">doi:10.1016/j.scs.2020.102515</a>. Panel A: scenario definitions
+      from Section 4; costs and Electricity and Water Fractions from Fig. 1 and installed technologies from Figs. 6–7, as
+      committed in the paper's public repository
+      <a href="https://github.com/sear-labs/water-energy-coopt-scs-2021">sear-labs/water-energy-coopt-scs-2021</a>
+      (results/tables/published/; archived as <a href="https://doi.org/10.5281/zenodo.22716302">doi:10.5281/zenodo.22716302</a>);
+      emissions finding from Section 5.3.</li>
+    <li>Jones, E.C., Jr., &amp; Leibowicz, B.D. (2022). Climate risk management in agriculture using alternative electricity and
+      water resources: A stochastic programming framework. <em>Environment Systems and Decisions</em>, 42(1), 117–135.
+      <a href="https://doi.org/10.1007/s10669-021-09838-8">doi:10.1007/s10669-021-09838-8</a>. Panel B: Table 1 (climates),
+      Section 3.3 (beliefs), Table 4 (values of information), Table 5 (expected profits) and Tables 6–7 (profit by climate).
+      Reproduction check from the public repository
+      <a href="https://github.com/sear-labs/fews-stochopt-esd-2022">sear-labs/fews-stochopt-esd-2022</a>
+      (results/clean/value_of_information.csv; archived as <a href="https://doi.org/10.5281/zenodo.22715616">doi:10.5281/zenodo.22715616</a>).</li>
+  </ol>
+</article>
+</main>
+<footer class="site-footer">
+  <p><a href="mailto:erick.jones@uta.edu">erick.jones@uta.edu</a> · <a href="https://scholar.google.com/citations?hl=en&amp;user=03RL76wAAAAJ">Google Scholar</a> · <a href="https://www.linkedin.com/in/erickjones2/">LinkedIn</a> · <a href="https://github.com/yamierick">GitHub</a> · <a href="https://searlab.uta.edu/">SEAR Lab</a></p>
+  <p class="constellation">Professional site · <a href="https://engineerliving.com">Engineer Living (ideas &amp; writing)</a> · <em>The Friction Deficit</em> (fiction, coming soon)</p>
+</footer>
+<script type="module" src="demo.js"></script>
+</body>
+</html>

@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Battery recycling · Erick C. Jones Jr., Ph.D.</title>
+<meta name="description" content="Where to turn spent batteries into black mass, and how to make it cheaply, from three published SEAR Lab papers.">
+<link rel="canonical" href="https://www.erickjonesphd.com/demos/battery-recycling/">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="stylesheet" href="../css/demos.css">
+<style>
+  /* Categorical palette, defined once; readable in both themes. */
+  :root { --c1: #0d6b4f; --c2: #b45309; --c3: #3b5b92; --c4: #8a918d; --c5: #7c3aed; }
+  @media (prefers-color-scheme: dark) {
+    :root { --c1: #5fc9a4; --c2: #f0a45c; --c3: #93b4ea; --c4: #7f8c85; --c5: #c4a5f5; }
+  }
+  .model .readout div { border: 1px solid var(--rule); border-radius: 6px; padding: .5rem .7rem; }
+  .readout dd small { display: block; font-size: .72rem; color: var(--muted); margin-top: .1rem; }
+  .readout dd.text { font-size: .9rem; line-height: 1.3; }
+  .seg button:focus-visible, .reset:focus-visible, .controls input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .output { min-width: 0; }
+  .chart-label { font-family: system-ui, sans-serif; font-size: .78rem; color: var(--muted); margin: 1rem 0 .2rem; text-transform: uppercase; letter-spacing: .05em; }
+  .chart-label:first-child { margin-top: 0; }
+  .legend { display: flex; flex-wrap: wrap; gap: .2rem 1rem; font-family: system-ui, sans-serif; font-size: .78rem; color: var(--muted); margin: .3rem 0 0; }
+  .sw { display: inline-block; width: .7rem; height: .7rem; margin-right: .3rem; vertical-align: -1px; border-radius: 2px; }
+  .check { display: flex !important; gap: .45rem; align-items: flex-start; }
+  .check input { margin-top: .2rem; accent-color: var(--accent); }
+  table.build { font-family: system-ui, sans-serif; font-size: .82rem; margin-top: .3rem; width: 100%; max-width: 34rem; }
+  table.build th, table.build td { text-align: right; padding: .25rem .5rem; }
+  table.build th:first-child, table.build td:first-child { text-align: left; }
+  table.build .on { color: var(--text); font-weight: 600; }
+  table.build .off { color: var(--muted); }
+  .companion { font-family: system-ui, sans-serif; font-size: .9rem; }
+  .output .hint { max-width: 40rem; }
+</style>
+</head>
+<body>
+<header class="site-header">
+  <a class="site-title" href="/">Erick C. Jones Jr.</a>
+  <nav><a href="/about/">About</a><a href="/research/">Research</a><a href="/labs/">Labs</a><a href="/publications/">Publications</a><a href="/teaching/">Teaching</a><a href="/resources/">Resources</a><a href="/models/">Models</a><a href="/beyond/">Beyond</a></nav>
+</header>
+<main class="wide">
+<article>
+  <h1>Battery recycling: where to make black mass, and how to make it cheaply</h1>
+  <p class="subhead">Before any metal comes back out of a spent battery, it has to be ground into a powder called black mass. Where should that happen, and does it need expensive equipment?</p>
+
+  <p class="note-published"><strong>Every number here comes from published SEAR Lab papers</strong>, listed at the bottom
+  with the table or figure each one comes from. Where a paper has an error, the demo shows the corrected value and says so.
+  Cite the papers, not this page.</p>
+
+  <!-- Panel 1: Atitebi & Jones (2025), Logistics -->
+  <section class="panel" id="p1">
+    <h2>1. Make black mass at a few big plants, or at every collection center?</h2>
+    <p class="lede">A U.S. recycling network for 2021–2040, with spent batteries growing 20% a year across the 48 contiguous states. Switch between the two designs the paper compares and watch which cost disappears.</p>
+    <div class="model">
+      <div class="controls">
+        <fieldset>
+          <legend>Network design</legend>
+          <div class="seg" id="net" role="group" aria-label="Network design">
+            <button type="button" data-v="cen">Centralized</button>
+            <button type="button" data-v="dec">Decentralized</button>
+          </div>
+          <label class="check"><input type="checkbox" id="freight"> <span>Show the paper's what-if: whole batteries shipped as ordinary, not hazardous, freight</span></label>
+        </fieldset>
+        <p class="hint">Centralized: collection centers send whole batteries to 10 large black-mass plants. Decentralized: each state's collection center grinds its own batteries and ships only the powder.</p>
+      </div>
+      <div class="output">
+        <p class="chart-label">How material moves, 2021–2040</p>
+        <svg class="chart" id="flow-chart" role="img" aria-labelledby="flow-title"><title id="flow-title">Flow of batteries and black mass through the selected network design</title></svg>
+        <p class="chart-label">Total cost, 2021–2040 (USD billion)</p>
+        <svg class="chart" id="cost-chart" role="img" aria-labelledby="cost-title"><title id="cost-title">Total network cost by component for both designs</title></svg>
+        <div class="legend" id="cost-legend"></div>
+        <p class="chart-label">Emissions, 2021–2040 (million tonnes CO₂-equivalent)</p>
+        <svg class="chart" id="co2-chart" role="img" aria-labelledby="co2-title"><title id="co2-title">Emissions by component for both designs</title></svg>
+        <dl class="readout" id="r1" aria-live="polite"></dl>
+        <p class="chart-label">Black-mass facilities added in the years the paper lists</p>
+        <table class="build" id="build"></table>
+        <p class="hint">Table 2 lists five years only, so these counts do not add up to the whole period. Small modules are cheap ($150,000 each, including a 50% overhead allowance, against $10 million for a large plant), so the decentralized design's many modules still cost only about 7% more to build overall ($1.82 vs $1.70 billion).</p>
+        <p class="correction" id="nonhaz-note">Two inconsistencies in the paper. It gives the decentralized total as $81.5 billion in its text but ≈$82.37 billion in Tables 1 and 4; the demo uses the tables. For the ordinary-freight what-if it says the decentralized design stays about 1.1% (≈$1 billion) cheaper than the centralized $82.5 billion. That matches the $81.5 billion; against the tables' $82.37 billion the gap is about $0.1 billion (0.2%). Either way, the saving comes almost entirely from not hauling whole batteries as hazardous freight. The paper also says transport emissions were left out, yet its Table 3, shown here, includes them.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Panel 2: Atitebi, Dumre & Jones (2025), Energies -->
+  <section class="panel" id="p2">
+    <h2>2. Grind it by hand, or with a $98 grain mill?</h2>
+    <p class="lede">The team cut open a module from a 2013 Nissan Leaf battery, shredded its four internal units with a $40 paper shredder, and ground 50 g samples twelve times with each method, then sieved them at 100 micrometers. Each dot is one trial.</p>
+    <div class="model">
+      <div class="controls">
+        <fieldset>
+          <legend>Grinding method</legend>
+          <div class="seg" id="method" role="group" aria-label="Grinding method">
+            <button type="button" data-v="m">By hand</button>
+            <button type="button" data-v="e">Electric</button>
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend>Weigh</legend>
+          <div class="seg" id="stage" role="group" aria-label="What to weigh">
+            <button type="button" data-v="pre">Ground</button>
+            <button type="button" data-v="post">Sieved</button>
+            <button type="button" data-v="res">Residue</button>
+          </div>
+          <p class="hint">Ground: everything after grinding. Sieved: the fine black mass that passes the sieve. Residue: what stays on it.</p>
+        </fieldset>
+        <fieldset>
+          <legend>Battery unit</legend>
+          <div class="seg" id="unit" role="group" aria-label="Battery unit">
+            <button type="button" data-v="0">All</button>
+            <button type="button" data-v="1">1</button>
+            <button type="button" data-v="2">2</button>
+            <button type="button" data-v="3">3</button>
+            <button type="button" data-v="4">4</button>
+          </div>
+          <p class="hint">Highlight the three trials cut from one of the module's four internal units.</p>
+        </fieldset>
+      </div>
+      <div class="output">
+        <p class="chart-label" id="dot-label">Fine black mass per 50 g of shredded battery (g)</p>
+        <svg class="chart" id="dot-chart" role="img" aria-labelledby="dot-title"><title id="dot-title">Grams recovered in each of 12 trials per grinding method, with the published mean and, after sieving, the 99% interval</title></svg>
+        <div class="legend"><span><i class="sw" style="background:var(--c2)"></i>By hand</span><span><i class="sw" style="background:var(--c1)"></i>Electric</span><span><i class="sw" style="background:var(--text);height:.15rem"></i>Published mean</span><span id="ci-key"><i class="sw" style="background:var(--muted);opacity:.3"></i>99% interval</span><span><i class="sw" style="height:0;border-top:2px dashed var(--muted);border-radius:0;vertical-align:3px"></i>50 g fed in</span></div>
+        <p class="chart-label">Equipment for one preprocessing line (USD)</p>
+        <svg class="chart" id="equip-chart" role="img" aria-labelledby="equip-title"><title id="equip-title">Equipment cost of a preprocessing line for each grinding method</title></svg>
+        <dl class="readout" id="r2" aria-live="polite"></dl>
+        <p class="correction">Errata in the paper's Table 2, none of which changes a result: unit 3, trial 1 (by hand, sieved) prints 63.2% beside 13.6 g; 13.6 g of 50 g is 27.2%. The row labeled "σ (Variance)" holds standard deviations. The masses were read in ounces and converted, so they come in steps of about 4.5 g, and two ground samples weigh slightly more than the nominal 50 g feed. The demo plots the grams, which the paper's statistics confirm.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Panel 3: Atitebi, Dumre, Shelor & Jones (2026), IISE — design only -->
+  <section class="panel" id="p3">
+    <h2>3. Next: pulling the metals back out (the experiment design)</h2>
+    <p class="lede">The follow-on study leaches black mass from the same low-cost process in acid to recover lithium and other metals. It varies three settings at three levels each. Pick a combination to see where it sits among the 27 conditions.</p>
+    <div class="model">
+      <div class="controls" id="doe-controls"></div>
+      <div class="output">
+        <p class="chart-label">The 27 leaching conditions (a full 3 × 3 × 3 design)</p>
+        <svg class="chart" id="doe-chart" role="img" aria-labelledby="doe-title"><title id="doe-title">Grid of the 27 combinations of acid strength, peroxide and pulp density, with the selected one highlighted</title></svg>
+        <dl class="readout" id="r3" aria-live="polite"></dl>
+        <p class="hint">This panel shows the plan of the experiment only. The paper also reports early recovery measurements; they are not shown here.</p>
+        <div class="actions" style="margin-top:1rem">
+          <button type="button" id="reset" class="reset">Reset</button>
+          <button type="button" id="share" class="reset">Copy link</button>
+        </div>
+        <p class="hint">Reset and Copy link cover all three panels.</p>
+      </div>
+    </div>
+  </section>
+
+  <h2>What this shows</h2>
+  <p>A spent battery is bulky and, because it can catch fire, it ships as hazardous freight at many times the ordinary rate. Black mass is about 39% of the battery's weight. In the network study, hauling 16.8 million tonnes of whole batteries to ten central plants costs about $60 billion over twenty years. Grind them at the collection centers instead and that line disappears; only 6.55 million tonnes of powder travel on to the recyclers. The other costs, making black mass and recycling it, are the same in both designs, and so are nearly all the emissions.</p>
+  <p>That design only works if small sites can make usable black mass cheaply. The bench study says they can: a paper shredder, a $98 electric grain mill and a sieve roll, a few hundred dollars of equipment, gave more fine black mass than a hand-crank pulverizer costing five times as much, with the plastic separator film sieving out cleanly. The difference only shows after sieving, which is the step that matters for the chemistry that follows. And any of the battery's four internal units worked equally well as feedstock.</p>
+  <p>The third study is the next link in the chain: a designed set of leaching experiments on that same black mass, to find the acid, oxidizer and solids settings that recover the most metal with the least reagent and waste.</p>
+  <p class="companion">Companion model on this site: <a href="/recovery-loop/">A toy linked model</a> shows why recycling is a supply source that arrives a decade or more after the batteries are built. It is a teaching toy with order-of-magnitude numbers, unlike this page.</p>
+
+  <h2>Behind this demo</h2>
+  <ul class="behind">
+    <li><a href="../../projects/battery-recycling/">Battery Recycling and Black Mass</a></li>
+    <li><a href="../../projects/microgrid-batteries/">Microgrids and Second-Life Batteries</a></li>
+  </ul>
+
+  <h2>Sources</h2>
+  <ol class="sources">
+    <li>Atitebi, O.S., &amp; Jones, E.C., Jr. (2025). Centralized vs. decentralized black-mass production: A comparative analysis of lithium reverse logistics supply chain networks. <em>Logistics</em>, 9(3), 97. <a href="https://doi.org/10.3390/logistics9030097">doi:10.3390/logistics9030097</a>. Panel 1: Tables 1–5, the parameter table (p. 7), Sections 3.1, 4, 5 and 6.1. The model's input data are not public, so nothing is recomputed, and no map is drawn: the paper publishes no per-state results.</li>
+    <li>Atitebi, O.S., Dumre, K., &amp; Jones, E.C., Jr. (2025). Supporting a lithium circular economy via reverse logistics: Improving the preprocessing stage of the lithium-ion battery recycling supply chain. <em>Energies</em>, 18, 651. <a href="https://doi.org/10.3390/en18030651">doi:10.3390/en18030651</a>. Panel 2: Tables 2–4, Sections 3.3 and 4.1–4.4 (p-values), Appendix A (equipment prices).</li>
+    <li>Atitebi, O.S., Dumre, K., Shelor, C.P., &amp; Jones, E.C., Jr. (2026). Experimental design for optimized recovery of critical minerals from lithium-ion battery black mass: Bridging sustainability and process efficiency. <em>Proceedings of the IISE Annual Conference &amp; Expo 2026</em>. Panel 3: Section 3 and Table 1 (design only).</li>
+  </ol>
+</article>
+</main>
+<footer class="site-footer">
+  <p><a href="mailto:erick.jones@uta.edu">erick.jones@uta.edu</a> · <a href="https://scholar.google.com/citations?hl=en&amp;user=03RL76wAAAAJ">Google Scholar</a> · <a href="https://www.linkedin.com/in/erickjones2/">LinkedIn</a> · <a href="https://github.com/yamierick">GitHub</a> · <a href="https://searlab.uta.edu/">SEAR Lab</a></p>
+  <p class="constellation">Professional site · <a href="https://engineerliving.com">Engineer Living (ideas &amp; writing)</a> · <em>The Friction Deficit</em> (fiction, coming soon)</p>
+</footer>
+<script type="module" src="demo.js"></script>
+</body>
+</html>

@@ -3,7 +3,7 @@ layout: ../layouts/Base.astro
 title: "Research"
 ---
 
-Current research areas, organized end to end and back along the energy and critical-mineral value chain.
+Current research areas, organized end to end and back along the energy and critical-mineral value chain. Each project has [its own page](/projects/), with its papers and people.
 
 ## Energy system evolution
 Modeling how power systems change over decades: ERCOT analysis, ReEDS and GCAM scenario work, Texas power system evolution, and surrogate optimization for linking models across scales (Morris screening, design-of-computer-experiments).

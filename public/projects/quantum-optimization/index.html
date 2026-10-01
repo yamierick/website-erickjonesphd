@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quantum Optimization · Erick C. Jones Jr., Ph.D.</title>
+<meta name="description" content="Exploring how planning problems can be rewritten so quantum computers can work on them, starting with a small scheduling example.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Erick C. Jones Jr., Ph.D.">
+<meta property="og:title" content="Quantum Optimization">
+<meta property="og:description" content="Exploring how planning problems can be rewritten so quantum computers can work on them, starting with a small scheduling example.">
+<link rel="canonical" href="https://www.erickjonesphd.com/projects/quantum-optimization/">
+<meta property="og:url" content="https://www.erickjonesphd.com/projects/quantum-optimization/">
+<meta property="og:image" content="https://www.erickjonesphd.com/projects/quantum-optimization/img/thumb.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="stylesheet" href="../css/projects.css">
+</head>
+<body>
+<header class="site-header">
+  <a class="site-title" href="/">Erick C. Jones Jr.</a>
+  <nav><a href="/about/">About</a><a href="/research/">Research</a><a href="/labs/">Labs</a><a href="/publications/">Publications</a><a href="/teaching/">Teaching</a><a href="/resources/">Resources</a><a href="/models/">Models</a><a href="/beyond/">Beyond</a></nav>
+</header>
+<main class="wide project">
+<article>
+  <p class="crumbs meta"><a href="../">Projects</a> · AI and Computational Methods</p>
+  <h1>Quantum Optimization</h1>
+  <p class="dek">Exploring how planning problems can be rewritten so quantum computers can work on them, starting with a small scheduling example.</p>
+  <ul class="chips"><li class="status">Active</li><li>2025–present</li><li>Quantum computing</li><li>Optimization</li><li>Operations research</li></ul>
+  <figure class="media"><img src="img/hero.png" alt="Four-step schematic. 1, Problem: five numbered events drawn as circles, with lines joining the pairs someone wants to attend (1 and 4, 2 and 3, 4 and 5, 3 and 4). 2, QUBO matrix: a five-by-five grid with dark cells at those pairs and light cells on the diagonal, labelled &#x27;pattern only&#x27;. 3, Quantum circuit: five qubit lines, each starting in state zero, passing through a tunable rotation gate RY(theta) and a measurement, with a loop arrow showing a classical optimizer adjusting the angles. 4, Schedule: an example readout of five bits, 0 1 0 1 0, mapped to Day 1 (events 1, 3, 5) and Day 2 (events 2, 4)." loading="eager"><figcaption>The four steps of the method on the paper&#x27;s five-event example: state the problem, fold its rules into a QUBO penalty matrix, train a quantum circuit to minimize the resulting energy, and read the measured bits back as a schedule. A schematic of the method; the bit string is an example, not a reported result.<span class="credit">Schematic drawn by the SEAR Lab from Alavi, Aghapour &amp; Jones (2026), Proceedings of the IISE Annual Conference &amp; Expo</span></figcaption></figure>
+  <section><h2>In plain English</h2><p>Many planning decisions, such as where to put facilities, how to route vehicles or how to schedule events, come down to large sets of yes-or-no choices. The number of possible answers doubles with every choice added, which is why such problems get hard quickly. Quantum computers may one day search these spaces in a different way, but only once a problem has been rewritten in a form they accept.</p><p>This project explores that translation for operations research problems. The lab&#x27;s first paper, presented at the 2026 IISE Annual Conference, walks through the whole recipe on a small event-scheduling example: a yes-or-no model; a QUBO (quadratic unconstrained binary optimization) form that folds every rule into penalties; an Ising energy function that a set of qubits can represent; and a tunable quantum circuit trained on a simulator. The aim is a clear, reusable method rather than a claim of speed, and the work is at an early stage.</p></section>
+  <section><h2>Main points</h2><ul class="points"><li>Sets out a step-by-step recipe for turning a classical yes-or-no model into a form a quantum computer can work on.</li><li>Implements the recipe in a Python notebook on a noiseless simulator; no quantum hardware was used.</li><li>Names the hurdles to scaling up: qubit counts, circuits that stop learning, hardware noise and penalty tuning.</li><li>The lab&#x27;s facility location and supply-chain models are natural next test cases for the method.</li></ul></section>
+  
+  
+  <section><h2>Papers</h2><div class="paper"><h3>Turning a scheduling puzzle into a quantum circuit, step by step</h3><p class="citation">Alavi, S., Aghapour, R., &amp; Jones, E.C., Jr. (2026). A quantum computing approach to combinatorial optimization: QUBO formulation and implementation. <em>Proceedings of the IISE Annual Conference &amp; Expo 2026</em>.</p><p>A worked example shows how to rewrite a small event-scheduling problem so a simulated quantum computer can search for the best schedule.</p><ul class="points"><li>The paper sets out a four-step recipe: write a classical yes-or-no model, fold its rules into a QUBO with penalty terms, convert the QUBO into an Ising Hamiltonian, and minimize that energy with a variational quantum circuit tuned by a classical optimizer.</li><li>In the implemented example, each of five qubits stands for one event, and the energy has one two-qubit term for each of the four pairs of events that someone wants to attend.</li><li>On a noiseless simulator, a single layer of one-qubit rotations trained for 200 steps settled on a schedule with events 1, 2 and 5 on one day and events 3 and 4 on the other.</li><li>The authors name the hurdles to scaling up: the number of qubits grows with events times days, deep circuits can stop learning (barren plateaus), real hardware adds noise, and penalty weights need re-tuning as problems grow.</li></ul><p class="paper-note"><strong>Correction note.</strong> The schedule reported in the paper puts events 3 and 4, a pair someone wants to attend, on the same day, so it is not the best schedule for the example. Re-running the paper&#x27;s circuit 1,000 times from random starts, the SEAR Lab found a schedule with no clash in 904 runs. The method in the paper stands; the reported run stopped at a weaker answer.</p><figure class="media"><img src="img/paper-quantum-qubo-2026.png" alt="Left: a line chart of circuit energy over the first 50 training steps for many runs, all starting near -4. Most runs (blue) fall to -8 within about 25 steps; a minority (orange) level off at -7. Right: two schedule cards. &#x27;Schedule reported in the paper&#x27;: Day 1 events 1, 2, 5; Day 2 events 3 and 4, highlighted as a clash. &#x27;Best schedule (energy -8)&#x27;: Day 1 events 1, 3, 5; Day 2 events 2 and 4." loading="lazy"><figcaption>The paper&#x27;s five-qubit circuit re-run from 1,000 random starts. Most runs (904) reach the lowest energy, a schedule with no clashes; 96 stall one level higher with one clash, like the run reported in the paper. The paper itself has no figures.<span class="credit">Rendered by the SEAR Lab from an exact re-implementation of the paper&#x27;s notebook</span></figcaption></figure></div></section>
+  
+  
+  <section><h2>People</h2><ul class="people"><li><span class="who"><span class="name">Erick C. Jones Jr., PhD, PE</span><span class="role">Principal Investigator · SEAR Lab director</span></span><a class="li" href="https://www.linkedin.com/in/erickjones2/" rel="noopener" aria-label="Erick C. Jones Jr., PhD, PE on LinkedIn">in</a></li><li><span class="who"><span class="name">Sarasadat Alavi</span><span class="role">Author, Proceedings of the IISE Annual Conference &amp; Expo 2026 2026</span></span></li><li><span class="who"><span class="name">Raziye Aghapour</span><span class="role">Author, Proceedings of the IISE Annual Conference &amp; Expo 2026 2026</span></span><a class="li" href="https://www.linkedin.com/in/raziye-aghapour-1ba1ab2a2" rel="noopener" aria-label="Raziye Aghapour on LinkedIn">in</a></li></ul><p class="people-note">Current team: names to be added from the lab personnel sheet. Profiles marked <strong>in</strong> link to LinkedIn. More past and present lab members are on the <a href="https://searlab.uta.edu/team/">SEAR Lab team page</a>.</p></section>
+  <p class="back"><a href="../">← All projects</a></p>
+</article>
+</main>
+<footer class="site-footer">
+  <p>
+    <a href="mailto:erick.jones@uta.edu">erick.jones@uta.edu</a> ·
+    <a href="https://scholar.google.com/citations?hl=en&amp;user=03RL76wAAAAJ">Google Scholar</a> ·
+    <a href="https://www.linkedin.com/in/erickjones2/">LinkedIn</a> ·
+    <a href="https://github.com/yamierick">GitHub</a> ·
+    <a href="https://searlab.uta.edu/">SEAR Lab</a>
+  </p>
+  <p class="constellation">Professional site · <a href="https://engineerliving.com">Engineer Living (ideas &amp; writing)</a> · <em>The Friction Deficit</em> (fiction, coming soon)</p>
+</footer>
+</body>
+</html>

@@ -1,0 +1,258 @@
+:root {
+  color-scheme: light dark;
+  --bg: #ffffff;
+  --text: #1c211e;
+  --muted: #66716b;
+  --accent: #0d6b4f;
+  --rule: #e3e8e5;
+  --code-bg: #f4f7f5;
+  --max: 46rem;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #151a17;
+    --text: #d9e0dc;
+    --muted: #8fa097;
+    --accent: #5fc9a4;
+    --rule: #2a332e;
+    --code-bg: #1d2420;
+  }
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font: 17px/1.65 Georgia, 'Times New Roman', serif;
+  color: var(--text);
+  background: var(--bg);
+}
+.site-header, main, .site-footer {
+  max-width: var(--max);
+  margin: 0 auto;
+  padding: 0 1.25rem;
+}
+.site-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: .5rem 1rem;
+  padding-top: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--rule);
+  font-family: system-ui, -apple-system, sans-serif;
+}
+.site-title {
+  font-weight: 700;
+  font-size: 1.15rem;
+  text-decoration: none;
+  color: var(--text);
+  margin-right: auto;
+}
+/* The nav is a flex item, so min-width:auto stopped it shrinking below its
+   content and it ran off the right edge on a phone — 541px of links in a 335px
+   box, with Resources and Beyond simply unreachable. Making it a wrapping flex
+   container is the fix; inline wrapping could never have worked because the
+   links are rendered with no whitespace between them, so the line had no break
+   opportunity at all. Spacing moves from margin to gap for the same reason. */
+.site-header nav {
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: .15rem .8rem;
+}
+.site-header nav a {
+  text-decoration: none;
+  color: var(--muted);
+  font-size: .95rem;
+}
+.site-header nav a:hover { color: var(--accent); }
+main { padding-top: 1.5rem; padding-bottom: 3rem; }
+a { color: var(--accent); }
+h1 { font-size: 1.65rem; line-height: 1.25; }
+.hero h1 { font-size: 1.9rem; margin-bottom: .3rem; }
+.subhead {
+  color: var(--muted);
+  font-size: 1.05rem;
+  font-style: italic;
+  margin-top: 0;
+}
+.meta { color: var(--muted); font-size: .9rem; font-family: system-ui, sans-serif; }
+.post-list { list-style: none; padding: 0; }
+.post-list li {
+  display: flex;
+  gap: .8rem;
+  padding: .25rem 0;
+  align-items: baseline;
+}
+.post-list time {
+  color: var(--muted);
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: .8rem;
+  white-space: nowrap;
+}
+.post-list .summary { color: var(--muted); font-size: .9rem; }
+article img, main img { max-width: 100%; height: auto; }
+.pub-year {
+  font-family: system-ui, sans-serif;
+  font-size: 1rem;
+  color: var(--muted);
+  letter-spacing: .06em;
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: .25rem;
+  margin-top: 2rem;
+}
+.hero-portrait {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+}
+.hero-portrait > div { flex: 1 1 20rem; }
+.hero-portrait .portrait {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex: 0 0 auto;
+  border: 1px solid var(--rule);
+}
+@media (max-width: 480px) {
+  .hero-portrait .portrait { width: 96px; height: 96px; }
+}
+.layers { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin: 1.5rem 0; }
+.layer {
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  padding: .9rem 1rem;
+}
+.layer h3 { margin: 0 0 .4rem; font-family: system-ui, sans-serif; font-size: 1rem; color: var(--accent); }
+.layer p { margin: 0; font-size: .92rem; color: var(--muted); }
+blockquote {
+  margin: 1rem 0;
+  padding-left: 1rem;
+  border-left: 3px solid var(--accent);
+  color: var(--muted);
+}
+pre { overflow-x: auto; background: var(--code-bg); padding: .8rem; font-size: .85rem; }
+code { background: var(--code-bg); padding: 0 .25em; }
+pre code { padding: 0; }
+table { border-collapse: collapse; font-size: .92rem; }
+th, td { border: 1px solid var(--rule); padding: .35rem .6rem; text-align: left; }
+.site-footer {
+  border-top: 1px solid var(--rule);
+  padding-top: 1rem;
+  padding-bottom: 2rem;
+  color: var(--muted);
+  font-size: .85rem;
+  font-family: system-ui, sans-serif;
+}
+.constellation { color: var(--muted); }
+
+/* ---- Demo pages: controls and chart styles, taken from the site's recovery-loop model so every model and demo looks alike ---- */
+.disclaimer {
+  border-left: 3px solid var(--accent);
+  padding: .6rem .9rem;
+  background: var(--code-bg);
+  font-size: .92rem;
+}
+.model { display: grid; grid-template-columns: 15rem 1fr; gap: 1.5rem; margin: 1.5rem 0; }
+@media (max-width: 800px) { .model { grid-template-columns: 1fr; } }
+.controls fieldset {
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  padding: .6rem .8rem .8rem;
+  margin: 0 0 .8rem;
+}
+.controls legend {
+  font-family: system-ui, sans-serif;
+  font-size: .78rem;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--accent);
+  padding: 0 .3rem;
+}
+.controls label {
+  display: block;
+  font-family: system-ui, sans-serif;
+  font-size: .82rem;
+  color: var(--muted);
+  margin-top: .5rem;
+}
+.controls input[type=range] { width: 100%; margin-top: .2rem; accent-color: var(--accent); }
+.controls output { float: right; font-variant-numeric: tabular-nums; color: var(--text); }
+.seg { display: flex; gap: .25rem; }
+.seg button {
+  flex: 1;
+  font: inherit;
+  font-family: system-ui, sans-serif;
+  font-size: .8rem;
+  padding: .3rem .1rem;
+  background: var(--bg);
+  color: var(--muted);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  cursor: pointer;
+}
+.seg button.on { background: var(--accent); border-color: var(--accent); color: var(--bg); }
+.actions { display: flex; gap: .4rem; }
+.reset {
+  font-family: system-ui, sans-serif;
+  font-size: .8rem;
+  background: none;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  padding: .3rem .7rem;
+  color: var(--muted);
+  cursor: pointer;
+}
+.hint { font-family: system-ui, sans-serif; font-size: .78rem; color: var(--muted); margin: .5rem 0 0; }
+#chart { width: 100%; height: auto; display: block; }
+.legend {
+  display: flex; flex-wrap: wrap; gap: .2rem 1rem;
+  font-family: system-ui, sans-serif; font-size: .78rem; color: var(--muted);
+  margin-top: .4rem;
+}
+.sw { display: inline-block; width: .7rem; height: .7rem; margin-right: .3rem; vertical-align: -1px; border-radius: 2px; }
+.sw-primary { background: var(--muted); opacity: .45; }
+.sw-recycled { background: var(--accent); opacity: .75; }
+.sw-demand { background: var(--text); height: .18rem; border-radius: 0; }
+.sw-gap { background: repeating-linear-gradient(45deg, var(--muted) 0 2px, transparent 2px 4px); }
+.readout {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: .6rem; margin: 1rem 0 0;
+  font-family: system-ui, sans-serif;
+}
+
+/* ---- Additions for the themed demos ---- */
+main.wide { max-width: 62rem; }
+.subhead { color: var(--muted); font-style: italic; }
+.note-published {
+  border-left: 3px solid var(--accent);
+  padding: .6rem .9rem;
+  background: var(--code-bg);
+  font-size: .92rem;
+}
+.panel { margin: 2rem 0; }
+.panel > h2 { font-family: system-ui, sans-serif; font-size: 1.05rem; margin: 0 0 .3rem; }
+.panel > .lede { color: var(--muted); margin: 0 0 .8rem; max-width: var(--max); }
+.chart { width: 100%; height: auto; display: block; }
+.chart text { font-family: system-ui, sans-serif; fill: var(--muted); }
+.chart .strong { fill: var(--text); font-weight: 600; }
+.readout dt { font-size: .72rem; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+.readout dd { margin: .1rem 0 0; font-size: 1.15rem; font-variant-numeric: tabular-nums; color: var(--text); }
+.correction {
+  font-family: system-ui, sans-serif; font-size: .82rem; color: var(--muted);
+  border-left: 3px solid #c2410c; padding: .2rem 0 .2rem .7rem; margin: .6rem 0;
+}
+.behind { display: flex; flex-wrap: wrap; gap: .5rem; margin: .5rem 0 0; padding: 0; list-style: none; }
+.behind a {
+  display: inline-block; font-family: system-ui, sans-serif; font-size: .85rem;
+  border: 1px solid var(--rule); border-radius: 999px; padding: .3rem .75rem; text-decoration: none;
+}
+.behind a:hover { border-color: var(--accent); }
+.sources { font-family: system-ui, sans-serif; font-size: .82rem; color: var(--muted); }
+.sources li { margin: .25rem 0; }
+.tip {
+  position: absolute; pointer-events: none; background: var(--bg); color: var(--text);
+  border: 1px solid var(--rule); border-radius: 4px; padding: .3rem .5rem;
+  font: .78rem/1.35 system-ui, sans-serif; box-shadow: 0 2px 6px rgba(0,0,0,.12); display: none; z-index: 5;
+}

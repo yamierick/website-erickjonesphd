@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lab Energy System: Production, Use and Control · Erick C. Jones Jr., Ph.D.</title>
+<meta name="description" content="The SEAR Lab turns its own rooftop solar, electricity use and weather into a live dataset that students collect, analyze and learn to control.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Erick C. Jones Jr., Ph.D.">
+<meta property="og:title" content="Lab Energy System: Production, Use and Control">
+<meta property="og:description" content="The SEAR Lab turns its own rooftop solar, electricity use and weather into a live dataset that students collect, analyze and learn to control.">
+<link rel="canonical" href="https://www.erickjonesphd.com/projects/lab-energy/">
+<meta property="og:url" content="https://www.erickjonesphd.com/projects/lab-energy/">
+<meta property="og:image" content="https://www.erickjonesphd.com/projects/lab-energy/img/thumb.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="stylesheet" href="../css/projects.css">
+</head>
+<body>
+<header class="site-header">
+  <a class="site-title" href="/">Erick C. Jones Jr.</a>
+  <nav><a href="/about/">About</a><a href="/research/">Research</a><a href="/labs/">Labs</a><a href="/publications/">Publications</a><a href="/teaching/">Teaching</a><a href="/resources/">Resources</a><a href="/models/">Models</a><a href="/beyond/">Beyond</a></nav>
+</header>
+<main class="wide project">
+<article>
+  <p class="crumbs meta"><a href="../">Projects</a> · Lab Energy System</p>
+  <h1>Lab Energy System: Production, Use and Control</h1>
+  <p class="dek">The SEAR Lab turns its own rooftop solar, electricity use and weather into a live dataset that students collect, analyze and learn to control.</p>
+  <ul class="chips"><li class="status">Active</li><li>2023–present</li><li>Lab energy system</li><li>Solar</li><li>Buildings</li><li>Data</li></ul>
+  <figure class="media"><img src="img/anim.gif" alt="Screen recording of the dashboard: the pointer sweeps across the energy chart showing values for each minute, the history window is narrowed from 24 hours to 6 hours and then 1 hour, the temperature switch flips the cards to Celsius and back, and the view returns to 24 hours." loading="eager"><figcaption>The lab energy dashboard in use, replaying the lab&#x27;s recorded air-conditioner and water-heater readings from April 2, 2026. The same dashboard is shown on the hot-water heater and HVAC page.<span class="credit">Screen capture of the lab&#x27;s dashboard, SEAR Lab</span></figcaption></figure>
+  <section><h2>In plain English</h2><p>How much of a small facility&#x27;s electricity can its own solar panels supply, and where does the rest go? The SEAR Lab asks that question about itself. Students wrote Python code that pulls data from the online services behind the lab&#x27;s rooftop solar microinverters and its smart circuit breakers, adds local weather, and turns the result into dashboards of energy produced and energy used. The work began as two separate efforts, rooftop solar analytics and a smart-breaker data center, which now form one project.</p><p>The same approach supports research. In a paper at the 2025 IISE Annual Conference, students Siddharth Shivaji Murkute and Abinash Bastola paired daily production from a residential solar array in Texas with weather records and built a regression model to separate normal weather swings from long-term panel wear. They estimated an average shortfall of about 0.55 percent, in line with manufacturers&#x27; typical 0.5 to 1 percent a year, while cautioning that the estimate carries model uncertainty. Next, the team is adding the lab&#x27;s hot-water heater and air conditioner and preparing to move from monitoring to control.</p></section>
+  <section><h2>Main points</h2><ul class="points"><li>Python collectors pull daily and hourly data from the solar-monitoring and smart-breaker vendor APIs, plus weather for Arlington, Texas.</li><li>The lab energy dashboard shows live and recorded readings from the lab&#x27;s equipment, with a history view that can be read hour by hour.</li><li>Smart-breaker readings show hour by hour which lab circuits draw power.</li><li>A 2025 IISE conference paper used production and weather data to test whether solar panels lose output at the rate manufacturers state.</li><li>The smart-breaker line is paused until new breakers are installed, and its code is kept as a worked example for the next team.</li></ul></section>
+  <figure class="media"><img src="img/hero.jpg" alt="A long row of solar panels on ballasted racks across a flat gravel roof, with low campus buildings and the Arlington skyline under a clear blue sky." loading="lazy"><figcaption>Rooftop solar panels serving the SEAR Lab, photographed in October 2023.<span class="credit">SEAR Lab photo, as published on searlab.uta.edu</span></figcaption></figure>
+  
+  
+  <section><h2>Papers, code and materials</h2><ul class="resources"><li><span class="cite"><span class="kind">Paper</span><span class="label">Murkute &amp; Bastola (2025), Measuring Microgrid Degradation: Collecting Meteorological and Microinverter Data, Proceedings of the IISE Annual Conference &amp; Expo 2025</span></span></li><li><a href="../hwh-hvac-data/" rel="noopener"><span class="kind">Related</span><span class="label">Hot-Water Heater and HVAC Data: the newest part of the lab energy system</span></a></li></ul></section>
+  
+  <section><h2>People</h2><ul class="people"><li><span class="who"><span class="name">Erick C. Jones Jr., PhD, PE</span><span class="role">Principal Investigator · SEAR Lab director</span></span><a class="li" href="https://www.linkedin.com/in/erickjones2/" rel="noopener" aria-label="Erick C. Jones Jr., PhD, PE on LinkedIn">in</a></li><li><span class="who"><span class="name">Siddharth Shivaji Murkute</span><span class="role">Paper author (2025); Lab Energy Technology Data Analytics (2024–25)</span></span></li><li><span class="who"><span class="name">Abinash Bastola</span><span class="role">Paper author (2025); BS Computer Science, UROP researcher (solar degradation prediction)</span></span><a class="li" href="https://www.linkedin.com/in/bastolaabinash/" rel="noopener" aria-label="Abinash Bastola on LinkedIn">in</a></li><li><span class="who"><span class="name">Vinay Kumar Shiva Kumar</span><span class="role">Lab Energy Technology Data Analytics (2024)</span></span></li><li><span class="who"><span class="name">Divi Teja Kaka</span><span class="role">Lab Energy Technology Data Analytics (2024)</span></span></li><li><span class="who"><span class="name">Lokesh Ram Hariram</span><span class="role">Lab Energy Technology Data Analytics (2025)</span></span></li><li><span class="who"><span class="name">Anushka Pawar</span><span class="role">Lab Energy Technology Data Analytics (2025)</span></span></li><li><span class="who"><span class="name">Gayathri Sri Muthuvelavan</span><span class="role">Lab Energy Technology Data Analytics (2025)</span></span></li><li><span class="who"><span class="name">Fazle Huq Moinuddin Khan</span><span class="role">Lab Energy Technology Data Analytics (2025)</span></span></li><li><span class="who"><span class="name">Ananthakrishnan Sreekumar</span><span class="role">Lab Energy Technology Data Analytics (2025)</span></span></li><li><span class="who"><span class="name">Hema Billemane Ashok Kumar</span><span class="role">Lab Energy Technology Data Analytics (2025)</span></span></li><li><span class="who"><span class="name">Zayaan Sharif Chowdhury</span><span class="role">Lab Energy Technology Data Analytics (2025)</span></span></li></ul><p class="people-note">Fall 2026 team: names to be added from the lab personnel sheet. Profiles marked <strong>in</strong> link to LinkedIn. More past and present lab members are on the <a href="https://searlab.uta.edu/team/">SEAR Lab team page</a>.</p></section>
+  <p class="back"><a href="../">← All projects</a></p>
+</article>
+</main>
+<footer class="site-footer">
+  <p>
+    <a href="mailto:erick.jones@uta.edu">erick.jones@uta.edu</a> ·
+    <a href="https://scholar.google.com/citations?hl=en&amp;user=03RL76wAAAAJ">Google Scholar</a> ·
+    <a href="https://www.linkedin.com/in/erickjones2/">LinkedIn</a> ·
+    <a href="https://github.com/yamierick">GitHub</a> ·
+    <a href="https://searlab.uta.edu/">SEAR Lab</a>
+  </p>
+  <p class="constellation">Professional site · <a href="https://engineerliving.com">Engineer Living (ideas &amp; writing)</a> · <em>The Friction Deficit</em> (fiction, coming soon)</p>
+</footer>
+</body>
+</html>

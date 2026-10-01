@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RFID for Lab and Supply-Chain Tracking · Erick C. Jones Jr., Ph.D.</title>
+<meta name="description" content="Turning radio-tag reads into records people can act on, tested first on the lab&#x27;s own equipment and on naloxone-kit tracking.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Erick C. Jones Jr., Ph.D.">
+<meta property="og:title" content="RFID for Lab and Supply-Chain Tracking">
+<meta property="og:description" content="Turning radio-tag reads into records people can act on, tested first on the lab&#x27;s own equipment and on naloxone-kit tracking.">
+<link rel="canonical" href="https://www.erickjonesphd.com/projects/rfid/">
+<meta property="og:url" content="https://www.erickjonesphd.com/projects/rfid/">
+<meta property="og:image" content="https://www.erickjonesphd.com/projects/rfid/img/thumb.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="stylesheet" href="../css/projects.css">
+</head>
+<body>
+<header class="site-header">
+  <a class="site-title" href="/">Erick C. Jones Jr.</a>
+  <nav><a href="/about/">About</a><a href="/research/">Research</a><a href="/labs/">Labs</a><a href="/publications/">Publications</a><a href="/teaching/">Teaching</a><a href="/resources/">Resources</a><a href="/models/">Models</a><a href="/beyond/">Beyond</a></nav>
+</header>
+<main class="wide project">
+<article>
+  <p class="crumbs meta"><a href="../">Projects</a> · RFID, Auto-ID and Digital Twins</p>
+  <h1>RFID for Lab and Supply-Chain Tracking</h1>
+  <p class="dek">Turning radio-tag reads into records people can act on, tested first on the lab&#x27;s own equipment and on naloxone-kit tracking.</p>
+  <ul class="chips"><li class="status">Active</li><li>2024–present</li><li>RFID</li><li>Auto-ID</li><li>Asset tracking</li><li>Healthcare supply chains</li><li>Digital twins</li></ul>
+  <figure class="media"><img src="img/anim.gif" alt="Screen recording of the RFID program&#x27;s Incoming Scans page as simulated reads arrive one by one: new rows appear at the top as MATCHED or DUPLICATE, then a MISMATCH and an UNKNOWN tag, and the alert counter rises to 2. The view then switches to the Dashboard, where the Alerts count reads 2 and both alerts are listed." loading="eager"><figcaption>Sample data, simulated reads: tag reads stream in and are checked against the item list as they arrive. An item seen in the wrong zone and an unregistered tag are flagged for a person to check, and show up as alerts on the dashboard.<span class="credit">Screen capture of the lab&#x27;s software, SEAR Lab</span></figcaption></figure>
+  <section><h2>In plain English</h2><p>Radio-frequency identification (RFID) uses small, inexpensive tags that a reader can detect by radio, without contact or a clear line of sight. It can tell a hospital, warehouse or lab where its equipment and supplies are, but only if the stream of raw tag reads is turned into information people can use. This project, based in the RFID and Auto-ID Deployment (RAID) Laboratory that Dr. Jones directs, works on that step, using the lab&#x27;s own equipment and a demonstration of naloxone-kit tracking as test cases.</p><p>The work began as RFID Technologies (2024–2025). Students brought the lab&#x27;s readers, antennas, tag printers and handheld scanners back into service, wrote troubleshooting guides and operating procedures, and prototyped a checkpoint that announces when a tagged item or person passes a reader. The current team has built software that collects reads from fixed and handheld readers, matches each tag to an item record, and flags unknown tags or items seen in the wrong zone. It is now being joined to the lab&#x27;s inventory system through a shared log, so a tag read updates the same record a barcode scan does.</p></section>
+  <section><h2>Main points</h2><ul class="points"><li>The working equipment includes fixed Impinj readers with antennas, Zebra handheld RFID readers and Zebra tag printers.</li><li>Each read records the tag ID, the antenna or zone, signal strength and time, and is matched against the lab&#x27;s item list.</li><li>Unknown tags, repeat reads and items seen in the wrong zone are flagged for a person to check rather than accepted silently.</li><li>A 2025 checkpoint prototype announced tagged equipment and people as they passed a reader, and the current software carries that idea forward.</li><li>The RFID, inventory and energy teams share one set of item identifiers, so tag reads join the same records as barcode scans and meter data.</li></ul></section>
+  <figure class="media"><img src="img/hero.png" alt="Screenshot of the RFID program&#x27;s Incoming Scans page under a striped &#x27;DEMO DATA&#x27; banner: a table of tag reads with scan ID, EPC, zone, antenna, confidence, date, time, reader, status, matched asset and notes. Statuses include MATCHED, DUPLICATE, a red MISMATCH for a DEMO drill kit and a grey UNKNOWN for a tag not in the item list." loading="lazy"><figcaption>The lab&#x27;s RFID program with sample data and simulated reads: each tag read is matched against the item list. Repeat reads are marked duplicate, an item seen in the wrong zone is flagged as a mismatch, and a tag that is not in the list is flagged as unknown.<span class="credit">Screen capture of the lab&#x27;s software, SEAR Lab</span></figcaption></figure>
+  
+  
+  <section><h2>Papers, code and materials</h2><ul class="resources"><li><a href="../inventory-control/" rel="noopener"><span class="kind">Related</span><span class="label">Lab Inventory Control Database: the item records RFID reads are matched to</span></a></li></ul></section>
+  
+  <section><h2>People</h2><ul class="people"><li><span class="who"><span class="name">Erick C. Jones Jr., PhD, PE</span><span class="role">Principal Investigator · SEAR Lab director</span></span><a class="li" href="https://www.linkedin.com/in/erickjones2/" rel="noopener" aria-label="Erick C. Jones Jr., PhD, PE on LinkedIn">in</a></li><li><span class="who"><span class="name">Syed Mufid</span><span class="role">MS IE, RFID Lead</span></span><a class="li" href="https://www.linkedin.com/in/mufid-syed/" rel="noopener" aria-label="Syed Mufid on LinkedIn">in</a></li><li><span class="who"><span class="name">Sanjeev Joshi</span><span class="role">MS EM, Microgrid &amp; RFID</span></span><a class="li" href="https://www.linkedin.com/in/sanjeev-joshi-4a075818a/" rel="noopener" aria-label="Sanjeev Joshi on LinkedIn">in</a></li><li><span class="who"><span class="name">Eshwara Sridhar</span><span class="role">MS IE, RFID</span></span><a class="li" href="https://www.linkedin.com/in/eshwaraprasad/" rel="noopener" aria-label="Eshwara Sridhar on LinkedIn">in</a></li><li><span class="who"><span class="name">Saquib Mohammed</span><span class="role">MS IE, RTLS RFID Team Lead</span></span><a class="li" href="https://www.linkedin.com/in/saquib-raza-mohammed-4216b2211/" rel="noopener" aria-label="Saquib Mohammed on LinkedIn">in</a></li><li><span class="who"><span class="name">Syed Ajmal Shakeeb</span><span class="role">MS IE, RFID Team Lead</span></span><a class="li" href="https://www.linkedin.com/in/syedajmalshakeeb/" rel="noopener" aria-label="Syed Ajmal Shakeeb on LinkedIn">in</a></li><li><span class="who"><span class="name">Dhaval Pandit</span><span class="role">RFID Technologies team (2024–25)</span></span></li><li><span class="who"><span class="name">Prajwal Yadav Manjunath</span><span class="role">RFID Technologies team (2024–25)</span></span></li><li><span class="who"><span class="name">Mahesh Chaudhari</span><span class="role">RFID Technologies team (2024)</span></span></li><li><span class="who"><span class="name">Vaibhav Dinesh Thapliyal</span><span class="role">RFID Technologies team (2024–25)</span></span></li><li><span class="who"><span class="name">Komal Santosh Bobde</span><span class="role">RFID Technologies team (2024–25)</span></span></li><li><span class="who"><span class="name">Nimish Shetty</span><span class="role">RFID Technologies team (2024)</span></span></li><li><span class="who"><span class="name">Vinay Vijay Hirve</span><span class="role">RFID Technologies team (2024)</span></span></li></ul><p class="people-note">Fall 2026 team: names to be added from the lab personnel sheet. Profiles marked <strong>in</strong> link to LinkedIn. More past and present lab members are on the <a href="https://searlab.uta.edu/team/">SEAR Lab team page</a>.</p></section>
+  <p class="back"><a href="../">← All projects</a></p>
+</article>
+</main>
+<footer class="site-footer">
+  <p>
+    <a href="mailto:erick.jones@uta.edu">erick.jones@uta.edu</a> ·
+    <a href="https://scholar.google.com/citations?hl=en&amp;user=03RL76wAAAAJ">Google Scholar</a> ·
+    <a href="https://www.linkedin.com/in/erickjones2/">LinkedIn</a> ·
+    <a href="https://github.com/yamierick">GitHub</a> ·
+    <a href="https://searlab.uta.edu/">SEAR Lab</a>
+  </p>
+  <p class="constellation">Professional site · <a href="https://engineerliving.com">Engineer Living (ideas &amp; writing)</a> · <em>The Friction Deficit</em> (fiction, coming soon)</p>
+</footer>
+</body>
+</html>

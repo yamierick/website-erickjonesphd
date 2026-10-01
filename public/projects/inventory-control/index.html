@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lab Inventory Control Database · Erick C. Jones Jr., Ph.D.</title>
+<meta name="description" content="Students are building the lab&#x27;s own system for tracking equipment and supplies, from shelf labels and barcode scans to where each item is now.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Erick C. Jones Jr., Ph.D.">
+<meta property="og:title" content="Lab Inventory Control Database">
+<meta property="og:description" content="Students are building the lab&#x27;s own system for tracking equipment and supplies, from shelf labels and barcode scans to where each item is now.">
+<link rel="canonical" href="https://www.erickjonesphd.com/projects/inventory-control/">
+<meta property="og:url" content="https://www.erickjonesphd.com/projects/inventory-control/">
+<meta property="og:image" content="https://www.erickjonesphd.com/projects/inventory-control/img/thumb.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="stylesheet" href="../css/projects.css">
+</head>
+<body>
+<header class="site-header">
+  <a class="site-title" href="/">Erick C. Jones Jr.</a>
+  <nav><a href="/about/">About</a><a href="/research/">Research</a><a href="/labs/">Labs</a><a href="/publications/">Publications</a><a href="/teaching/">Teaching</a><a href="/resources/">Resources</a><a href="/models/">Models</a><a href="/beyond/">Beyond</a></nav>
+</header>
+<main class="wide project">
+<article>
+  <p class="crumbs meta"><a href="../">Projects</a> · RFID, Auto-ID and Digital Twins</p>
+  <h1>Lab Inventory Control Database</h1>
+  <p class="dek">Students are building the lab&#x27;s own system for tracking equipment and supplies, from shelf labels and barcode scans to where each item is now.</p>
+  <ul class="chips"><li class="status">Active</li><li>2025–present</li><li>RFID and Auto-ID</li><li>Inventory</li><li>Digital twins</li><li>Operations</li></ul>
+  <figure class="media"><img src="img/anim.gif" alt="Screen recording: on the Scan tab, Checkout mode is chosen and a barcode number is typed; the DEMO power supply is recorded as checked out. The Status tab then shows it &#x27;checked out by demo-alice&#x27;. After Sync Now and Refresh, the DEMO multimeter changes from &#x27;never seen&#x27; to &#x27;in Back South / Storage&#x27; with an rfid badge." loading="eager"><figcaption>Sample data. An item is checked out by barcode, and its status changes. Then the station syncs with the shared folder and picks up simulated RFID reads sent through the lab&#x27;s RFID program moments earlier, so the multimeter&#x27;s record updates to where the reader saw it.<span class="credit">Screen capture of the lab&#x27;s software, SEAR Lab</span></figcaption></figure>
+  <section><h2>In plain English</h2><p>A research lab runs on hundreds of small things: tools, tags, cables, consumables and shared equipment. When no one knows what is on hand or where it is kept, time goes into searching and reordering. This project builds the SEAR Lab&#x27;s own inventory system and uses the lab as a test site for the asset-tracking problems studied in the RFID and Auto-ID Deployment (RAID) Laboratory.</p><p>Students are counting what the lab holds, organizing shelves with the 5S method (sort, set in order, shine, standardize, sustain), and labeling shelves and items with standard GS1 identifiers. A simple program records each placement, check-out and return as a new line in a log, and works out from that log where each item is and who has it. Because items share identifiers with the lab&#x27;s RFID and energy-monitoring work, a tag read can be tied to the same item record as a barcode scan. The current version runs on a laptop with nothing to install and keeps several laptops in step through a shared folder.</p></section>
+  <section><h2>Main points</h2><ul class="points"><li>The item master lists what the lab owns; any station can add an item, and every change records which station made it.</li><li>Scanning a shelf label and then an item barcode records a move, check-out or return in a log that is added to but never edited.</li><li>Each item&#x27;s status (where it was last placed or seen, or who has it checked out) is recomputed from that log rather than typed in.</li><li>Items carry GS1 identifiers (a GTIN for each kind of item and a GIAI for each tracked asset), so RFID reads join the same records.</li><li>The physical inventory follows the 5S method, with a scored audit of each area of the lab.</li></ul></section>
+  <figure class="media"><img src="img/hero.png" alt="Screenshot of the Inventory Ledger&#x27;s Status tab: a table of ten DEMO items (oscilloscope, multimeter, power supply and others) with columns for item ID, description, state, confidence, last seen, last user and last event. States include &#x27;in Front North&#x27; with an rfid badge, &#x27;checked out by demo-alice&#x27; and &#x27;never seen&#x27;." loading="lazy"><figcaption>The lab&#x27;s inventory program running its built-in demo, with sample data: each item&#x27;s current state is worked out from the log. Some items were placed by barcode scans, one is checked out, and three were placed by RFID reads (blue &#x27;rfid&#x27; badge).<span class="credit">Screen capture of the lab&#x27;s software, SEAR Lab</span></figcaption></figure>
+  
+  
+  <section><h2>Papers, code and materials</h2><ul class="resources"><li><a href="../rfid/" rel="noopener"><span class="kind">Related</span><span class="label">RFID for Lab and Supply-Chain Tracking: reads feed the same log</span></a></li></ul></section>
+  
+  <section><h2>People</h2><ul class="people"><li><span class="who"><span class="name">Erick C. Jones Jr., PhD, PE</span><span class="role">Principal Investigator · SEAR Lab director</span></span><a class="li" href="https://www.linkedin.com/in/erickjones2/" rel="noopener" aria-label="Erick C. Jones Jr., PhD, PE on LinkedIn">in</a></li></ul><p class="people-note">Fall 2026 team: names to be added from the lab personnel sheet. Profiles marked <strong>in</strong> link to LinkedIn. More past and present lab members are on the <a href="https://searlab.uta.edu/team/">SEAR Lab team page</a>.</p></section>
+  <p class="back"><a href="../">← All projects</a></p>
+</article>
+</main>
+<footer class="site-footer">
+  <p>
+    <a href="mailto:erick.jones@uta.edu">erick.jones@uta.edu</a> ·
+    <a href="https://scholar.google.com/citations?hl=en&amp;user=03RL76wAAAAJ">Google Scholar</a> ·
+    <a href="https://www.linkedin.com/in/erickjones2/">LinkedIn</a> ·
+    <a href="https://github.com/yamierick">GitHub</a> ·
+    <a href="https://searlab.uta.edu/">SEAR Lab</a>
+  </p>
+  <p class="constellation">Professional site · <a href="https://engineerliving.com">Engineer Living (ideas &amp; writing)</a> · <em>The Friction Deficit</em> (fiction, coming soon)</p>
+</footer>
+</body>
+</html>

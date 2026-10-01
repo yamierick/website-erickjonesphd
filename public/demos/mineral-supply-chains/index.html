@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mineral supply chains · Erick C. Jones Jr., Ph.D.</title>
+<meta name="description" content="Who mines and refines the battery metals, and what a cheaper or cleaner lithium supply chain looks like, from three published SEAR Lab papers.">
+<link rel="canonical" href="https://www.erickjonesphd.com/demos/mineral-supply-chains/">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="stylesheet" href="../css/demos.css">
+<style>
+  /* Categorical palette, defined once; readable in both themes. */
+  :root { --c1: #0d6b4f; --c2: #b45309; --c3: #3b5b92; --c4: #8a918d; --band-low: #0d6b4f; --band-mid: #b45309; --band-high: #b91c1c; }
+  @media (prefers-color-scheme: dark) {
+    :root { --c1: #5fc9a4; --c2: #f0a45c; --c3: #93b4ea; --c4: #7f8c85; --band-low: #5fc9a4; --band-mid: #f0a45c; --band-high: #f08080; }
+  }
+  .model .readout div { border: 1px solid var(--rule); border-radius: 6px; padding: .5rem .7rem; }
+  .readout dd.text { font-size: .9rem; line-height: 1.3; }
+  .readout dd small { display: block; font-size: .72rem; color: var(--muted); margin-top: .1rem; }
+  .seg.wrap { flex-wrap: wrap; }
+  .seg.wrap button { flex: 1 0 30%; }
+  .seg button:focus-visible, .reset:focus-visible, input[type=range]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .output { min-width: 0; }
+  .chart-label { font-family: system-ui, sans-serif; font-size: .78rem; color: var(--muted); margin: 1rem 0 .2rem; text-transform: uppercase; letter-spacing: .05em; }
+  .chart-label:first-child { margin-top: 0; }
+  .legend { display: flex; flex-wrap: wrap; gap: .2rem 1rem; font-family: system-ui, sans-serif; font-size: .78rem; color: var(--muted); margin: .3rem 0 0; }
+  .sw { display: inline-block; width: .7rem; height: .7rem; margin-right: .3rem; vertical-align: -1px; border-radius: 2px; }
+  .sw-line { height: 0; border-top: 2px dashed var(--text); border-radius: 0; vertical-align: 3px; }
+  .hub { font-family: system-ui, sans-serif; font-size: .88rem; margin: .6rem 0 0; }
+  .companion { font-family: system-ui, sans-serif; font-size: .9rem; }
+  .output .hint { max-width: 40rem; }
+</style>
+</head>
+<body>
+<header class="site-header">
+  <a class="site-title" href="/">Erick C. Jones Jr.</a>
+  <nav><a href="/about/">About</a><a href="/research/">Research</a><a href="/labs/">Labs</a><a href="/publications/">Publications</a><a href="/teaching/">Teaching</a><a href="/resources/">Resources</a><a href="/models/">Models</a><a href="/beyond/">Beyond</a></nav>
+</header>
+<main class="wide">
+<article>
+  <h1>Mineral supply chains: who mines, who refines, and what a cheaper or cleaner plan looks like</h1>
+  <p class="subhead">Battery metals come from a handful of countries and companies, and most are refined in fewer still. What would it cost to plan the chain differently?</p>
+
+  <p class="note-published"><strong>Every number here comes from published SEAR Lab papers</strong>, listed at the bottom
+  with the table or figure each one comes from. Where a paper has an error, the demo shows the corrected value and says so.
+  Cite the papers, not this page.</p>
+
+  <!-- Panel 1: Akhter et al. (2026) -->
+  <section class="panel" id="p1">
+    <h2>1. Who mines each metal, and where the ore goes</h2>
+    <p class="lede">Pick a metal. The strip ranks all six by how concentrated their 2024 production is; the bars show the largest companies and producing countries, and where each company sends its ore to be processed.</p>
+    <div class="model">
+      <div class="controls">
+        <fieldset>
+          <legend>Metal</legend>
+          <div class="seg wrap" id="metal" role="group" aria-label="Metal">
+            <button type="button" data-v="li">Lithium</button>
+            <button type="button" data-v="co">Cobalt</button>
+            <button type="button" data-v="ni">Nickel</button>
+            <button type="button" data-v="mn">Manganese</button>
+            <button type="button" data-v="cu">Copper</button>
+            <button type="button" data-v="al">Aluminum</button>
+          </div>
+        </fieldset>
+        <p class="hint">Shares cover only the large companies the paper lists (roughly those above 5–10% of world or national output), so the index slightly understates true concentration.</p>
+        <p class="hint">HHI: square each company's percentage share and add them up. 10,000 is one company with everything.</p>
+      </div>
+      <div class="output">
+        <p class="chart-label">Concentration of 2024 production (HHI)</p>
+        <svg class="chart" id="hhi-chart" role="img" aria-labelledby="hhi-title"><title id="hhi-title">Herfindahl–Hirschman Index of 2024 production for six battery metals, against the paper's concentration bands</title></svg>
+        <p class="correction" id="cobalt-note">Cobalt corrected: the paper's Table 13 prints a global HHI of 3,214 (highly concentrated, dashed outline). Its own Table 7 company shares, on its stated world total of 290 kt, give 2,031 (moderately concentrated); 3,214 is what those outputs give on an older world total of about 230 kt. With the correction, no metal is highly concentrated: cobalt and manganese are the most concentrated, both moderately.</p>
+        <p class="chart-label" id="co-label">Largest companies, share of world output</p>
+        <svg class="chart" id="company-chart" role="img" aria-labelledby="company-title"><title id="company-title">Largest companies' shares of world production, with each company's main processing countries</title></svg>
+        <div class="legend"><span><i class="sw" style="background:var(--c3)"></i>Main processing includes China</span><span><i class="sw" style="background:var(--c4)"></i>Processed elsewhere</span></div>
+        <p class="chart-label" id="ct-label">Producing countries, share of world output</p>
+        <svg class="chart" id="country-chart" role="img" aria-labelledby="country-title"><title id="country-title">Producing countries' shares of world production, with the listed companies' shares of each country</title></svg>
+        <p class="hint" id="country-hint"></p>
+        <p class="hub" id="hub"></p>
+        <dl class="readout" id="r1" aria-live="polite"></dl>
+      </div>
+    </div>
+  </section>
+
+  <!-- Panel 2: Jones (2024) -->
+  <section class="panel" id="p2">
+    <h2>2. A least-cost lithium plan, or a lower-carbon one</h2>
+    <p class="lede">One planner builds the world's lithium chain from mine to battery pack, 2020 to 2100, with perfect foresight. Switch between the plan that minimizes cost and the one that minimizes CO₂, and see what changes.</p>
+    <div class="model">
+      <div class="controls">
+        <fieldset>
+          <legend>Plan</legend>
+          <div class="seg" id="plan" role="group" aria-label="Plan">
+            <button type="button" data-v="cost">Least cost</button>
+            <button type="button" data-v="co2">Lowest CO₂</button>
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend>Facilities open in</legend>
+          <div class="seg" id="year" role="group" aria-label="Year for facility counts">
+            <button type="button" data-v="2023">2023</button>
+            <button type="button" data-v="2030">2030</button>
+            <button type="button" data-v="2040">2040</button>
+            <button type="button" data-v="2050">2050</button>
+            <button type="button" data-v="2100">2100</button>
+          </div>
+          <p class="hint">The five years the paper tabulates.</p>
+        </fieldset>
+        <fieldset>
+          <legend>Totals by stage</legend>
+          <div class="seg" id="metric" role="group" aria-label="Totals by stage">
+            <button type="button" data-v="co2">CO₂</button>
+            <button type="button" data-v="cost">Cost</button>
+          </div>
+        </fieldset>
+      </div>
+      <div class="output">
+        <p class="chart-label">Lithium mined each year, by deposit type (kt Li)</p>
+        <svg class="chart" id="mine-chart" role="img" aria-labelledby="mine-title"><title id="mine-title">Lithium mined each year from 2020 to 2100 by deposit type, for the selected plan</title></svg>
+        <div class="legend"><span><i class="sw" style="background:var(--c1)"></i>Hard-rock spodumene</span><span><i class="sw" style="background:var(--c2)"></i>Clay</span><span><i class="sw" style="background:var(--c3)"></i>Brine</span><span><i class="sw sw-line"></i><span id="other-label">Lowest-CO₂ plan, total</span></span></div>
+        <p class="chart-label" id="fac-label">Facilities open in 2050</p>
+        <svg class="chart" id="fac-chart" role="img" aria-labelledby="fac-title"><title id="fac-title">Facilities open by stage in the selected year, both plans</title></svg>
+        <p class="chart-label" id="stage-label">Emissions by stage, 2020–2100</p>
+        <svg class="chart" id="stage-chart" role="img" aria-labelledby="stage-title"><title id="stage-title">Whole-horizon totals by supply-chain stage, both plans</title></svg>
+        <dl class="readout" id="r2" aria-live="polite"></dl>
+        <p class="correction" id="li-note">The least-cost series comes straight from the paper's published solution, shipped in its public code. The paper does not publish the lower-carbon plan's yearly mine output or stage totals, so those were re-solved from the same public code with the paper's CO₂ objective. The re-solve matches the paper's totals (55.7 Gt, USD 10.1 trillion) and its stage chart (Figure 9). Its facility counts do not match Table 4 (in 2050 it opens 38 mines and 195 recycling plants, against the paper's 29 and 243), because many different plans tie at the lowest CO₂. So the facility counts and totals shown are the paper's own. The split between spodumene and clay can also shift between equally low-carbon plans; the total mined each year does not.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Panel 3: Alavi, Aghapour & Jones (2026) -->
+  <section class="panel" id="p3">
+    <h2>3. Steering Australian lithium to U.S. plants</h2>
+    <p class="lede">A two-region version of the same model splits the chain between the United States and China, then sends a share of Australia's refined lithium to U.S. cathode and cell plants. Move the slider through the paper's seven scenarios.</p>
+    <div class="model">
+      <div class="controls">
+        <fieldset>
+          <legend>Agreement</legend>
+          <label for="alloc">Australian refined lithium sent to the U.S. <output id="alloc-out" for="alloc"></output>
+            <input type="range" id="alloc" min="0" max="60" step="10" value="30" aria-describedby="alloc-hint">
+          </label>
+          <p class="hint" id="alloc-hint">Snaps to the paper's scenarios: 0% (baseline) to 60% in steps of 10.</p>
+        </fieldset>
+        <div class="actions">
+          <button type="button" id="reset" class="reset">Reset</button>
+          <button type="button" id="share" class="reset">Copy link</button>
+        </div>
+        <p class="hint">Reset and Copy link cover all three panels.</p>
+      </div>
+      <div class="output">
+        <p class="chart-label">U.S. costs by scenario (USD billion)</p>
+        <svg class="chart" id="us-chart" role="img" aria-labelledby="us-title"><title id="us-title">U.S. domestic production and import costs for each scenario</title></svg>
+        <div class="legend"><span><i class="sw" style="background:var(--c1)"></i>U.S. domestic production</span><span><i class="sw" style="background:var(--c4)"></i>U.S. imports</span></div>
+        <p class="chart-label">China's costs by scenario (USD billion)</p>
+        <svg class="chart" id="cn-chart" role="img" aria-labelledby="cn-title"><title id="cn-title">China's total cost for each scenario</title></svg>
+        <dl class="readout" id="r3" aria-live="polite"></dl>
+        <p class="correction">Notes on the paper. It says U.S. costs climb fastest between the 30% and 40% scenarios, but its own Table 2 shows that step is the smallest (about $194 billion, against about $230–$298 billion for the others). It states the horizon as 2050 in one section and 2100 in another. And its conclusion recommends a "20–30% U.S. midstream market share", although the modeled U.S. shares run only from 3% to 17%; 20–30% is the share of Australian lithium sent to the U.S. The numbers shown are Table 2's as printed.</p>
+      </div>
+    </div>
+  </section>
+
+  <h2>What this shows</h2>
+  <p>Mining is more spread out than it looks from any one country, and refining is less. Copper and aluminum come from many companies; cobalt and manganese from a few. Lithium and nickel score as unconcentrated at the mine, yet most of the ore from Australia, South America and Indonesia is refined in or by companies from one country, China. The paper sorts the metals into three policy groups: reinforce what is already diverse (copper, aluminum), build refining elsewhere (lithium, nickel), and lean on recycling or stockpiles where supply is tight (cobalt, manganese).</p>
+  <p>The second panel asks what a planner could do about lithium on the scale of the whole chain. The cheapest plan never builds a recycling plant. Asking for the lowest CO₂ instead builds hundreds, mines less, and costs about 6% more to cut emissions about 2%. The small cut is the point: most of the chain's CO₂ comes from making cells and packs, not from mining, so cleaner power at those factories matters more than which mines get built.</p>
+  <p>The third panel splits that single planner into two countries. Redirecting Australian lithium to U.S. plants shrinks U.S. spending on imports, but U.S. costs rise several times over while China's fall, and the two together cost slightly more. The agreement moves production between countries more than it makes the chain cheaper. The lab's 2025 review of climate and trade policy argues that energy models rarely capture trade-offs like these, where a measure that lowers one risk (dependence on a single refiner) raises another (cost); these papers are early steps toward models that do.</p>
+  <p class="companion">Companion models on this site: <a href="/materials/">What a grid is made of</a> traces demand down to metal and ore, and <a href="/lead-time/">Too late to decide</a> shows why a new mine is a decision made about sixteen years before its metal arrives. Both are teaching toys with order-of-magnitude numbers, unlike this page.</p>
+
+  <h2>Behind this demo</h2>
+  <ul class="behind">
+    <li><a href="../../projects/critical-mineral-flows/">Critical Mineral Flows</a></li>
+    <li><a href="../../projects/lithium-supply-chain/">Lithium Supply Chain Model</a></li>
+  </ul>
+
+  <h2>Sources</h2>
+  <ol class="sources">
+    <li>Akhter, R., Palli, S.R., Walanjuwani, M., &amp; Jones, E.C., Jr. (2026). Mapping the supply chain of lithium-ion battery metals from mine to primary processing by country and corporation. <em>Commodities</em>, 5(1), 2. <a href="https://doi.org/10.3390/commodities5010002">doi:10.3390/commodities5010002</a>. Panel 1: company tables 1, 3, 5, 7, 9, 11; country tables 2, 4, 6, 8, 10, 12; Table 13 (global HHI); concentration bands (Section 3); processing narratives (Section 5); policy typology (Section 6). Cobalt HHI corrected from Table 7.</li>
+    <li>Jones, E.C., Jr. (2024). Lithium supply chain optimization: A global analysis of critical minerals for batteries. <em>Energies</em>, 17, 2685. <a href="https://doi.org/10.3390/en17112685">doi:10.3390/en17112685</a>. Panel 2: Table 4 (facilities, total cost, total CO₂); least-cost mine output and stage totals from the published solution in the paper's public code, <a href="https://github.com/sear-labs/lithium-optsc-energies-2024">sear-labs/lithium-optsc-energies-2024</a> (the data behind Figures 5–7); lower-carbon series re-solved from that code (compare Figures 8–9).</li>
+    <li>Alavi, S., Aghapour, R., &amp; Jones, E.C., Jr. (2026). Modeling policy-driven dynamics in the multi-regional lithium supply chain. <em>Proceedings of the IISE Annual Conference &amp; Expo 2026</em>. Panel 3: Table 2 and Section 5.</li>
+    <li>Jones, E.C., Jr. (2025). Climate and trade policy for risk management: The need for geopolitical analytical frameworks for supply chain and energy system modeling. <em>Current Sustainable/Renewable Energy Reports</em>, 12, 9. <a href="https://doi.org/10.1007/s40518-025-00256-x">doi:10.1007/s40518-025-00256-x</a>. Framing only; no numbers used.</li>
+  </ol>
+</article>
+</main>
+<footer class="site-footer">
+  <p><a href="mailto:erick.jones@uta.edu">erick.jones@uta.edu</a> · <a href="https://scholar.google.com/citations?hl=en&amp;user=03RL76wAAAAJ">Google Scholar</a> · <a href="https://www.linkedin.com/in/erickjones2/">LinkedIn</a> · <a href="https://github.com/yamierick">GitHub</a> · <a href="https://searlab.uta.edu/">SEAR Lab</a></p>
+  <p class="constellation">Professional site · <a href="https://engineerliving.com">Engineer Living (ideas &amp; writing)</a> · <em>The Friction Deficit</em> (fiction, coming soon)</p>
+</footer>
+<script type="module" src="demo.js"></script>
+</body>
+</html>
