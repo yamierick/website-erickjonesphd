@@ -22,3 +22,7 @@
 # project they came from; the About page links Google Scholar and ORCID.
 /publications/        /projects/       301
 /publications/*       /projects/       301
+
+# The old site served its CV at /files/cv.pdf until 2026-09-03; keep links
+# to it (Scholar, LinkedIn, email signatures) landing on the current one.
+/files/cv.pdf         /files/erick-jones-cv.pdf  301
