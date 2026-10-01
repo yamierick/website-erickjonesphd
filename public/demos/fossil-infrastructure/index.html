@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A second life for fossil-fuel infrastructure · Erick C. Jones Jr., Ph.D.</title>
+<meta name="description" content="Explore three SEAR Lab papers on reusing fossil-fuel infrastructure: geothermal power from orphaned oil wells, phased CO₂ pipelines, and geothermal as firm power for AI data centers.">
+<link rel="canonical" href="https://www.erickjonesphd.com/demos/fossil-infrastructure/">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="stylesheet" href="../css/demos.css">
+<style>
+  /* Small categorical palette, defined once, readable in both themes. */
+  :root {
+    --geo: var(--accent);
+    --gas: #b45309;
+    --uranium: #7c3aed;
+    --solar: #a16207;
+    --battery: #0e7490;
+    --grid: var(--muted);
+    --ghost: var(--rule);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --gas: #f0a04b; --uranium: #b99af5; --solar: #e3c04a; --battery: #5fc4d8; --ghost: #34403a; }
+  }
+  .model .readout div { border: 1px solid var(--rule); border-radius: 6px; padding: .5rem .7rem; }
+  .seg.wrap { flex-wrap: wrap; }
+  .seg.wrap button { flex: 1 1 45%; }
+  .seg.six button { flex: 1 1 14%; }
+  .controls select {
+    width: 100%; margin-top: .25rem; font: .85rem system-ui, sans-serif; padding: .3rem;
+    background: var(--bg); color: var(--text); border: 1px solid var(--rule); border-radius: 4px;
+  }
+  .seg button:focus-visible, .reset:focus-visible, .controls select:focus-visible, .controls input:focus-visible {
+    outline: 2px solid var(--accent); outline-offset: 2px;
+  }
+  .map .st { fill: var(--code-bg); stroke: var(--rule); stroke-width: .8; }
+  .map .st.study { fill: var(--ghost); stroke: var(--muted); cursor: pointer; }
+  .map .st.lit { fill: var(--geo); fill-opacity: .72; }
+  .map .st.sel { stroke: var(--text); stroke-width: 2.2; }
+  .map text.ab { font-size: 13px; font-weight: 600; fill: var(--text); pointer-events: none; }
+  .notes { font-family: system-ui, sans-serif; font-size: .88rem; margin: .6rem 0 0; padding-left: 1.1rem; }
+  .notes li { margin: .2rem 0; }
+  .sub { font-family: system-ui, sans-serif; font-size: .8rem; color: var(--muted); margin: .9rem 0 .2rem; text-transform: uppercase; letter-spacing: .05em; }
+  .legend .sw-geo { background: var(--geo); opacity: .72; }
+  .legend .sw-ghost { background: var(--ghost); border: 1px solid var(--muted); }
+  .legend .sw-dash { background: none; border-top: 2px dashed var(--text); height: 0; border-radius: 0; vertical-align: 3px; }
+  .legend .sw-gas { background: var(--gas); } .legend .sw-u { background: var(--uranium); }
+  .legend .sw-none { background: var(--geo); } .legend .sw-solar { background: var(--solar); }
+  .legend .sw-grid { background: var(--grid); } .legend .sw-bat { background: var(--battery); }
+  .legend .sw-muted { background: var(--muted); opacity: .45; }
+  .chart .axis { stroke: var(--rule); }
+  .chart .gridl { stroke: var(--rule); stroke-dasharray: 2 3; }
+  .chart .lbl { font-size: 12px; }
+  .chart .val { font-size: 12px; fill: var(--text); font-variant-numeric: tabular-nums; }
+  .chart .small { font-size: 11px; }
+  .corrections { margin-top: .4rem; }
+  @media (max-width: 600px) { .map text.ab { font-size: 26px; } }
+</style>
+</head>
+<body>
+<header class="site-header">
+  <a class="site-title" href="/">Erick C. Jones Jr.</a>
+  <nav><a href="/about/">About</a><a href="/research/">Research</a><a href="/labs/">Labs</a><a href="/projects/">Projects</a><a href="/teaching/">Teaching</a><a href="/resources/">Resources</a><a href="/models/">Models</a><a href="/beyond/">Beyond</a></nav>
+</header>
+<main class="wide">
+<article>
+  <h1>A second life for fossil-fuel infrastructure</h1>
+  <p class="subhead">Old oil wells, depleted reservoirs and the skills that built them could carry clean, firm power. Where, how fast, and at what cost?</p>
+
+  <p class="note-published"><strong>Every number here comes from published SEAR Lab papers</strong>, listed at the bottom
+  with the table or section each one comes from. Where a paper has an error, the demo shows the corrected value and says so.
+  Cite the papers, not this page.</p>
+
+  <!-- ============================== Panel A ============================== -->
+  <section class="panel" id="geo">
+    <h2>1. Hot rock under old oil country</h2>
+    <p class="lede">Eight states from Nevada to Mississippi hold thousands of orphaned oil and gas wells, many on hot ground, on tribal lands
+      or in HUBZones (federally designated low-income business areas). Pick a finding to see which states the paper names for it, then
+      break the potential down by how hot the rock is.</p>
+    <div class="model">
+      <div class="controls">
+        <fieldset>
+          <legend>Map: what the paper finds</legend>
+          <div class="seg wrap" id="lens" role="group" aria-label="Map finding">
+            <button type="button" data-v="study">Study area</button>
+            <button type="button" data-v="tribal">Tribal land on hot rock</button>
+            <button type="button" data-v="wells">Orphaned wells on hot rock</button>
+            <button type="button" data-v="overlap">Wells meet tribal land</button>
+            <button type="button" data-v="hottest">Highest potential</button>
+          </div>
+          <label for="st">State</label>
+          <select id="st">
+            <option value="">Choose a study state</option>
+            <option value="AZ">Arizona</option><option value="AR">Arkansas</option><option value="LA">Louisiana</option>
+            <option value="MS">Mississippi</option><option value="NV">Nevada</option><option value="NM">New Mexico</option>
+            <option value="OK">Oklahoma</option><option value="TX">Texas</option>
+          </select>
+        </fieldset>
+        <fieldset>
+          <legend>Chart: by geothermal class</legend>
+          <label>Measure</label>
+          <div class="seg wrap" id="gm" role="group" aria-label="Measure">
+            <button type="button" data-v="egs">Potential (GW)</button>
+            <button type="button" data-v="wellsGW">Converted wells (GW)</button>
+            <button type="button" data-v="wells">Orphaned wells</button>
+            <button type="button" data-v="area">Land area</button>
+            <button type="button" data-v="facilities">Possible plants</button>
+          </div>
+          <label>Land</label>
+          <div class="seg" id="gc" role="group" aria-label="Land category">
+            <button type="button" data-v="all">All</button>
+            <button type="button" data-v="hub">HUBZones</button>
+            <button type="button" data-v="tribal">Tribal</button>
+          </div>
+        </fieldset>
+        <div class="actions">
+          <button type="button" class="reset js-reset" data-panel="geo">Reset</button>
+          <button type="button" class="reset js-share">Copy link</button>
+        </div>
+      </div>
+      <div class="output">
+        <svg class="chart map" id="map" viewBox="0 0 960 598" role="img" aria-labelledby="map-title"><title id="map-title">Map of the contiguous United States</title></svg>
+        <div class="legend"><span><i class="sw sw-geo"></i><span id="lens-label">Named by the paper</span></span><span><i class="sw sw-ghost"></i>Other study states</span></div>
+        <ul class="notes" id="st-notes" aria-live="polite"></ul>
+        <p class="sub" id="geo-sub">By geothermal class</p>
+        <svg class="chart" id="geo-chart" viewBox="0 0 720 250" role="img" aria-labelledby="geo-title"><title id="geo-title">Values by geothermal class</title></svg>
+        <div class="legend" id="geo-legend"></div>
+        <dl class="readout" id="geo-readout"></dl>
+      </div>
+    </div>
+    <div class="corrections">
+      <p class="correction"><strong>Correction.</strong> The paper's Conclusions give 2,328 GW of technical potential and 3 GW from converted
+        wells; its Table 4 and Section 4.8 give <strong>2,372.8 GW</strong> and <strong>4.3 GW</strong>. The demo uses Table 4. (Table 4's
+        class rows are rounded, so they add to 2,372.9 GW and 4.2 GW.) The Conclusions' other figures agree with Table 3: 372,309 sq mi at
+        Class 1–3, and 6,166 orphaned wells in HUBZones on Class 1–3 ground.</p>
+      <p class="hint">The paper publishes no numbers by state, so the map shows only which states it names for each finding. Potential is counted only
+        on ground at 120 °C or more (Classes 1–3); Classes 4–5 appear only in land area and well counts. The totals are a technical upper bound:
+        land use, economics and site checks are left for future work.</p>
+    </div>
+  </section>
+
+  <!-- ============================== Panel B ============================== -->
+  <section class="panel" id="ccs">
+    <h2>2. CO₂ pipelines: build it all at once, or in five-year phases?</h2>
+    <p class="lede">Carbon capture sends CO₂ by pipeline to deep saline rock or to oil fields for enhanced recovery. In a Gulf-region case
+      (80 sources, 125 storage sites, 30 years), the same project was planned as one design and as six five-year phases.
+      Step through the phases and watch where the money goes.</p>
+    <div class="model">
+      <div class="controls">
+        <fieldset>
+          <legend>Planning goal</legend>
+          <div class="seg" id="cm" role="group" aria-label="Planning goal">
+            <button type="button" data-v="cap">Store 3 Mt/yr</button>
+            <button type="button" data-v="price">Only what pays</button>
+          </div>
+          <p class="hint" id="cm-hint"></p>
+        </fieldset>
+        <fieldset>
+          <legend>Show</legend>
+          <div class="seg wrap" id="cq" role="group" aria-label="Measure">
+            <button type="button" data-v="transport">Cost per year</button>
+            <button type="button" data-v="cumulative">Cost so far</button>
+            <button type="button" data-v="pipeKm">Pipeline</button>
+            <button type="button" data-v="captured">CO₂ stored</button>
+          </div>
+          <label for="ph">Through phase <output id="ph-out" for="ph"></output>
+            <input type="range" id="ph" min="1" max="6" step="1" value="6">
+          </label>
+        </fieldset>
+        <div class="actions">
+          <button type="button" class="reset js-reset" data-panel="ccs">Reset</button>
+          <button type="button" class="reset js-share">Copy link</button>
+        </div>
+      </div>
+      <div class="output">
+        <svg class="chart" id="ccs-chart" viewBox="0 0 720 360" role="img" aria-labelledby="ccs-title"><title id="ccs-title">CO₂ transport by phase</title></svg>
+        <div class="legend"><span><i class="sw sw-geo"></i>Planned in six phases</span><span><i class="sw sw-dash"></i>Planned all at once</span></div>
+        <dl class="readout" id="ccs-readout"></dl>
+      </div>
+    </div>
+    <p class="hint">"Cost so far" multiplies each phase's published cost per year by the years elapsed, so it is exact at every year shown.
+      Negative costs in the paper's tables are net revenue from storage credits; the demo shows transport, where the two designs differ.</p>
+    <p class="correction"><strong>Check.</strong> In Table 1 the single-phase annual cost (−$34.8M/yr) does not equal its rounded parts
+      ($126M − $180M + $18.5M = −$35.5M/yr); the phased columns agree with their parts to within about $0.2M. The transport rows, which
+      this panel uses, add up exactly to the printed totals ($555M and $363.65M). In "only what pays" mode the paper's "5% more CO₂" is
+      3.03 against 2.87 Mt/yr, which is 5.6%.</p>
+  </section>
+
+  <!-- ============================== Panel C ============================== -->
+  <section class="panel" id="dc">
+    <h2>3. Geothermal as firm power for an AI data center</h2>
+    <p class="lede">A 250 MW data center in Texas can build its own power on site while staying on the grid. Six mixes were scored on blended cost
+      and on how much of the grid's outage risk they remove. Pick a mix; compare the two geothermal-anchored designs, S3 and S4.</p>
+    <div class="model">
+      <div class="controls">
+        <fieldset>
+          <legend>On-site mix</legend>
+          <div class="seg six" id="dcsel" role="group" aria-label="Scenario">
+            <button type="button" data-v="S1">S1</button><button type="button" data-v="S2">S2</button><button type="button" data-v="S3">S3</button>
+            <button type="button" data-v="S4">S4</button><button type="button" data-v="S5">S5</button><button type="button" data-v="S6">S6</button>
+          </div>
+          <p class="hint" id="dc-name"></p>
+        </fieldset>
+        <fieldset>
+          <legend>Highlight</legend>
+          <div class="seg" id="dg" role="group" aria-label="Highlight">
+            <button type="button" data-v="all">All six</button>
+            <button type="button" data-v="geo">With geothermal</button>
+          </div>
+        </fieldset>
+        <div class="actions">
+          <button type="button" class="reset js-reset" data-panel="dc">Reset</button>
+          <button type="button" class="reset js-share">Copy link</button>
+        </div>
+      </div>
+      <div class="output">
+        <svg class="chart" id="dc-chart" viewBox="0 0 720 380" role="img" aria-labelledby="dc-title"><title id="dc-title">Blended cost against outage protection for six on-site power mixes</title></svg>
+        <div class="legend"><span><i class="sw sw-none"></i>No fuel supply needed</span><span><i class="sw sw-gas"></i>Natural gas</span><span><i class="sw sw-u"></i>Uranium</span><span><i class="sw sw-dash"></i>Grid only, $75/MWh</span></div>
+        <p class="sub">Installed at the site (Table 11) and what it can carry alone in an outage (Table 15)</p>
+        <svg class="chart" id="mix-chart" viewBox="0 0 720 130" role="img" aria-labelledby="mix-title"><title id="mix-title">Installed capacity of the selected mix</title></svg>
+        <div class="legend"><span><i class="sw sw-geo"></i>Geothermal</span><span><i class="sw sw-solar"></i>Solar PPA</span><span><i class="sw sw-gas"></i>Gas engines / microturbines</span><span><i class="sw sw-u"></i>Small modular reactor</span><span><i class="sw sw-grid"></i>Grid</span><span><i class="sw sw-bat"></i>Hybrid battery</span></div>
+        <dl class="readout" id="dc-readout"></dl>
+      </div>
+    </div>
+    <p class="correction"><strong>Correction.</strong> The paper's abstract says gas-dependent mixes range from 58.0% to 91.2% outage protection.
+      In its Table 15 the 58.0% belongs to S4 (geothermal + solar + grid), which needs no fuel; the gas-dependent mixes (S1, S2, S6) run from
+      <strong>72.5% to 91.2%</strong>.</p>
+    <p class="hint">Outage protection is the paper's avoided loss-of-load probability; it depends on the paper's stated assumptions about outages,
+      battery bridging and fuel supply, and is not a guarantee. S3's "&gt;99.9%" is drawn at 99.9%. S3's geothermal is 250 MW in Table 11 but
+      300 MW of nameplate in Table 13; the demo uses Table 11. A solar PPA is a contract for utility-scale solar power, not panels on site.</p>
+  </section>
+
+  <h2>What this shows</h2>
+  <p>The oil and gas era left behind more than emissions. It left drilled wells, mapped hot rock, pipeline corridors, depleted reservoirs and a
+    workforce that knows how to drill. Each of these papers asks how some of that could be put back to work.</p>
+  <p>The first panel is about place. The ground that is hot enough for enhanced geothermal plants overlaps with orphaned wells, tribal lands
+    and low-income business zones, so federal programs for those communities could steer the benefits. Switch the land filter to
+    "Tribal": about 15% of the technical potential lies on tribal land, but on Class 3 ground tribal land holds a quarter of the potential
+    and nearly half of the converted-well capacity.</p>
+  <p>The second panel is about timing. Building a CO₂ network all at once means paying to run its longest pipelines from the first year.
+    Planning in phases starts with short links between nearby sources and storage, and adds the long, costly routes only when the close
+    storage fills. Drag the phase slider: the phased plan spends more per year than the all-at-once design only in its last phase, and when
+    both must store 3 Mt a year it ends the 30 years about a third cheaper on transport.</p>
+  <p>The third panel is about firmness. A data center needs power every hour. Geothermal runs around the clock with no fuel pipeline, so an
+    all-geothermal site (S3) gives the strongest outage protection at a moderate cost. The cheapest mix (S4) also uses geothermal, but its
+    on-site plants can carry only 145 of the 250 MW, so it protects least. Cheapest and most resilient are not the same design.</p>
+
+  <h2>Behind this demo</h2>
+  <ul class="behind">
+    <li><a href="../../projects/alternative-energy/">Alternative Energy Solutions</a></li>
+    <li><a href="../../projects/data-centers/">AI Data Center Energy</a></li>
+  </ul>
+
+  <h2>Sources</h2>
+  <ol class="sources">
+    <li>Jones, E.C., Jr., Munjurpet Sridharan, C., Aghapour, R., &amp; Rodriguez, A. (2025). Re-energizing legacy fossil infrastructure:
+      Evaluating geothermal power in tribal lands and HUBZones. <em>Sustainability</em>, 17(6), 2558.
+      <a href="https://doi.org/10.3390/su17062558">doi:10.3390/su17062558</a>. Panel 1: Tables 1, 3, 4 and 5; Sections 4.1, 4.3, 4.5, 4.6, 4.8, 5 and 6. CC BY 4.0.</li>
+    <li>Jones, E.C., Jr., Yaw, S., Bennett, J.A., Ogland-Hand, J.D., Strahan, C., &amp; Middleton, R.S. (2022). Designing multi-phased CO₂
+      capture and storage infrastructure deployments. <em>Renewable and Sustainable Energy Transition</em>, 2, 100023.
+      <a href="https://doi.org/10.1016/j.rset.2022.100023">doi:10.1016/j.rset.2022.100023</a>. Panel 2: Tables 1 and 2; Sections 4.1 and 4.2.
+      Numbers only; the paper's figures are not reproduced (CC BY-NC-ND 4.0).</li>
+    <li>Jones, E.C., Jr., &amp; Jones, E.C., Sr. (2026). Megawatts to zettaflops: A techno-economic framework for grid-tied behind-the-meter
+      architectures in AI data centers. <em>Electricity</em>, 7(2), 43.
+      <a href="https://doi.org/10.3390/electricity7020043">doi:10.3390/electricity7020043</a>. Panel 3: Tables 8, 11, 14 and 15. CC BY 4.0.</li>
+    <li>State outlines: U.S. Census Bureau, 2023 cartographic boundary file (<code>cb_2023_us_state_20m</code>);
+      projected to Albers Equal Area and simplified offline (<code>_build/build_states.py</code>). No basemap tiles.</li>
+  </ol>
+</article>
+</main>
+<footer class="site-footer">
+  <p><a href="mailto:erick.jones@uta.edu">erick.jones@uta.edu</a> · <a href="https://scholar.google.com/citations?hl=en&amp;user=03RL76wAAAAJ">Google Scholar</a> · <a href="https://www.linkedin.com/in/erickjones2/">LinkedIn</a> · <a href="https://github.com/yamierick">GitHub</a> · <a href="https://searlab.uta.edu/">SEAR Lab</a></p>
+  <p class="constellation">Professional site · <a href="https://engineerliving.com">Engineer Living (ideas &amp; writing)</a> · <em>The Friction Deficit</em> (fiction, coming soon)</p>
+</footer>
+<div class="tip" id="tip" role="tooltip"></div>
+<script type="module" src="demo.js"></script>
+</body>
+</html>

@@ -97,10 +97,73 @@ const models = [
       + "today. The shaded region is the part that has already gone.",
   },
 ];
+
+/**
+ * The demos are a different kind of thing from the toys above, so they get a
+ * section of their own rather than three more cards under a disclaimer that
+ * says "no number here should be cited". These run on published results, and
+ * each folder's test.mjs checks its numbers against the papers' tables.
+ *
+ * They live as static pages in public/demos/, built outside this repo
+ * (Workbench\website\demos). Each card borrows the thumbnail of the project
+ * page the demo draws on most, so the image and the project stay in step.
+ */
+const demos = [
+  {
+    slug: "mineral-supply-chains", project: "critical-mineral-flows",
+    title: "Mineral supply chains",
+    line: "Who mines, who refines, and what a cheaper or cleaner plan looks like.",
+    body: "Battery metals come from a handful of countries and companies, and most are refined in "
+      + "fewer still. What would it cost to plan the chain differently?",
+  },
+  {
+    slug: "battery-recycling", project: "battery-recycling",
+    title: "Battery recycling",
+    line: "Where to make black mass, and how to make it cheaply.",
+    body: "Before any metal comes back out of a spent battery, it has to be ground into a powder "
+      + "called black mass. Where should that happen, and does it need expensive equipment?",
+  },
+  {
+    slug: "texas-grid", project: "grid-dashboard",
+    title: "The Texas grid",
+    line: "Where power is made, where demand is going, and how new loads can power themselves.",
+    body: "Texas runs its own grid. As wind, solar and very large new loads arrive, who makes the "
+      + "power, and who pays for it?",
+  },
+  {
+    slug: "decarbonizing-travel", project: "sav-hsr",
+    title: "Decarbonizing travel",
+    line: "Shared self-driving fleets and extended-range EVs.",
+    body: "Two ways to take carbon out of car travel: share the cars, or put a bigger battery in "
+      + "them. What does each one buy?",
+  },
+  {
+    slug: "food-energy-water", project: "food-energy-water",
+    title: "Food, energy and water under climate risk",
+    line: "Sharing and co-planning power and water; farming under an unknown climate.",
+    body: "Making your own power and water pays when you share it and plan both together. Planning "
+      + "for a climate you cannot know costs more than bad weather.",
+  },
+  {
+    slug: "fossil-infrastructure", project: "alternative-energy",
+    title: "A second life for fossil-fuel infrastructure",
+    line: "Old wells to geothermal, phased CO₂ pipelines, geothermal for data centers.",
+    body: "Old oil wells, depleted reservoirs and the skills that built them could carry clean, "
+      + "firm power. Where, how fast, and at what cost?",
+  },
+  {
+    slug: "access-and-health", project: "covid-last-mile",
+    title: "Access and health",
+    line: "Getting COVID-19 vaccines to the neighborhoods that need them.",
+    body: "When there are not enough doses to go around, who gets served first, and what does the "
+      + "shortage cost?",
+  },
+];
 ---
 
 <Base title="Models" wide={true} og="models">
   <p class="subhead">Small interactive models, each built to make one mechanism visible.</p>
+  <p class="hint">Further down: <a href="#papers">seven demos built from the lab's published papers</a>.</p>
 
   <p class="disclaimer">
     <strong>These are teaching toys, not research.</strong> They run on fixed
@@ -141,7 +204,31 @@ const models = [
     The real versions of these questions — a mix that is chosen rather than
     given, under capacity limits, lead times and recovery — are the actual
     research, and do not fit on a web page. That work lives in
-    <a href="/labs/">the lab</a> and in <a href="/publications/">the papers</a>.
+    <a href="/labs/">the lab</a> and in <a href="/projects/">the papers</a>.
+  </p>
+
+  <h2 class="plain" id="papers">From the lab's papers</h2>
+  <p>
+    The research itself does not fit on a web page, but its results can. Unlike
+    the toys above, these demos are built from published SEAR Lab papers, a few
+    to each theme. Their numbers come from the papers' own tables, and tests
+    check them against those tables. Where a paper printed a number that later
+    proved wrong, the demo shows the corrected value and says so.
+  </p>
+
+  <ul class="models demos">
+    {demos.map((d) => (
+      <li>
+        <div class="art"><img src={`/projects/${d.project}/img/thumb.jpg`} alt="" loading="lazy" /></div>
+        <h2><a href={`/demos/${d.slug}/`}>{d.title}</a></h2>
+        <p class="line">{d.line}</p>
+        <p class="thesis">{d.body}</p>
+      </li>
+    ))}
+  </ul>
+  <p class="hint">
+    <a href="/demos/">All seven on one page</a> ·
+    <a href="/projects/">Every SEAR project</a>, with its papers and people
   </p>
 </Base>
 
@@ -182,6 +269,10 @@ const models = [
     padding: .5rem .9rem;
   }
   .art :global(svg.thumb) { display: block; width: 100%; height: auto; }
+  /* Demo cards use a project photo, full-bleed and cropped to the same strip
+     as the drawn thumbnails so the two grids read as one family. */
+  .demos .art { padding: 0; }
+  .demos .art img { display: block; width: 100%; aspect-ratio: 240 / 86; object-fit: cover; }
 
   .models h2 { margin: .9rem 1.1rem .3rem; font-size: 1.18rem; }
   .models h2 a { text-decoration: none; }

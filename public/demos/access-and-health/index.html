@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Access and health · Erick C. Jones Jr., Ph.D.</title>
+<meta name="description" content="Getting COVID-19 vaccines to the Houston neighborhoods that need them: a ZIP-code map of cases and the eight supply scenarios from a SEAR Lab paper.">
+<link rel="canonical" href="https://www.erickjonesphd.com/demos/access-and-health/">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="stylesheet" href="../css/demos.css">
+<style>
+  /* Sequential ramp for the map and a two-colour pair for the charts, defined once. */
+  :root {
+    --q0: #e8eef6; --q1: #b9cde6; --q2: #7fa6d2; --q3: #4577b5; --q4: #1f4e8c;
+    --paper: #c2410c;
+    --repo: var(--accent);
+    --line2: #1f4e8c;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --q0: #1f2a36; --q1: #2c4a6e; --q2: #3f6fa3; --q3: #6b9ad0; --q4: #a9c8ec; --paper: #fb923c; --line2: #8fb6e6; }
+  }
+  .model .readout div { border: 1px solid var(--rule); border-radius: 6px; padding: .5rem .7rem; }
+  .readout dd small { display: block; font-size: .72rem; color: var(--muted); margin-top: .15rem; }
+  .seg.wrap { flex-wrap: wrap; }
+  .seg.wrap button { flex: 1 1 45%; }
+  .controls select {
+    width: 100%; margin-top: .25rem; font: .85rem system-ui, sans-serif; padding: .3rem;
+    background: var(--bg); color: var(--text); border: 1px solid var(--rule); border-radius: 4px;
+  }
+  .seg button:focus-visible, .reset:focus-visible, .controls select:focus-visible, .controls input:focus-visible {
+    outline: 2px solid var(--accent); outline-offset: 2px;
+  }
+  .map .z { stroke: var(--bg); stroke-width: .6; cursor: pointer; }
+  .map .z.dim { opacity: .28; }
+  .map .z.sel { stroke: var(--text); stroke-width: 2.2; }
+  .map .reg { fill: none; stroke: var(--text); stroke-width: 1.6; pointer-events: none; }
+  .map .reg.on { stroke-width: 3; }
+  .map text.rl { font-size: 13px; font-weight: 700; fill: var(--text); paint-order: stroke; stroke: var(--bg); stroke-width: 3px; pointer-events: none; }
+  @media (max-width: 600px) { .map text.rl { font-size: 22px; } }
+  .legend .q { width: 1.3rem; }
+  .legend .sw-repo { background: var(--repo); opacity: .8; }
+  .legend .sw-paper { background: none; border: 2px solid var(--paper); border-radius: 50%; }
+  .legend .sw-line { background: var(--line2); height: .2rem; border-radius: 0; vertical-align: 2px; }
+  .legend .sw-tr { background: var(--line2); opacity: .85; }
+  .chart .axis { stroke: var(--rule); }
+  .chart .gridl { stroke: var(--rule); stroke-dasharray: 2 3; }
+  .chart .lbl { font-size: 12px; }
+  .chart .val { font-size: 12px; fill: var(--text); font-variant-numeric: tabular-nums; }
+  .chart .small { font-size: 11px; }
+  .chart .pv { font-size: 11px; fill: var(--paper); font-weight: 600; }
+</style>
+</head>
+<body>
+<header class="site-header">
+  <a class="site-title" href="/">Erick C. Jones Jr.</a>
+  <nav><a href="/about/">About</a><a href="/research/">Research</a><a href="/labs/">Labs</a><a href="/projects/">Projects</a><a href="/teaching/">Teaching</a><a href="/resources/">Resources</a><a href="/models/">Models</a><a href="/beyond/">Beyond</a></nav>
+</header>
+<main class="wide">
+<article>
+  <h1>Access and health: getting COVID-19 vaccines to the neighborhoods that need them</h1>
+  <p class="subhead">When there are not enough doses to go around, who gets served first, and what does the shortage cost?</p>
+
+  <p class="note-published"><strong>Every number here comes from a published SEAR Lab paper or from its public code</strong>, listed
+  at the bottom with the table or sentence each one comes from. Values printed in the paper and values regenerated from the public
+  repositories are marked differently. Where the paper has an error, the demo says so. Cite the paper, not this page.</p>
+
+  <!-- ============================== Panel A ============================== -->
+  <section class="panel" id="map-panel">
+    <h2>1. Where the pandemic hit: Houston by ZIP code</h2>
+    <p class="lede">The project mapped COVID-19 cases and deaths across Houston-area ZIP codes to see where the burden and vulnerable
+      communities overlap. Switch layers, pick a region, or look up a ZIP code. Counts are totals for each ZIP code from one snapshot;
+      they are not rates, and nothing here describes individual people.</p>
+    <div class="model">
+      <div class="controls">
+        <fieldset>
+          <legend>Layer</legend>
+          <div class="seg" id="m" role="group" aria-label="Map layer">
+            <button type="button" data-v="cases">Cases</button>
+            <button type="button" data-v="active">Active</button>
+            <button type="button" data-v="deaths">Deaths</button>
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend>Focus</legend>
+          <label for="r">Region</label>
+          <select id="r">
+            <option value="">All eight regions</option>
+            <option value="N">North</option><option value="NE">Northeast</option><option value="E">East</option><option value="SE">Southeast</option>
+            <option value="S">South</option><option value="SW">Southwest</option><option value="W">West</option><option value="NW">Northwest</option>
+          </select>
+          <label for="z">ZIP code</label>
+          <select id="z"><option value="">Any</option></select>
+        </fieldset>
+        <div class="actions">
+          <button type="button" class="reset js-reset" data-panel="map">Reset</button>
+          <button type="button" class="reset js-share">Copy link</button>
+        </div>
+      </div>
+      <div class="output">
+        <svg class="chart map" id="map" viewBox="0 0 720 526" role="img" aria-labelledby="map-title"><title id="map-title">Map of Houston-area ZIP codes</title></svg>
+        <div class="legend" id="map-legend"></div>
+        <dl class="readout" id="map-readout"></dl>
+      </div>
+    </div>
+    <p class="correction"><strong>Note on coverage.</strong> The paper's model uses <strong>97</strong> ZIP codes in Harris County
+      (77002–77099, Table 2). The project's public GIS covers a wider area: <strong>147</strong> ZIP codes in eight regions, with
+      49,365 confirmed cases and 487 deaths in the snapshot. The map shows the GIS as published; the date of its snapshot is not recorded.</p>
+    <p class="hint">The paper also scores ZIP codes with a Community Health Index (health, social vulnerability and active cases). That index is
+      built from data the Houston Health Department shared and is not in the public repository, so it is not mapped here.</p>
+  </section>
+
+  <!-- ============================== Panel B ============================== -->
+  <section class="panel" id="sc">
+    <h2>2. More vaccine, or smarter distribution?</h2>
+    <p class="lede">A network model shipped doses from 5 hubs through 278 providers to about 654,000 people over 60 and health care
+      workers, at the lowest cost, with a penalty for every person left unserved. The paper ran eight scenarios: the supply available
+      then and two, three and four times it, each shared equally or prioritized to the most vulnerable communities.</p>
+    <div class="model">
+      <div class="controls">
+        <fieldset>
+          <legend>Vaccine supply</legend>
+          <label for="k">Supply and provider capacity <output id="k-out" for="k"></output>
+            <input type="range" id="k" min="1" max="4" step="1" value="1">
+          </label>
+          <p class="hint">Snaps to the paper's four levels.</p>
+        </fieldset>
+        <fieldset>
+          <legend>Distribution</legend>
+          <div class="seg" id="p" role="group" aria-label="Distribution">
+            <button type="button" data-v="equal">Equal</button>
+            <button type="button" data-v="prioritized">Prioritized</button>
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend>Show</legend>
+          <div class="seg wrap" id="q" role="group" aria-label="Measure">
+            <button type="button" data-v="service">People served</button>
+            <button type="button" data-v="penalty">Shortage penalty</button>
+            <button type="button" data-v="transport">Transport cost</button>
+            <button type="button" data-v="both">Both costs</button>
+          </div>
+        </fieldset>
+        <div class="actions">
+          <button type="button" class="reset js-reset" data-panel="sc">Reset</button>
+          <button type="button" class="reset js-share">Copy link</button>
+        </div>
+      </div>
+      <div class="output">
+        <svg class="chart" id="sc-chart" viewBox="0 0 720 360" role="img" aria-labelledby="sc-title"><title id="sc-title">Scenario results</title></svg>
+        <div class="legend" id="sc-legend"></div>
+        <dl class="readout" id="sc-readout"></dl>
+      </div>
+    </div>
+    <p class="correction"><strong>Correction.</strong> The paper says equal distribution at the supply available then served
+      <strong>32%</strong> of the target group. Its own penalty figures ($34M at that supply, $22M at twice it) are only consistent with
+      about <strong>26%</strong>: doubling supply from 32% would have cut the penalty to about $18M, not $22M. The demo shows the printed
+      32% with this note, and the public reconstruction, which matches the printed penalties to within 0.4%, uses 26%.</p>
+    <p class="hint">Bars are the public repository's reconstruction of the eight scenarios; circles are values the paper prints as numbers
+      (most of its results appear only as bar charts). The reconstruction orders ZIP codes by the CDC Social Vulnerability Index as a
+      public stand-in for the Community Health Index, and prices every unserved person at $70 (two Pfizer doses then), the top of the
+      paper's $35–$70 range. Its "most vulnerable third of ZIP codes" is not the same group as the paper's ten prioritized communities.</p>
+  </section>
+
+  <h2>What this shows</h2>
+  <p>In early 2021 COVID-19 vaccines were scarce, and older adults and communities of color had been hit hardest. Getting doses to them
+    is partly a logistics problem, especially the "last mile" from clinics and pharmacies to the people who need them.</p>
+  <p>The map shows why place matters. Cases were not spread evenly: some ZIP codes had over a thousand confirmed cases in the snapshot and
+    others a handful. A supply chain that treats every ZIP code alike will not match where the need is.</p>
+  <p>The scenarios show the trade. Step the supply up from 1× to 4×: the shortage penalty falls to zero, while transport cost rises
+    because more people are reached. Switch to "Both costs" to see that transport, even including the last mile, is tiny next to the
+    cost of leaving people unserved. Then switch between equal and prioritized at 1×: total coverage barely moves (about a third, or a
+    quarter by the corrected figure), but the paper finds that prioritizing by its health index serves the most vulnerable communities
+    at close to 100%.</p>
+
+  <h2>Behind this demo</h2>
+  <ul class="behind">
+    <li><a href="../../projects/covid-last-mile/">COVID-19 Last-Mile Distribution</a></li>
+  </ul>
+
+  <h2>Sources</h2>
+  <ol class="sources">
+    <li>Jones, E.C., Azeem, G., Jones, E.C., Jr., Jefferson, F., Henry, M., Abolmaali, S., &amp; Sparks, J. (2021). Understanding the last
+      mile transportation concept impacting underserved global communities to save lives during COVID-19 pandemic.
+      <em>Frontiers in Future Transportation</em>, 2, 732331. <a href="https://doi.org/10.3389/ffutr.2021.732331">doi:10.3389/ffutr.2021.732331</a>.
+      Table 2 (assumptions), Table 3 (scenarios), and the Results text for the printed penalties and service levels. CC BY.</li>
+    <li>sear-labs/covid-optsc-ffutr-2021 (public code for the paper's supply chain model, MIT licence).
+      <a href="https://github.com/sear-labs/covid-optsc-ffutr-2021">github.com/sear-labs/covid-optsc-ffutr-2021</a>,
+      <a href="https://doi.org/10.5281/zenodo.22309107">doi:10.5281/zenodo.22309107</a>. <code>results/reconstructed_scenarios.csv</code>, and the
+      prioritized rows regenerated with its <code>scripts/make_figures.py</code> on <code>data/derived_paper_instance.csv</code>.</li>
+    <li>sear-labs/houston-covid-gis (public code for the paper's Houston maps, MIT licence).
+      <a href="https://github.com/sear-labs/houston-covid-gis">github.com/sear-labs/houston-covid-gis</a>,
+      <a href="https://doi.org/10.5281/zenodo.22309109">doi:10.5281/zenodo.22309109</a>. <code>data/geometry/covid_regions.gpkg</code>, per-ZIP totals only;
+      projected and simplified offline (<code>_build/build_zips.py</code>).</li>
+  </ol>
+</article>
+</main>
+<footer class="site-footer">
+  <p><a href="mailto:erick.jones@uta.edu">erick.jones@uta.edu</a> · <a href="https://scholar.google.com/citations?hl=en&amp;user=03RL76wAAAAJ">Google Scholar</a> · <a href="https://www.linkedin.com/in/erickjones2/">LinkedIn</a> · <a href="https://github.com/yamierick">GitHub</a> · <a href="https://searlab.uta.edu/">SEAR Lab</a></p>
+  <p class="constellation">Professional site · <a href="https://engineerliving.com">Engineer Living (ideas &amp; writing)</a> · <em>The Friction Deficit</em> (fiction, coming soon)</p>
+</footer>
+<div class="tip" id="tip" role="tooltip"></div>
+<script type="module" src="demo.js"></script>
+</body>
+</html>

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hot-Water Heater and HVAC Data · Erick C. Jones Jr., Ph.D.</title>
+<meta name="description" content="Students connect the lab&#x27;s water heater and air conditioner to software, so the lab can see, and eventually steer, how much energy they use.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Erick C. Jones Jr., Ph.D.">
+<meta property="og:title" content="Hot-Water Heater and HVAC Data">
+<meta property="og:description" content="Students connect the lab&#x27;s water heater and air conditioner to software, so the lab can see, and eventually steer, how much energy they use.">
+<link rel="canonical" href="https://www.erickjonesphd.com/projects/hwh-hvac-data/">
+<meta property="og:url" content="https://www.erickjonesphd.com/projects/hwh-hvac-data/">
+<meta property="og:image" content="https://www.erickjonesphd.com/projects/hwh-hvac-data/img/thumb.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="stylesheet" href="../css/projects.css">
+</head>
+<body>
+<header class="site-header">
+  <a class="site-title" href="/">Erick C. Jones Jr.</a>
+  <nav><a href="/about/">About</a><a href="/research/">Research</a><a href="/labs/">Labs</a><a href="/projects/">Projects</a><a href="/teaching/">Teaching</a><a href="/resources/">Resources</a><a href="/models/">Models</a><a href="/beyond/">Beyond</a></nav>
+</header>
+<main class="wide project">
+<article>
+  <p class="crumbs meta"><a href="../">Projects</a> · Lab Energy System</p>
+  <h1>Hot-Water Heater and HVAC Data</h1>
+  <p class="dek">Students connect the lab&#x27;s water heater and air conditioner to software, so the lab can see, and eventually steer, how much energy they use.</p>
+  <ul class="chips"><li class="status">Active</li><li>2026–present</li><li>Lab energy system</li><li>Buildings</li><li>HVAC</li><li>Data</li></ul>
+  <figure class="media"><img src="img/anim.gif" alt="Screen recording of the dashboard: the pointer sweeps across the energy chart showing values for each minute, the history window is narrowed from 24 hours to 6 hours and then 1 hour, the temperature switch flips the cards to Celsius and back, and the view returns to 24 hours." loading="eager"><figcaption>Using the dashboard: reading values off the chart, changing the history window and switching units. The data are the same recorded April 2, 2026 readings of the lab&#x27;s air conditioner and water heater.<span class="credit">Screen capture of the lab&#x27;s dashboard, SEAR Lab</span></figcaption></figure>
+  <section><h2>In plain English</h2><p>Water heating and air conditioning are among the largest energy uses in many buildings, yet in a typical lab nobody sees what they consume until the utility bill arrives. This project connects the SEAR Lab&#x27;s own hot-water heater and mini-split air conditioner to the manufacturers&#x27; online services, so their readings are collected automatically and set beside the lab&#x27;s rooftop solar output.</p><p>Students built a small Python application that checks the equipment every minute, saves each reading to a log and draws live charts on a web dashboard, including a simple net-load figure: solar production minus heating and cooling use. Some values are still estimates rather than measurements. Air-conditioner energy, for example, is inferred from whether the unit is switched on, so the team plans to label every value as measured or estimated. The next step is two-way control: adjusting temperature set points automatically, for instance when the power grid is under strain.</p></section>
+  <section><h2>Main points</h2><ul class="points"><li>The collector reads the water heater&#x27;s daily energy use and the air conditioner&#x27;s on/off state and room temperature through the vendors&#x27; APIs.</li><li>Every 60 seconds the latest readings are written to a local log and shown on a browser dashboard with live charts.</li><li>A device the collector cannot reach shows as offline, with no number, instead of a made-up reading.</li><li>The same application also pulls rooftop solar data, tying this work to the lab&#x27;s wider energy dashboards.</li><li>Planned next: sending set-point changes back to the equipment, the first step toward automated control.</li></ul></section>
+  <figure class="media"><img src="img/hero.png" alt="Dark-themed web dashboard titled HVAC Lab Energy Dashboard. Three cards: Solar System marked offline with no reading; Air Conditioner powered on at 70.7°F with a 69.8°F target and 2.46 kWh estimated for the day; Rheem Water Heater in energy-saving mode, set to 126°F, not running, 0.90 kWh for the day. Below, a history-window bar set to 24 hours and an Energy Consumption chart for April 2, 2026 showing the water heater&#x27;s daily total stepping up from 0.2 to 0.9 kWh." loading="lazy"><figcaption>The lab&#x27;s energy dashboard replaying recorded readings from the lab&#x27;s air conditioner and water heater on April 2, 2026 (6:51 a.m. to 6:21 p.m.). Solar shows offline because no real solar readings were recorded that day. Air-conditioner energy is an estimate from its on/off state; the dips to zero are stretches when the collector could not reach the devices.<span class="credit">Screen capture of the lab&#x27;s dashboard, SEAR Lab</span></figcaption></figure>
+  
+  
+  <section><h2>Papers, code and materials</h2><ul class="resources"><li><a href="../lab-energy/" rel="noopener"><span class="kind">Related</span><span class="label">Lab Energy System: the solar, breaker and weather data this joins</span></a></li></ul></section>
+  
+  <section><h2>People</h2><ul class="people"><li><span class="who"><span class="name">Erick C. Jones Jr., PhD, PE</span><span class="role">Principal Investigator · SEAR Lab director</span></span><a class="li" href="https://www.linkedin.com/in/erickjones2/" rel="noopener" aria-label="Erick C. Jones Jr., PhD, PE on LinkedIn">in</a></li></ul><p class="people-note">Fall 2026 team: names to be added from the lab personnel sheet. Profiles marked <strong>in</strong> link to LinkedIn. More past and present lab members are on the <a href="https://searlab.uta.edu/team/">SEAR Lab team page</a>.</p></section>
+  <p class="back"><a href="../">← All projects</a></p>
+</article>
+</main>
+<footer class="site-footer">
+  <p>
+    <a href="mailto:erick.jones@uta.edu">erick.jones@uta.edu</a> ·
+    <a href="https://scholar.google.com/citations?hl=en&amp;user=03RL76wAAAAJ">Google Scholar</a> ·
+    <a href="https://www.linkedin.com/in/erickjones2/">LinkedIn</a> ·
+    <a href="https://github.com/yamierick">GitHub</a> ·
+    <a href="https://searlab.uta.edu/">SEAR Lab</a>
+  </p>
+  <p class="constellation">Professional site · <a href="https://engineerliving.com">Engineer Living (ideas &amp; writing)</a> · <em>The Friction Deficit</em> (fiction, coming soon)</p>
+</footer>
+</body>
+</html>

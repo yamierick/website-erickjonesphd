@@ -25,4 +25,4 @@ I am an assistant professor of Industrial, Manufacturing, and Systems Engineerin
 
 **Methods.** SEAR specializes in mathematical optimization, simulation, AI/ML, and specialized analytics (GIS, LCA, TEA), with bench-scale chemistry for critical-metal recovery and RFID for asset tracking — the experiments calibrate the models, and the models design the experiments.
 
-Start with [about me](/about/), current [research](/research/), [selected publications](/publications/), or play with a [toy model](/model/) of the mineral–energy loop.
+Start with [about me](/about/), current [research](/research/), the lab's [projects](/projects/), or play with a [toy model](/recovery-loop/) of the mineral–energy loop.

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mapping Communities and Land Value · Erick C. Jones Jr., Ph.D.</title>
+<meta name="description" content="Using maps to see how services, health and property value are spread across places, from census tracts to Tarrant County&#x27;s parcels.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Erick C. Jones Jr., Ph.D.">
+<meta property="og:title" content="Mapping Communities and Land Value">
+<meta property="og:description" content="Using maps to see how services, health and property value are spread across places, from census tracts to Tarrant County&#x27;s parcels.">
+<link rel="canonical" href="https://www.erickjonesphd.com/projects/geospatial-mapping/">
+<meta property="og:url" content="https://www.erickjonesphd.com/projects/geospatial-mapping/">
+<meta property="og:image" content="https://www.erickjonesphd.com/projects/geospatial-mapping/img/thumb.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="stylesheet" href="../css/projects.css">
+</head>
+<body>
+<header class="site-header">
+  <a class="site-title" href="/">Erick C. Jones Jr.</a>
+  <nav><a href="/about/">About</a><a href="/research/">Research</a><a href="/labs/">Labs</a><a href="/projects/">Projects</a><a href="/teaching/">Teaching</a><a href="/resources/">Resources</a><a href="/models/">Models</a><a href="/beyond/">Beyond</a></nav>
+</header>
+<main class="wide project">
+<article>
+  <p class="crumbs meta"><a href="../">Projects</a> · Geospatial and Infrastructure Analysis</p>
+  <h1>Mapping Communities and Land Value</h1>
+  <p class="dek">Using maps to see how services, health and property value are spread across places, from census tracts to Tarrant County&#x27;s parcels.</p>
+  <ul class="chips"><li class="status">Active</li><li>2023–present</li><li>GIS</li><li>ArcGIS</li><li>Census tracts</li><li>Community health</li><li>Property tax</li><li>Land value</li><li>Hexagon maps</li><li>Python</li></ul>
+  <figure class="media"><img src="img/anim.gif" alt="Animated 3D view of Tarrant County turning slowly. Hexagonal columns rise from the map, their height and color showing tax per acre, then market value per acre; downtown Fort Worth&#x27;s columns stand tallest, with a few tall columns near DFW Airport and Arlington." loading="eager"><figcaption>The same hexagons in 3D, drawn with hexmap-web: column height and color show tax per acre, then market value per acre, as the view turns.<span class="credit">Rendered by the SEAR Lab from public Tarrant Appraisal District, Tarrant County Tax Office and U.S. Census data (the lab&#x27;s Tarrant County analysis, release v0.1.0); drawn with sear-labs/hexmap-web</span></figcaption></figure>
+  <section><h2>In plain English</h2><p>Where are a region&#x27;s services, health care and wealth, and which places go without? Since 2023, SEAR Lab students have mapped versions of that question in ArcGIS: how U.S. metro areas connect by road, rail, air and water; how close Texas hospitals sit to airports and power plants; where community health centers stand against census-tract measures of social vulnerability; and how amenities and property value vary by county and ZIP code.</p><p>The newest strand asks how much property tax each acre of Tarrant County produces, and why some areas raise less. In 2026 the lab rebuilt it as a reproducible Python pipeline that joins the 2025 appraisal roll to 660,267 taxable parcels and reports only area totals. Property tax from all taxing units came to about $2,307 per resident county-wide and $2,150 in Fort Worth, but $1,070 in Fort Worth&#x27;s council District 11. East Fort Worth (Districts 5, 8 and 11) raises 0.69 times the city&#x27;s average tax per acre. District 11&#x27;s low effective tax rate comes mostly from appraisal caps: 42% of its single-family homes are capped, against 16% in the rest of the city. Some figures are estimates: a few taxing units collect their own taxes, Northwest ISD is approximated from its posted rate, some improvement districts are missing from the data, and council-district populations are 2020 Census counts scaled to 2025.</p></section>
+  <section><h2>Main points</h2><ul class="points"><li>One question runs through every map: how resources, services and value are spread across places, whether the unit is a census tract, ZIP code, parcel or hexagon.</li><li>The ArcGIS projects taught the lab which public layers matter, such as census tracts, the CDC Social Vulnerability Index, Justice40 disadvantaged communities and federal infrastructure maps.</li><li>The Tarrant County rebuild fixed two earlier errors: appraised value had been reported as tax, and records were matched on owners&#x27; mailing addresses, not on parcels.</li><li>Equal-area hexagons let places of different shapes and sizes be compared fairly, and the lab&#x27;s open-source hexmap-web library, also used by the Texas grid dashboard, turns them into interactive web maps.</li><li>Next is the cost side: whether the tax each area raises covers the roads, water and sewer lines that serve it.</li></ul></section>
+  <figure class="media"><img src="img/hero.png" alt="Hexagon heat map of Tarrant County, Texas, in 1-square-mile hexagons, colored by property tax per acre in 2025 from pale yellow (about $2,000 an acre or less) through orange and red to near-black ($64,000 or more). The darkest hexagons are downtown Fort Worth and the area south-west of it. Most of the urban county, including North Richland Hills, Grapevine, Euless, Arlington, Grand Prairie and Mansfield, is red to purple; east and south-east Fort Worth is orange; the rural west and south are pale yellow. Hatched gray hexagons at DFW Airport are entirely tax-exempt land. Outlines mark the seven cities over 50,000 people." loading="lazy"><figcaption>Property tax per acre across Tarrant County, tax year 2025, in 1-square-mile hexagons. Darker is higher, on a log scale; hatched hexagons are entirely tax-exempt land. Each hexagon totals its parcels, so no single property is shown.<span class="credit">Rendered by the SEAR Lab from public Tarrant Appraisal District, Tarrant County Tax Office and U.S. Census data (the lab&#x27;s Tarrant County analysis, release v0.1.0)</span></figcaption></figure>
+  
+  
+  <section><h2>Papers, code and materials</h2><ul class="resources"><li><a href="https://github.com/sear-labs/hexmap-web" rel="noopener"><span class="kind">Code</span><span class="label">sear-labs/hexmap-web: the lab&#x27;s open-source library for interactive hexagon maps, built for this project</span></a></li><li><a href="../covid-last-mile/" rel="noopener"><span class="kind">Related</span><span class="label">COVID-19 Last-Mile Distribution: mapping how scarce treatments and vaccines could reach Houston&#x27;s most vulnerable neighborhoods</span></a></li><li><a href="../building-asset-mapping/" rel="noopener"><span class="kind">Related</span><span class="label">Building Asset Mapping: rooftop solar across DFW, built on the same appraisal data</span></a></li><li><a href="../grid-dashboard/" rel="noopener"><span class="kind">Related</span><span class="label">Texas Grid Dashboard: ERCOT generation mapped with the same hexmap-web library</span></a></li></ul></section>
+  
+  <section><h2>People</h2><ul class="people"><li><span class="who"><span class="name">Erick C. Jones Jr., PhD, PE</span><span class="role">Principal Investigator · SEAR Lab director</span></span><a class="li" href="https://www.linkedin.com/in/erickjones2/" rel="noopener" aria-label="Erick C. Jones Jr., PhD, PE on LinkedIn">in</a></li><li><span class="who"><span class="name">Shraddha Varekar</span><span class="role">Student researcher; co-author of the 2023 ArcGIS report on how U.S. metro areas connect</span></span><a class="li" href="https://www.linkedin.com/in/shraddhavarekar29/" rel="noopener" aria-label="Shraddha Varekar on LinkedIn">in</a></li><li><span class="who"><span class="name">Ahmed Saboor Syed</span><span class="role">Student researcher; county-level amenity mapping in ArcGIS (2024)</span></span></li><li><span class="who"><span class="name">Ritesh Muralidhar</span><span class="role">Student researcher; 2024 Tarrant County land value analysis</span></span></li><li><span class="who"><span class="name">Varun Kulkarni</span><span class="role">Student researcher; 2025 Tarrant County land and property value report</span></span></li></ul><p class="people-note">Current team: names to be added from the lab personnel sheet. Profiles marked <strong>in</strong> link to LinkedIn. More past and present lab members are on the <a href="https://searlab.uta.edu/team/">SEAR Lab team page</a>.</p></section>
+  <p class="back"><a href="../">← All projects</a></p>
+</article>
+</main>
+<footer class="site-footer">
+  <p>
+    <a href="mailto:erick.jones@uta.edu">erick.jones@uta.edu</a> ·
+    <a href="https://scholar.google.com/citations?hl=en&amp;user=03RL76wAAAAJ">Google Scholar</a> ·
+    <a href="https://www.linkedin.com/in/erickjones2/">LinkedIn</a> ·
+    <a href="https://github.com/yamierick">GitHub</a> ·
+    <a href="https://searlab.uta.edu/">SEAR Lab</a>
+  </p>
+  <p class="constellation">Professional site · <a href="https://engineerliving.com">Engineer Living (ideas &amp; writing)</a> · <em>The Friction Deficit</em> (fiction, coming soon)</p>
+</footer>
+</body>
+</html>

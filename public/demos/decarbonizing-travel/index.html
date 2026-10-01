@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Decarbonizing travel · Erick C. Jones Jr., Ph.D.</title>
+<meta name="description" content="Explore two published SEAR Lab studies: how shared self-driving fleets change Austin's cars, power and CO2 to 2050, and how much U.S. driving extended-range EVs could electrify.">
+<link rel="canonical" href="https://www.erickjonesphd.com/demos/decarbonizing-travel/">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="stylesheet" href="../css/demos.css">
+<style>
+  /* Categorical palette, defined once. Steps from the site's validated chart
+     palette; the dark values are separate steps for the dark surface. */
+  :root {
+    --c-blue: #2a78d6; --c-orange: #eb6834; --c-aqua: #1baf7a; --c-yellow: #eda100;
+    --c-violet: #4a3aa7; --c-red: #e34948;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --c-blue: #3987e5; --c-orange: #d95926; --c-aqua: #199e70; --c-yellow: #c98500;
+      --c-violet: #9085e9; --c-red: #e66767;
+    }
+  }
+  .output { position: relative; min-width: 0; }
+  .model .readout div { border: 1px solid var(--rule); border-radius: 6px; padding: .5rem .7rem; }
+  .readout dd small { font-size: .72rem; color: var(--muted); display: block; margin-top: .1rem; }
+  .seg { flex-wrap: wrap; }
+  .seg button { min-width: 3.2rem; }
+  .seg button:focus-visible, .reset:focus-visible, input[type=range]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .seg button:disabled { opacity: .45; cursor: not-allowed; }
+  .controls fieldset.off legend { color: var(--muted); }
+  .chart-title { font-family: system-ui, sans-serif; font-size: .82rem; color: var(--text); font-weight: 600; margin: 0 0 .2rem; }
+  .chart + .chart-title, .legend + .chart-title { margin-top: 1.1rem; }
+  .table-view { font-family: system-ui, sans-serif; font-size: .8rem; margin-top: .8rem; }
+  .table-view summary { cursor: pointer; color: var(--muted); }
+  .table-view .scroll { overflow-x: auto; max-width: 100%; }
+  .table-view table { margin-top: .4rem; font-size: .76rem; font-variant-numeric: tabular-nums; }
+  .table-view th, .table-view td { padding: .2rem .45rem; text-align: right; white-space: nowrap; }
+  .table-view th:first-child, .table-view td:first-child { text-align: left; }
+  .compare-ev { font-family: system-ui, sans-serif; font-size: .82rem; color: var(--muted); margin: .6rem 0 0; }
+  .correction ul { margin: .2rem 0 0; padding-left: 1.1rem; }
+  .correction li { margin: .15rem 0; }
+  .sw-pf { background: var(--c-orange); } .sw-pe { background: var(--c-blue); }
+  .sw-sf { background: var(--c-yellow); } .sw-se { background: var(--c-aqua); }
+  .sw-coal { background: var(--c-red); } .sw-nuclear { background: var(--c-violet); } .sw-gas { background: var(--c-orange); }
+  .sw-other { background: var(--c-aqua); } .sw-wind { background: var(--c-blue); } .sw-solar { background: var(--c-yellow); }
+  .sw-elec { background: var(--c-violet); } .sw-veh { background: var(--c-orange); }
+  .sw-line { background: none; border-top: 2px dashed var(--text); height: 0; width: 1rem; border-radius: 0; vertical-align: 3px; }
+  .sw-erev { background: var(--c-blue); border-radius: 50%; } .sw-bev { background: var(--c-orange); border-radius: 50%; }
+  .sw-co2 { background: var(--c-aqua); }
+  .tip b { font-weight: 600; }
+  .tip table { border: 0; font-size: .74rem; margin-top: .15rem; }
+  .tip td { border: 0; padding: 0 .3rem 0 0; }
+  .tip td:last-child { text-align: right; font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body>
+<header class="site-header">
+  <a class="site-title" href="/">Erick C. Jones Jr.</a>
+  <nav><a href="/about/">About</a><a href="/research/">Research</a><a href="/labs/">Labs</a><a href="/projects/">Projects</a><a href="/teaching/">Teaching</a><a href="/resources/">Resources</a><a href="/models/">Models</a><a href="/beyond/">Beyond</a></nav>
+</header>
+<main class="wide">
+<article>
+  <h1>Decarbonizing travel: shared self-driving fleets and extended-range EVs</h1>
+  <p class="subhead">Two ways to take carbon out of car travel: share the cars, or put a bigger battery in them. What does each one buy?</p>
+
+  <p class="note-published"><strong>Every number here comes from published SEAR Lab papers</strong>, listed at the bottom
+  with the table or figure each one comes from. Where a paper has an error, the demo shows the corrected value and says so.
+  Cite the papers, not this page.</p>
+
+  <section class="panel" id="sav">
+    <h2>A. Austin, 2015–2050: what if shared self-driving cars carry most of the driving?</h2>
+    <p class="lede">Pick one of the ten futures the paper modeled. Compare the fleet, the power plants and the CO₂ with the
+    private-cars-only future under the same carbon policy.</p>
+    <div class="model">
+      <div class="controls">
+        <fieldset>
+          <legend>Shared self-driving fleet</legend>
+          <div class="seg" id="sav-sav" role="group" aria-label="Shared self-driving fleet">
+            <button type="button" data-v="none">None</button>
+            <button type="button" data-v="70">70% of travel by 2050</button>
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend>Carbon tax</legend>
+          <div class="seg" id="sav-tax" role="group" aria-label="Carbon tax">
+            <button type="button" data-v="0">None</button>
+            <button type="button" data-v="1">$20/t, +5% a year</button>
+          </div>
+        </fieldset>
+        <fieldset id="fs-chg">
+          <legend>When the fleet charges</legend>
+          <div class="seg" id="sav-chg" role="group" aria-label="When the fleet charges">
+            <button type="button" data-v="optimized">Any idle hour</button>
+            <button type="button" data-v="night">Night only</button>
+          </div>
+        </fieldset>
+        <fieldset id="fs-dm">
+          <legend>Shared miles per private mile replaced</legend>
+          <div class="seg" id="sav-dm" role="group" aria-label="Shared miles per private mile replaced">
+            <button type="button" data-v="0.5">0.5×</button>
+            <button type="button" data-v="1">1×</button>
+            <button type="button" data-v="2">2×</button>
+          </div>
+          <p class="hint">2× means every private mile the fleet takes over becomes two fleet miles (empty trips, more travel). The paper ran night-only charging at 1× only, so choosing one resets the other.</p>
+        </fieldset>
+        <fieldset>
+          <legend>Show</legend>
+          <div class="seg" id="sav-view" role="group" aria-label="Chart to show">
+            <button type="button" data-v="veh">Vehicles</button>
+            <button type="button" data-v="elc">Electricity</button>
+            <button type="button" data-v="co2">CO₂</button>
+          </div>
+        </fieldset>
+        <div class="actions">
+          <button type="button" class="reset" id="sav-reset">Reset</button>
+          <button type="button" class="reset copy-link">Copy link</button>
+        </div>
+      </div>
+      <div class="output">
+        <p class="chart-title" id="sav-chart-head"></p>
+        <svg class="chart" id="sav-chart" viewBox="0 0 720 360" role="img" aria-labelledby="sav-title sav-desc">
+          <title id="sav-title">Austin scenario results by year</title><desc id="sav-desc"></desc>
+        </svg>
+        <div class="legend" id="sav-legend"></div>
+        <dl class="readout" id="sav-readout"></dl>
+        <details class="table-view"><summary>Show the numbers as a table</summary><div class="scroll" id="sav-table"></div></details>
+        <div class="tip" id="sav-tip" role="presentation"></div>
+      </div>
+    </div>
+    <p class="hint">Scenario <span id="sav-id">3</span> of Table 2. The paper shows its results as charts; the year-by-year values
+    here come from the ten scenarios re-solved in 2026 with the paper's public model, which reproduces the electricity-mix
+    figures the paper states (natural gas 80% of generation in 2035 without a tax, 79.6% here; peaking at 56% in 2021 with it,
+    55.6% here). Build years and storage schedules are one optimal solution among several; totals are not.</p>
+  </section>
+
+  <section class="panel" id="erev">
+    <h2>B. The United States: how much driving could an extended-range EV do on battery?</h2>
+    <p class="lede">An extended-range EV always drives on its electric motor; a small gasoline generator recharges the battery
+    when it runs out. Slide the electric range and see what share of 2023 U.S. driving it covers, how much battery that
+    takes, and how much CO₂ it saves.</p>
+    <div class="model">
+      <div class="controls">
+        <fieldset>
+          <legend>Electric range</legend>
+          <label for="erev-rng">Miles on a full battery <output id="erev-rng-out" for="erev-rng">50 miles</output></label>
+          <input type="range" id="erev-rng" min="25" max="150" step="25" value="50" aria-valuetext="50 miles">
+          <p class="hint">Snaps to the six ranges the paper computed: 25 to 150 miles.</p>
+        </fieldset>
+        <fieldset>
+          <legend>Assumptions</legend>
+          <div class="seg" id="erev-case" role="group" aria-label="Assumptions">
+            <button type="button" data-v="worst">Worst</button>
+            <button type="button" data-v="avg">Average</button>
+            <button type="button" data-v="best">Best</button>
+          </div>
+          <p class="hint" id="erev-case-hint"></p>
+        </fieldset>
+        <div class="actions">
+          <button type="button" class="reset" id="erev-reset">Reset</button>
+          <button type="button" class="reset copy-link">Copy link</button>
+        </div>
+      </div>
+      <div class="output">
+        <p class="chart-title">Share of U.S. miles on electricity, against the battery it takes to convert every car</p>
+        <svg class="chart" id="erev-chart" viewBox="0 0 720 330" role="img" aria-labelledby="erev-title erev-desc">
+          <title id="erev-title">Electric share of miles against fleet battery capacity, by electric range</title><desc id="erev-desc"></desc>
+        </svg>
+        <div class="legend">
+          <span><i class="sw sw-erev"></i>Extended-range EV (25–150 miles)</span>
+          <span><i class="sw sw-bev"></i>All-electric car</span>
+        </div>
+        <p class="chart-title">CO₂ saved each year against an all-gasoline fleet</p>
+        <svg class="chart" id="erev-co2" viewBox="0 0 720 250" role="img" aria-labelledby="erev-co2-title erev-co2-desc">
+          <title id="erev-co2-title">Annual CO2 saved by electric range</title><desc id="erev-co2-desc"></desc>
+        </svg>
+        <dl class="readout" id="erev-readout"></dl>
+        <p class="compare-ev" id="erev-compare"></p>
+        <details class="table-view"><summary>Show the numbers as a table</summary><div class="scroll" id="erev-table"></div></details>
+      </div>
+    </div>
+    <div class="correction">
+      <strong>Notes on the paper's numbers.</strong> The demo shows the values printed in the paper's Tables 4–6.
+      <ul>
+        <li>The 50-mile battery is 13.7 kWh in the abstract and 13.9 kWh in Table 6. 50 miles at 3.6 miles per kWh is 13.9 kWh, which the demo uses.</li>
+        <li>CO₂ saved at 150 miles appears as 679 (introduction), 679.7 (Table 5) and 680 Mt (conclusions). The demo uses Table 5.</li>
+        <li>Table 6's fleet battery capacities are about 10% lower than battery size times the 286.1 million vehicles in Table 4
+          (13.9 kWh × 286.1 million = 4.0 TWh, printed 3.6; the all-electric car's 83.3 kWh gives 23.8 TWh, printed 21.5).
+          They correspond to about 258 million vehicles. The demo shows the printed capacities; the comparison between ranges is unaffected.</li>
+        <li>Table 4 lists fuel economy as 18/26.4/36 mpg and grid intensity as 125/348/714 g CO₂/kWh under “Worst/Average/Best”,
+          but Table 5 and the text use them the other way round (the worst case has efficient gasoline cars and a dirtier grid:
+          36 mpg, 714 g/kWh). The demo follows Table 5.</li>
+      </ul>
+    </div>
+  </section>
+
+  <h2>What this shows</h2>
+  <p>Both studies ask how much carbon comes out of car travel when the cars change. In Austin, the shared fleet's biggest
+  effect is on numbers: a car that is shared is driven all day, so the city needs far fewer of them (about 430,000 instead of
+  1.08 million in 2050 in the central case). Because each shared car covers so many miles, cheap-to-run battery-electric cars
+  pay off quickly, and the shared fleet electrifies years ahead of private cars. Even if every private mile it replaces becomes
+  two shared miles, total cost and cumulative CO₂ stay below the private-cars-only future.</p>
+  <p>The fleet also changes the power system around it. Letting fleet cars charge in the middle of the day, when solar power is
+  plentiful, is worth 3.6% of total system cost without a carbon tax and 3.5% with one, and it lets more of the fleet go
+  electric. Try switching charging to “Night only” and watch the gasoline and hybrid share of the fleet grow back. The carbon
+  tax mostly changes the power plants: without it natural gas and solar share the grid in 2050; with it, wind replaces the gas.</p>
+  <p>The national EREV study asks the same question for one car at a time. Most U.S. trips are short, so the first 50 miles of
+  battery cover nearly three-quarters of all miles driven. Each further 25 miles needs about the same extra battery but adds
+  fewer electric miles: from 50 to 100 miles adds 9.8 percentage points, from 100 to 150 only 3.7. Switch the assumptions to
+  “Worst” and the CO₂ saving almost disappears: with very efficient gasoline cars (36 mpg) and a dirtier grid (714 g of CO₂ per kWh), an electric mile is
+  barely cleaner than a gasoline one. The Austin model's answer to that is the other half of this page: a grid that
+  decarbonizes as the cars electrify.</p>
+  <p>The lab's follow-on study, which adds high-speed rail to shared fleets for the Texas Triangle, is under revision; its
+  results will appear here when it is published.</p>
+
+  <h2>Behind this demo</h2>
+  <ul class="behind">
+    <li><a href="../../projects/sav-hsr/">High-Speed Rail and Robotaxis for the Texas Megaregion</a></li>
+    <li><a href="../../projects/ev-analysis/">Extended-Range Electric Vehicles</a></li>
+  </ul>
+
+  <h2>Sources</h2>
+  <ol class="sources">
+    <li>Jones, E.C., &amp; Leibowicz, B.D. (2019). Contributions of shared autonomous vehicles to climate change mitigation.
+      <em>Transportation Research Part D: Transport and Environment</em>, 72, 279–298.
+      <a href="https://doi.org/10.1016/j.trd.2019.05.005">doi:10.1016/j.trd.2019.05.005</a>. Panel A: scenario definitions
+      from Table 2 and Sections 4.1–4.3; stated results from Sections 5.1, 5.2 and 5.4 (pp. 287, 289, 293). Year-by-year values
+      from the paper's public code and re-solved results,
+      <a href="https://github.com/sear-labs/sav-osemosys-trd-2019">sear-labs/sav-osemosys-trd-2019</a>
+      (results/clean/annual.csv and objective.csv; archived as <a href="https://doi.org/10.5281/zenodo.22715620">doi:10.5281/zenodo.22715620</a>).</li>
+    <li>Patil, H.V., Kumbhar, A.A., &amp; Jones, E.C., Jr. (2025). Contributions of extended-range electric vehicles (EREVs) to
+      electrified miles, emissions and transportation cost reduction. <em>Energies</em>, 18(24), 6448.
+      <a href="https://doi.org/10.3390/en18246448">doi:10.3390/en18246448</a> (open access, CC BY 4.0). Panel B: Table 4
+      (assumptions), Table 5 (electric miles, CO₂ saved) and Table 6 (electric share, battery size, fleet battery capacity).</li>
+  </ol>
+</article>
+</main>
+<footer class="site-footer">
+  <p><a href="mailto:erick.jones@uta.edu">erick.jones@uta.edu</a> · <a href="https://scholar.google.com/citations?hl=en&amp;user=03RL76wAAAAJ">Google Scholar</a> · <a href="https://www.linkedin.com/in/erickjones2/">LinkedIn</a> · <a href="https://github.com/yamierick">GitHub</a> · <a href="https://searlab.uta.edu/">SEAR Lab</a></p>
+  <p class="constellation">Professional site · <a href="https://engineerliving.com">Engineer Living (ideas &amp; writing)</a> · <em>The Friction Deficit</em> (fiction, coming soon)</p>
+</footer>
+<script type="module" src="demo.js"></script>
+</body>
+</html>

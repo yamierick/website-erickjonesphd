@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Texas Grid Dashboard · Erick C. Jones Jr., Ph.D.</title>
+<meta name="description" content="How location and time of day shape which Texas power plants run, what electricity costs, and where batteries would help most.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Erick C. Jones Jr., Ph.D.">
+<meta property="og:title" content="Texas Grid Dashboard">
+<meta property="og:description" content="How location and time of day shape which Texas power plants run, what electricity costs, and where batteries would help most.">
+<link rel="canonical" href="https://www.erickjonesphd.com/projects/grid-dashboard/">
+<meta property="og:url" content="https://www.erickjonesphd.com/projects/grid-dashboard/">
+<meta property="og:image" content="https://www.erickjonesphd.com/projects/grid-dashboard/img/thumb.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="stylesheet" href="../css/projects.css">
+</head>
+<body>
+<header class="site-header">
+  <a class="site-title" href="/">Erick C. Jones Jr.</a>
+  <nav><a href="/about/">About</a><a href="/research/">Research</a><a href="/labs/">Labs</a><a href="/projects/">Projects</a><a href="/teaching/">Teaching</a><a href="/resources/">Resources</a><a href="/models/">Models</a><a href="/beyond/">Beyond</a></nav>
+</header>
+<main class="wide project">
+<article>
+  <p class="crumbs meta"><a href="../">Projects</a> · Energy Systems and Grid Analytics</p>
+  <h1>Texas Grid Dashboard</h1>
+  <p class="dek">How location and time of day shape which Texas power plants run, what electricity costs, and where batteries would help most.</p>
+  <ul class="chips"><li class="status">Active</li><li>2023–present</li><li>ERCOT</li><li>Electricity markets</li><li>Energy storage</li><li>Geospatial analysis</li></ul>
+  <figure class="media"><img src="img/anim.gif" alt="Animated map of Texas cycling through night, morning, midday and evening in summer and then winter; hexagons in West and Central Texas turn from wind or grey to solar at midday and back at night." loading="eager"><figcaption>The same map through the day, summer then winter: night, morning, midday and evening. Solar takes over much of the map at midday, while wind leads in the west at night.<span class="credit">Rendered by the SEAR Lab from public ERCOT data (60-Day SCED Disclosure, 2025) with EIA-860 plant locations</span></figcaption></figure>
+  <section><h2>In plain English</h2><p>Most of Texas runs on its own power grid, managed by ERCOT. Where and when electricity is made matters. Wind in West Texas blows hardest at night, solar peaks at midday, and gas plants near the big cities fill in the evening. Prices also differ from place to place and hour to hour. This project asks how location, time of day and season shape which kinds of generation run, what price results, and what that means for where battery storage should go.</p><p>The work began as a student dashboard of ERCOT demand, generation and prices. It now assembles ERCOT&#x27;s public records for every generator and every hour of the year, places each one at its power plant, and maps output, demand and net flow on equal-area hexagons that can be switched by season and time of day. The maps are built with the lab&#x27;s open-source hexmap-web library. A paper is in revision, and results will be shared once it is published.</p></section>
+  <section><h2>Main points</h2><ul class="points"><li>Assembles a full year of ERCOT&#x27;s public generator records, hour by hour, and checks them against ERCOT&#x27;s published demand.</li><li>Places each generator at its plant using federal (EIA-860) plant locations, so output can be mapped rather than reported only by zone.</li><li>Separates the effect of where a plant is from when it runs, for both the mix of generation and the price of power.</li><li>Applies the analysis to a practical decision: which parts of the Texas grid would gain most from new battery storage.</li><li>Documents pitfalls in ERCOT&#x27;s public files, such as hour-ending timestamps, truncated downloads and format changes, so others can reuse the data correctly.</li></ul></section>
+  <figure class="media"><img src="img/hero.png" alt="Map of Texas divided into small hexagons, each colored by its largest source of electricity in 2025: wind and solar across West Texas, gas around Houston, Dallas and Corpus Christi, with nuclear and coal at scattered plants." loading="lazy"><figcaption>The largest source of electricity in each 250 km² hexagon, averaged over 2025, from ERCOT&#x27;s public generator records. Lines show ERCOT&#x27;s weather zones; blank areas are served by other grids.<span class="credit">Rendered by the SEAR Lab from public ERCOT data (60-Day SCED Disclosure, 2025) with EIA-860 plant locations</span></figcaption></figure>
+  <p class="try-demo"><a href="../../demos/texas-grid/"><span class="kind">Interactive demo</span>The Texas grid →</a></p>
+  
+  <section><h2>Papers, code and materials</h2><ul class="resources"><li><a href="https://github.com/sear-labs/hexmap-web" rel="noopener"><span class="kind">Code</span><span class="label">sear-labs/hexmap-web: the lab&#x27;s open-source library for the project&#x27;s hexagon maps</span></a></li></ul></section>
+  
+  <section><h2>People</h2><ul class="people"><li><span class="who"><span class="name">Erick C. Jones Jr., PhD, PE</span><span class="role">Principal Investigator · SEAR Lab director</span></span><a class="li" href="https://www.linkedin.com/in/erickjones2/" rel="noopener" aria-label="Erick C. Jones Jr., PhD, PE on LinkedIn">in</a></li><li><span class="who"><span class="name">Hritik Patil</span><span class="role">Student researcher; author of the draft paper (2025–2026)</span></span></li><li><span class="who"><span class="name">Ankith Reddy Avula</span><span class="role">Student researcher; built the 2024 dashboard and poster</span></span></li></ul><p class="people-note">Earlier contributors listed; any current team to be added from the lab personnel sheet. Profiles marked <strong>in</strong> link to LinkedIn. More past and present lab members are on the <a href="https://searlab.uta.edu/team/">SEAR Lab team page</a>.</p></section>
+  <p class="back"><a href="../">← All projects</a></p>
+</article>
+</main>
+<footer class="site-footer">
+  <p>
+    <a href="mailto:erick.jones@uta.edu">erick.jones@uta.edu</a> ·
+    <a href="https://scholar.google.com/citations?hl=en&amp;user=03RL76wAAAAJ">Google Scholar</a> ·
+    <a href="https://www.linkedin.com/in/erickjones2/">LinkedIn</a> ·
+    <a href="https://github.com/yamierick">GitHub</a> ·
+    <a href="https://searlab.uta.edu/">SEAR Lab</a>
+  </p>
+  <p class="constellation">Professional site · <a href="https://engineerliving.com">Engineer Living (ideas &amp; writing)</a> · <em>The Friction Deficit</em> (fiction, coming soon)</p>
+</footer>
+</body>
+</html>

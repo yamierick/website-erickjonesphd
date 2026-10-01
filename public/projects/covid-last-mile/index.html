@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>COVID-19 Last-Mile Distribution · Erick C. Jones Jr., Ph.D.</title>
+<meta name="description" content="Planning how scarce COVID-19 treatments and vaccines could reach Houston&#x27;s most vulnerable neighborhoods first.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Erick C. Jones Jr., Ph.D.">
+<meta property="og:title" content="COVID-19 Last-Mile Distribution">
+<meta property="og:description" content="Planning how scarce COVID-19 treatments and vaccines could reach Houston&#x27;s most vulnerable neighborhoods first.">
+<link rel="canonical" href="https://www.erickjonesphd.com/projects/covid-last-mile/">
+<meta property="og:url" content="https://www.erickjonesphd.com/projects/covid-last-mile/">
+<meta property="og:image" content="https://www.erickjonesphd.com/projects/covid-last-mile/img/thumb.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="stylesheet" href="../css/projects.css">
+</head>
+<body>
+<header class="site-header">
+  <a class="site-title" href="/">Erick C. Jones Jr.</a>
+  <nav><a href="/about/">About</a><a href="/research/">Research</a><a href="/labs/">Labs</a><a href="/projects/">Projects</a><a href="/teaching/">Teaching</a><a href="/resources/">Resources</a><a href="/models/">Models</a><a href="/beyond/">Beyond</a></nav>
+</header>
+<main class="wide project">
+<article>
+  <p class="crumbs meta"><a href="../">Projects</a> · Community and Policy Analytics</p>
+  <h1>COVID-19 Last-Mile Distribution</h1>
+  <p class="dek">Planning how scarce COVID-19 treatments and vaccines could reach Houston&#x27;s most vulnerable neighborhoods first.</p>
+  <ul class="chips"><li class="status done">Completed</li><li>2020–2021</li><li>COVID-19</li><li>Public health</li><li>Supply chains</li><li>GIS</li><li>Houston</li></ul>
+  <figure class="media"><img src="img/hero.png" alt="Map of Harris County, Texas, divided into 147 ZIP codes shaded from light to dark blue by confirmed COVID-19 cases, with heavy outlines grouping them into eight regions labeled North, Northeast, East, Southeast, South, Southwest, West and Northwest. The darkest ZIP codes, with 600 or more cases, sit mainly in the West, Northwest and Southwest regions." loading="eager"><figcaption>Confirmed COVID-19 cases in each of 147 ZIP codes across the eight regions of the Houston-area map built for this project. Counts are per-ZIP totals from a single snapshot, not rates, and no individual-level data is shown.<span class="credit">Rendered by the SEAR Lab from the public sear-labs/houston-covid-gis repository (aggregate counts by ZIP code)</span></figcaption></figure>
+  <section><h2>In plain English</h2><p>When COVID-19 reached the United States in 2020, the neighborhoods hit hardest were often those with the least access to care. This project, funded by a National Science Foundation EAGER grant for early-stage, exploratory research, asked how a public health supply chain could get scarce treatments, and later vaccines, to the people most at risk first. It worked with the Houston Health Department, and it treated neighborhood providers and the home, not only hospitals, as the end of the supply chain.</p><p>The team built two things. A map of Houston ZIP codes brought together COVID-19 cases and deaths, social vulnerability, and access to hospitals. An optimization model then used that picture to decide how doses should flow from hubs through providers to each ZIP code, with a penalty for every person left unserved. The results were published in Frontiers in Future Transportation in 2021 and shared with the health department. Both parts have since been rebuilt as open code, so the maps and the model can be rerun and adapted for future outbreaks.</p></section>
+  <section><h2>Main points</h2><ul class="points"><li>Paired mapping with optimization, so the model&#x27;s priorities came from where cases, deaths and social vulnerability overlapped.</li><li>Weighed the cost of leaving people unserved alongside the cost of transport, asking who goes short and where, not only whether supply is enough.</li><li>Compared equal distribution with distribution prioritized by a community health index, across eight supply scenarios.</li><li>Both code repositories are public with archived releases: the vaccine supply chain model, and the Houston maps rebuilt in Python so no commercial GIS licence is needed.</li><li>The approach carries over to any shortage where limited supplies must reach vulnerable communities first.</li></ul></section>
+  
+  <p class="try-demo"><a href="../../demos/access-and-health/"><span class="kind">Interactive demo</span>Access and health →</a></p>
+  <section><h2>Papers</h2><div class="paper"><h3>Getting COVID-19 vaccines to the Houston neighborhoods that need them most</h3><p class="citation">Jones, E.C., Azeem, G., Jones, E.C., Jr., Jefferson, F., Henry, M., Abolmaali, S., &amp; Sparks, J. (2021). Understanding the last mile transportation concept impacting underserved global communities to save lives during COVID-19 pandemic. <em>Frontiers in Future Transportation</em>, 2, 732331. <a href="https://doi.org/10.3389/ffutr.2021.732331" rel="noopener">https://doi.org/10.3389/ffutr.2021.732331</a></p><p>When vaccine supply is short, a supply chain model that prioritizes vulnerable Houston neighborhoods can serve them almost fully while overall coverage stays low.</p><ul class="points"><li>At the vaccine supply available when the data were collected, equal distribution reached only 32% of the target group of about 654,000 people over 60 and health care workers.</li><li>Doubling supply and provider capacity cut the shortage penalty from about $34 million to $22 million, and at four times supply everyone in the target group was served.</li><li>Transport costs, including the last mile, rose as more people were served but stayed far below the cost of shortages in every scenario.</li><li>Prioritizing ZIP codes by the Community Health Index served the most vulnerable communities at close to 100% even when overall coverage was about 31%.</li></ul><ul class="resources"><li><a href="https://doi.org/10.3389/ffutr.2021.732331" rel="noopener"><span class="kind">Paper</span><span class="label">Read the paper (open access)</span></a></li><li><a href="https://github.com/sear-labs/covid-optsc-ffutr-2021" rel="noopener"><span class="kind">Code</span><span class="label">sear-labs/covid-optsc-ffutr-2021: reproduces the paper&#x27;s vaccine supply chain model</span></a></li><li><a href="https://doi.org/10.5281/zenodo.22309107" rel="noopener"><span class="kind">Code</span><span class="label">Archived code release for citation (Zenodo DOI 10.5281/zenodo.22309107): covid-optsc-ffutr-2021</span></a></li><li><a href="https://github.com/sear-labs/houston-covid-gis" rel="noopener"><span class="kind">Code</span><span class="label">sear-labs/houston-covid-gis: the paper&#x27;s Houston COVID-19 maps, rebuilt in Python</span></a></li><li><a href="https://doi.org/10.5281/zenodo.22309109" rel="noopener"><span class="kind">Code</span><span class="label">Archived code release for citation (Zenodo DOI 10.5281/zenodo.22309109): houston-covid-gis</span></a></li></ul></div></section>
+  
+  <aside class="sponsor"><strong>Sponsor.</strong> National Science Foundation — EAGER: AI-Enabled Optimization of the COVID-19 Therapeutics Supply Chain to Support Community Public Health (award 2028612, May 2020–April 2023)</aside>
+  <section><h2>People</h2><ul class="people"><li><span class="who"><span class="name">Erick C. Jones Jr., PhD, PE</span><span class="role">Faculty investigator · SEAR Lab director</span></span><a class="li" href="https://www.linkedin.com/in/erickjones2/" rel="noopener" aria-label="Erick C. Jones Jr., PhD, PE on LinkedIn">in</a></li><li><span class="who"><span class="name">Gohar Azeem</span><span class="role">Author, Frontiers in Future Transportation 2021</span></span></li><li><span class="who"><span class="name">Felicia Jefferson</span><span class="role">Author, Frontiers in Future Transportation 2021</span></span></li><li><span class="who"><span class="name">Marcia Henry</span><span class="role">Author, Frontiers in Future Transportation 2021</span></span></li><li><span class="who"><span class="name">Shannon Abolmaali</span><span class="role">Author, Frontiers in Future Transportation 2021</span></span></li><li><span class="who"><span class="name">Janice Sparks</span><span class="role">Author, Frontiers in Future Transportation 2021</span></span></li></ul><p class="people-note">Profiles marked <strong>in</strong> link to LinkedIn. More past and present lab members are on the <a href="https://searlab.uta.edu/team/">SEAR Lab team page</a>.</p></section>
+  <p class="back"><a href="../">← All projects</a></p>
+</article>
+</main>
+<footer class="site-footer">
+  <p>
+    <a href="mailto:erick.jones@uta.edu">erick.jones@uta.edu</a> ·
+    <a href="https://scholar.google.com/citations?hl=en&amp;user=03RL76wAAAAJ">Google Scholar</a> ·
+    <a href="https://www.linkedin.com/in/erickjones2/">LinkedIn</a> ·
+    <a href="https://github.com/yamierick">GitHub</a> ·
+    <a href="https://searlab.uta.edu/">SEAR Lab</a>
+  </p>
+  <p class="constellation">Professional site · <a href="https://engineerliving.com">Engineer Living (ideas &amp; writing)</a> · <em>The Friction Deficit</em> (fiction, coming soon)</p>
+</footer>
+</body>
+</html>

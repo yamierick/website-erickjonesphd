@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Texas Grid · Erick C. Jones Jr., Ph.D.</title>
+<meta name="description" content="Where ERCOT's power is made, how Texas energy demand shifts as the grid adds wind and solar, what happens when communities build their own power, and how AI data centers can power themselves.">
+<link rel="canonical" href="https://www.erickjonesphd.com/demos/texas-grid/">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="stylesheet" href="../css/demos.css">
+<style>
+  /* One small categorical palette for the whole page; the same source keeps the same color in every panel. */
+  :root {
+    --c-gas: #e34948; --c-wind: #2a78d6; --c-solar: #eda100; --c-nuke: #4a3aa7; --c-other: #1baf7a;
+    --c-coal: #57534e; --c-liq: #8c5a1e; --c-misc: #a8a29e; --c-corr: #c2410c;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --c-gas: #e66767; --c-wind: #3987e5; --c-solar: #d9a21a; --c-nuke: #c4b5fd; --c-other: #199e70;
+      --c-coal: #a8a29e; --c-liq: #c98a4b; --c-misc: #6b6560; --c-corr: #fb923c;
+    }
+  }
+  .intro-list { font-family: system-ui, sans-serif; font-size: .9rem; color: var(--muted); padding-left: 1.2rem; }
+  .intro-list li { margin: .15rem 0; }
+  .intro-list a { text-decoration: none; }
+  .panel { border-top: 1px solid var(--rule); padding-top: 1.2rem; }
+  .panel .kicker { font-family: system-ui, sans-serif; font-size: .72rem; text-transform: uppercase; letter-spacing: .07em; color: var(--accent); margin: 0 0 .2rem; }
+  .output { position: relative; min-width: 0; }
+  .seg.wrap { flex-wrap: wrap; }
+  .seg.wrap button { flex: 1 0 30%; }
+  .seg button:focus-visible, .reset:focus-visible, .controls input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .seg button .sw { margin-right: .25rem; }
+  .model .readout div { border: 1px solid var(--rule); border-radius: 6px; padding: .5rem .7rem; }
+  .readout dd small { display: block; font-size: .72rem; color: var(--muted); }
+  .src-tag { font-family: system-ui, sans-serif; font-size: .72rem; color: var(--muted); border: 1px solid var(--rule); border-radius: 999px; padding: .05rem .5rem; margin-left: .4rem; vertical-align: 2px; white-space: nowrap; }
+  .foot { font-family: system-ui, sans-serif; font-size: .76rem; color: var(--muted); margin: .5rem 0 0; }
+  .correction strong { color: var(--text); }
+  .correction { border-left-color: var(--c-corr); }
+  .chart .hexes path { stroke: var(--bg); stroke-width: .6; }
+  .chart .sel { stroke: var(--text); stroke-width: 1.6; }
+  .chart .zone { fill: none; stroke: var(--muted); stroke-width: 1; stroke-opacity: .7; }
+  .chart .frame { fill: var(--code-bg); stroke: var(--rule); stroke-width: 1; }
+  .chart .city { fill: var(--text); paint-order: stroke; stroke: var(--bg); stroke-width: 3px; stroke-linejoin: round; }
+  .chart .dot { fill: var(--text); }
+  .chart .axis { stroke: var(--rule); }
+  .chart .grid { stroke: var(--rule); stroke-width: 1; }
+  .chart .base { stroke: var(--text); stroke-width: 1.5; stroke-dasharray: 5 4; }
+  .chart .pt { cursor: pointer; }
+  .chart .pt text, .chart .halo { paint-order: stroke; stroke: var(--bg); stroke-width: 4px; stroke-linejoin: round; }
+  .chart .pt:focus { outline: none; }
+  .chart .pt:focus-visible circle.ring, .chart .pt.on circle.ring { stroke: var(--text); stroke-width: 2.5; }
+  .legend .sw { border-radius: 2px; }
+  .sw.pub { background: repeating-linear-gradient(45deg, var(--muted) 0 2px, transparent 2px 4px); border: 1px solid var(--muted); }
+  .sw.fix { background: var(--accent); }
+  .sw.base { background: none; border-top: 2px dashed var(--text); height: 0; width: 1rem; border-radius: 0; vertical-align: 3px; }
+  .sw.faint { background: var(--rule); }
+  .capbars { margin-top: .6rem; }
+  .table-toggle { margin-top: .6rem; font-family: system-ui, sans-serif; font-size: .8rem; }
+  .table-toggle summary { cursor: pointer; color: var(--muted); }
+  .table-toggle table { margin-top: .4rem; font-size: .78rem; font-variant-numeric: tabular-nums; }
+  .table-wrap { overflow-x: auto; max-width: 100%; }
+  @media (max-width: 800px) {
+    .controls { display: grid; gap: 0; }
+  }
+</style>
+</head>
+<body>
+<header class="site-header">
+  <a class="site-title" href="/">Erick C. Jones Jr.</a>
+  <nav><a href="/about/">About</a><a href="/research/">Research</a><a href="/labs/">Labs</a><a href="/projects/">Projects</a><a href="/teaching/">Teaching</a><a href="/resources/">Resources</a><a href="/models/">Models</a><a href="/beyond/">Beyond</a></nav>
+</header>
+<main class="wide">
+<article>
+  <h1>The Texas grid: where power is made, where demand is going, and how new loads can power themselves</h1>
+  <p class="subhead">Texas runs its own grid. As wind, solar and very large new loads arrive, who makes the power, and who pays for it?</p>
+
+  <p class="note-published"><strong>Every number from a paper here is published</strong>, listed at the bottom with the table or
+  figure it comes from. The map in the first panel is <strong>public ERCOT data</strong>, shown as context, not a research result.
+  Where a paper has an error, the demo shows the corrected value and says so. Cite the papers, not this page.</p>
+
+  <ol class="intro-list">
+    <li><a href="#grid-map">Where ERCOT's power is made</a>, by season and time of day (public ERCOT data, 2025).</li>
+    <li><a href="#sectors">Where demand is going</a>: does a greener grid change what buildings, factories and vehicles burn? (IISE 2025)</li>
+    <li><a href="#communities">Communities building their own power</a>, and what it does to everyone else's price (IISE 2020, with a 2026 erratum).</li>
+    <li><a href="#datacenters">AI data centers powering themselves</a>: six on-site mixes, cost against outage protection (<em>Electricity</em>, 2026).</li>
+  </ol>
+
+  <!-- (a) ------------------------------------------------------------------------------------------ -->
+  <section class="panel" id="grid-map">
+    <p class="kicker">1 · Supply today</p>
+    <h2>Where ERCOT's power is made, by season and time of day <span class="src-tag">public ERCOT data</span></h2>
+    <p class="lede">Each hexagon covers 250 km² and takes the color of its largest source of electricity; paler means less output.
+    Switch to summer midday and watch solar spread across West and Central Texas, then to night, when wind takes the west.</p>
+    <div class="model">
+      <div class="controls">
+        <fieldset>
+          <legend>Season</legend>
+          <div class="seg wrap" id="a-season" role="group" aria-label="Season"></div>
+        </fieldset>
+        <fieldset>
+          <legend>Time of day</legend>
+          <div class="seg wrap" id="a-time" role="group" aria-label="Time of day"></div>
+          <p class="hint" id="a-hours"></p>
+        </fieldset>
+        <fieldset>
+          <legend>Highlight a source</legend>
+          <div class="seg wrap" id="a-hi" role="group" aria-label="Highlight a source"></div>
+        </fieldset>
+        <div class="actions">
+          <button type="button" class="reset" data-reset="a">Reset</button>
+          <button type="button" class="reset copy-link">Copy link</button>
+        </div>
+      </div>
+      <div class="output">
+        <svg class="chart" id="a-map" viewBox="0 0 960 960" role="img" aria-labelledby="a-map-title">
+          <title id="a-map-title">Map of the ERCOT grid in 250 square-kilometer hexagons, each colored by its largest source of electricity</title>
+        </svg>
+        <div class="legend" id="a-legend"></div>
+        <svg class="chart" id="a-mix" viewBox="0 0 720 64" role="img" aria-labelledby="a-mix-title">
+          <title id="a-mix-title">ERCOT-wide generation mix for the chosen season and time of day</title>
+        </svg>
+        <dl class="readout" id="a-readout"></dl>
+        <details class="table-toggle"><summary>Show the mix as a table</summary><div class="table-wrap" id="a-table"></div></details>
+        <p class="foot">Average MW over the hours shown, 2025. Generators placed at their EIA-860 plant locations (about 84% of energy;
+        the rest spread over the plant's county). Lines are ERCOT's eight weather zones; blank areas are on other grids or make under
+        5 MW on average. Source: ERCOT 60-Day SCED Disclosure 2025, as mapped for the lab's <a href="../../projects/grid-dashboard/">Texas Grid Dashboard</a>.</p>
+        <div class="tip" id="a-tip" role="status"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- (b) ------------------------------------------------------------------------------------------ -->
+  <section class="panel" id="sectors">
+    <p class="kicker">2 · Where demand is going</p>
+    <h2>Texas sectoral demand: a greener grid, and what everyone else burns</h2>
+    <p class="lede">Aghapour, Alavi, Atitebi and Jones (2025) fed a detailed Texas wind and solar build-out into an economy-wide model
+    and compared it with the model's reference path. Each year shows two bars: the reference (left) and the solar-and-wind targeted
+    scenario (right). Try <em>Difference</em> to see only the gap between them.</p>
+    <div class="model">
+      <div class="controls">
+        <fieldset>
+          <legend>Sector</legend>
+          <div class="seg wrap" id="b-view" role="group" aria-label="Sector"></div>
+        </fieldset>
+        <fieldset>
+          <legend>Show</legend>
+          <div class="seg" id="b-mode" role="group" aria-label="Show">
+            <button type="button" data-v="levels">Both scenarios</button>
+            <button type="button" data-v="diff">Difference</button>
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend>Year</legend>
+          <label for="b-year">Model year <output id="b-year-out"></output></label>
+          <input type="range" id="b-year" min="2015" max="2050" step="5" value="2050">
+          <p class="hint">The model reports every fifth year; the slider stops only on those.</p>
+        </fieldset>
+        <div class="actions">
+          <button type="button" class="reset" data-reset="b">Reset</button>
+          <button type="button" class="reset copy-link">Copy link</button>
+        </div>
+      </div>
+      <div class="output">
+        <svg class="chart" id="b-chart" viewBox="0 0 720 380" role="img" aria-labelledby="b-chart-title">
+          <title id="b-chart-title">Texas energy use by fuel, reference and solar-and-wind targeted scenarios, 2015 to 2050</title>
+        </svg>
+        <div class="legend" id="b-legend"></div>
+        <dl class="readout" id="b-readout"></dl>
+        <p class="correction" id="b-correction"></p>
+        <p class="foot">Exajoules (EJ) a year; 1 EJ is about 278 TWh. Values are the GCAM-USA outputs behind the paper's Figures 1 and 2,
+        read from the authors' committed model outputs; the solar and wind targets are the paper's Table 1.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- (c) ------------------------------------------------------------------------------------------ -->
+  <section class="panel" id="communities">
+    <p class="kicker">3 · Customers who make their own</p>
+    <h2>Communities building their own power, and what it does to the utility</h2>
+    <p class="lede">Jones (2020) modeled a utility serving up to 40 identical communities that can build their own wind or solar
+    or keep buying. A 2026 erratum found two coding errors. Each chart shows the published value (hatched) beside the corrected one.
+    Slide the number of communities and switch between measures.</p>
+    <p class="correction"><strong>Correction.</strong> The paper concluded that distributed energy lowers total system cost. Corrected,
+    it <strong>raises</strong> total cost in every scenario: adopting communities pay less, but the saving is a transfer from the
+    utility's other customers. The community share at 40 communities is 33.2%, not 86.7%. The paper's other two findings hold: the
+    utility's price rises as it sells less, and communities use the utility as backup.</p>
+    <div class="model">
+      <div class="controls">
+        <fieldset>
+          <legend>Measure</legend>
+          <div class="seg wrap" id="c-metric" role="group" aria-label="Measure"></div>
+        </fieldset>
+        <fieldset>
+          <legend>Communities generating</legend>
+          <label for="c-n">Number of communities <output id="c-n-out"></output></label>
+          <input type="range" id="c-n" min="0" max="5" step="1" value="5" aria-describedby="c-n-hint">
+          <p class="hint" id="c-n-hint">The paper ran 1, 5, 10, 20, 30 and 40; the slider stops only on those.</p>
+        </fieldset>
+        <div class="actions">
+          <button type="button" class="reset" data-reset="c">Reset</button>
+          <button type="button" class="reset copy-link">Copy link</button>
+        </div>
+      </div>
+      <div class="output">
+        <svg class="chart" id="c-chart" viewBox="0 0 720 340" role="img" aria-labelledby="c-chart-title">
+          <title id="c-chart-title">Published and corrected results by number of communities generating their own power</title>
+        </svg>
+        <div class="legend" id="c-legend"></div>
+        <dl class="readout" id="c-readout"></dl>
+        <p class="foot" id="c-foot"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- (d) ------------------------------------------------------------------------------------------ -->
+  <section class="panel" id="datacenters">
+    <p class="kicker">4 · New loads that power themselves</p>
+    <h2>AI data centers powering themselves</h2>
+    <p class="lede">Jones Jr. and Jones Sr. (2026) compared six ways a 250 MW AI data center in ERCOT could build its own power
+    while staying on the grid. Left means cheaper than buying everything from the grid; up means better protected from a grid outage.
+    Pick a mix to see what it is built from.</p>
+    <div class="model">
+      <div class="controls">
+        <fieldset>
+          <legend>On-site mix</legend>
+          <div class="seg wrap" id="d-sc" role="group" aria-label="On-site mix"></div>
+          <p class="hint" id="d-name"></p>
+        </fieldset>
+        <div class="actions">
+          <button type="button" class="reset" data-reset="d">Reset</button>
+          <button type="button" class="reset copy-link">Copy link</button>
+        </div>
+      </div>
+      <div class="output">
+        <svg class="chart" id="d-chart" viewBox="0 0 720 360" role="img" aria-labelledby="d-chart-title">
+          <title id="d-chart-title">Blended cost of electricity against outage protection for six on-site power mixes, with the 75 dollar per MWh grid baseline</title>
+        </svg>
+        <div class="legend" id="d-legend"></div>
+        <svg class="chart capbars" id="d-cap" viewBox="0 0 720 200" role="img" aria-labelledby="d-cap-title">
+          <title id="d-cap-title">Installed capacity of the chosen mix, by technology, against the 250 MW load</title>
+        </svg>
+        <dl class="readout" id="d-readout"></dl>
+        <p class="correction"><strong>Note on the abstract.</strong> The abstract says gas-dependent mixes range from 58.0% to 91.2%
+        outage protection. In the paper's Table 15, 58.0% belongs to geothermal + solar (S4), which needs no fuel. The gas-dependent
+        mixes (S1, S2, S6) run from <span id="d-gasrange">72.5% to 91.2%</span>.</p>
+        <p class="foot">Outage protection is the avoided loss-of-load probability (ALOLP): how much of the grid's outage risk the site
+        removes. The paper calls these values scenario-dependent. PPA: a contract for utility-scale solar. Figures from Tables 11, 14 and
+        15 of the paper (CC BY 4.0).</p>
+        <div class="tip" id="d-tip" role="status"></div>
+      </div>
+    </div>
+  </section>
+
+  <h2>What this shows</h2>
+  <p>ERCOT's power comes from different places at different hours. Gas leads most hexagons around Houston, Dallas and Corpus Christi at every
+  hour; wind in West and North Texas peaks at night; solar takes over much of the map at midday. That geography is the
+  starting point for every question below: new supply and new demand have to fit into it.</p>
+  <p>The second panel asks what a much larger wind and solar build-out changes elsewhere in the economy. In the paper's
+  economy-wide model, coal power falls sooner and every sector uses a little more electricity, but factories and vehicles still run
+  mostly on gas and refined liquids. Industry, not buildings, gains the most electricity. A cleaner grid on its own does not bring
+  large fuel switching.</p>
+  <p>The third and fourth panels look at loads that make their own power. When communities build their own generation, they pay less,
+  but the utility sells less and must charge its remaining customers more; once the erratum is applied, the total cost of the
+  system goes up, not down. A 250 MW AI data center faces the same trade in a sharper form: the cheapest on-site mix protects least
+  against outages, and the best-protected one, all-geothermal, is still cheaper than grid power in the paper's estimates.</p>
+  <p>Things to try: the summer evening map (gas takes back its share as solar fades); Industry in <em>Difference</em> mode; the utility price at 30
+  and 40 communities, where the published jump turns out to be an artifact of the coding errors; and S4 against S3 in the last panel.</p>
+
+  <h2>Behind this demo</h2>
+  <ul class="behind">
+    <li><a href="../../projects/grid-dashboard/">Texas Grid Dashboard</a></li>
+    <li><a href="../../projects/energy-systems/">Energy Systems</a></li>
+    <li><a href="../../projects/data-centers/">AI Data Center Energy</a></li>
+  </ul>
+
+  <h2>Sources</h2>
+  <ol class="sources">
+    <li>ERCOT, 60-Day SCED Disclosure reports, 2025, with plant locations from U.S. EIA Form EIA-860 (2025). Public data, mapped on
+    250 km² hexagons for the SEAR Lab's Texas Grid Dashboard. Used in panel 1 (generation mix only).</li>
+    <li>Aghapour, R., Alavi, S., Atitebi, O. S., &amp; Jones, E. C., Jr. (2025). Texas power system evolution and sectoral energy
+    demand: Contrasting sector-specific and multi-sector model outcomes. <em>Proceedings of the IISE Annual Conference &amp; Expo 2025</em>.
+    <a href="https://www.proquest.com/openview/fb47c6b94c33e0e25a48f3549c46ac0e/1">ProQuest record</a> (no DOI registered).
+    Panel 2: Table 1 (solar and wind targets); the data behind Figure 1 (generation by source) and Figure 2 (energy use by sector and
+    fuel), from the authors' committed GCAM-USA outputs.</li>
+    <li>Jones, E. C., Jr. (2020). Decomposing systems: Illustrating the utility of distributed energy resources with decomposition
+    techniques. <em>Proceedings of the 2020 IISE Annual Conference</em>.
+    <a href="https://www.proceedings.com/content/076/076356webtoc.pdf">Proceedings contents</a> (no DOI). Panel 3: Figure 1 (total
+    costs and prices) and Figure 2 (community share), published values.</li>
+    <li>Erratum to Jones (2020), issued 2026-09-14, in the public code repository
+    <a href="https://github.com/sear-labs/der-decomp-iise-2020/blob/main/ERRATUM.md">sear-labs/der-decomp-iise-2020</a>
+    (<a href="https://doi.org/10.5281/zenodo.22758887">doi:10.5281/zenodo.22758887</a>). Panel 3: corrected community shares
+    (Erratum 2 table) and total costs (Erratum 1 table); corrected prices, backup purchases and both-errors-fixed costs regenerated
+    from the repository's committed <code>results/decomposition-corrected.csv</code>.</li>
+    <li>Jones, E. C., Jr., &amp; Jones, E. C., Sr. (2026). Megawatts to zettaflops: A techno-economic framework for grid-tied
+    behind-the-meter architectures in AI data centers. <em>Electricity</em>, 7(2), 43.
+    <a href="https://doi.org/10.3390/electricity7020043">doi:10.3390/electricity7020043</a> (CC BY 4.0). Panel 4: Table 11
+    (installed capacity), Table 14 (blended cost and grid baseline) and Table 15 (fuel dependency, maximum on-site output, ALOLP).</li>
+  </ol>
+</article>
+</main>
+<footer class="site-footer">
+  <p><a href="mailto:erick.jones@uta.edu">erick.jones@uta.edu</a> · <a href="https://scholar.google.com/citations?hl=en&amp;user=03RL76wAAAAJ">Google Scholar</a> · <a href="https://www.linkedin.com/in/erickjones2/">LinkedIn</a> · <a href="https://github.com/yamierick">GitHub</a> · <a href="https://searlab.uta.edu/">SEAR Lab</a></p>
+  <p class="constellation">Professional site · <a href="https://engineerliving.com">Engineer Living (ideas &amp; writing)</a> · <em>The Friction Deficit</em> (fiction, coming soon)</p>
+</footer>
+<script type="module" src="demo.js"></script>
+</body>
+</html>
