@@ -1,15 +1,15 @@
 # Old Wowchemy/Academic site URLs -> new pages
 /authors/admin/*      /about/          301
 /author/*             /about/          301
-/publication/*        /publications/   301
-/project/*            /research/       301
+/publication/*        /projects/       301
+/project/*            /projects/       301
 /blog/Class_Projects/* /resources/     301
 /blog/ORIE/*          /resources/      301
 /blog/*               /resources/      301
 /courses/*            /teaching/       301
 /lab/*                /labs/           301
 /about_org/*          /about/          301
-/talk/*               /publications/   301
+/talk/*               /projects/       301
 /home/*               /                301
 
 # Preview page, promoted to /materials/ once its changes were accepted
@@ -17,3 +17,8 @@
 
 # Renamed: /model/ was one letter from the /models/ index, and said nothing
 /model/               /recovery-loop/  301
+
+# Retired 2026-10-01: Projects replaced Publications. Papers are listed on the
+# project they came from; the About page links Google Scholar and ORCID.
+/publications/        /projects/       301
+/publications/*       /projects/       301
