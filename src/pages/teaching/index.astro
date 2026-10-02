@@ -1,0 +1,97 @@
+---
+import Base from "../../layouts/Base.astro";
+import { courses, materials, earlier } from "../../data/courses.js";
+
+/**
+ * Teaching is laid out like Projects: one page per course, plus the programs,
+ * which link to their own project pages. Wording follows Jones's 2026 teaching
+ * statement; the committee roles follow his September 2026 CV.
+ */
+const programs = [
+  { title: "Engineering for One Planet (EOP) Institutionalization Program", url: "/projects/eop/",
+    text: "PI on a Lemelson Foundation grant through which more than 100 UTA faculty have built sustainability outcomes into the engineering courses they already teach. Published at ASEE each year since 2023." },
+  { title: "DOD next-generation power systems workforce", url: "/projects/hesm/",
+    text: "Co-PI on a DOD-funded effort preparing engineers to design advanced electrical power systems that combine multiple sources, storage, intelligent control and transient loads." },
+  { title: "NSF Research Experiences for Teachers (RET) Sites", url: "/projects/ret-green-building/",
+    text: "Faculty mentor on both of UTA's RET Sites, which bring college-level engineering research into K–12 classrooms, and Co-PI on the 2025–2030 Site." },
+  { title: "Lean manufacturing with Lego", url: "/projects/lean-lego-demo/",
+    text: "A classroom module in which students learn industrial engineering concepts by assembling Lego workstations." },
+  { title: "Planet Texas 2050", url: null,
+    text: "Developed curriculum for UT Austin's grand-challenge initiative as a Scientist in Residence." },
+];
+---
+
+<Base title="Teaching">
+  <p>
+    My job is to help students build the ability to think critically, and then
+    to prove they can apply that thinking to a real problem. Every course teaches
+    a usable technical skill, such as coding an optimization model in Python,
+    statistical analysis or energy-system modeling, and then has students apply
+    it to real data in a team project written to the standard of an IISE
+    conference paper.
+  </p>
+  <p>
+    I chair the IMSE Undergraduate Curriculum Committee and serve on the College
+    of Engineering and REE curriculum committees. That work centers on
+    ABET accreditation and on preparing students for the FE exam and professional
+    licensure, while making sure they also leave with modern skills: programming,
+    working with data, and using AI honestly. As a licensed Professional
+    Engineer, I hold students to the standard the profession will: engineers are
+    trusted with systems that, when they fail, fail people.
+  </p>
+
+  <h2>Courses</h2>
+  <ul class="cards">
+    {courses.map((c) => (
+      <li>
+        <h3><a href={`/teaching/${c.slug}/`}>{c.title}</a></h3>
+        <p class="meta">{c.code} · {c.since}</p>
+        <p>{c.line}</p>
+        {c.materials.length > 0 && <p class="meta">{c.materials.length} worked examples</p>}
+        {c.interactive.length > 0 && <p class="meta">{c.interactive.length} interactive models</p>}
+      </li>
+    ))}
+  </ul>
+
+  <h2>Programs</h2>
+  <ul class="programs">
+    {programs.map((p) => (
+      <li>
+        <strong>{p.url ? <a href={p.url}>{p.title}</a> : p.title}</strong>
+        <span> — {p.text}</span>
+      </li>
+    ))}
+  </ul>
+
+  <h2>How I teach</h2>
+  <ul class="programs">
+    <li><strong>Set expectations with total clarity.</strong> Students know exactly which concepts each class covers, and how the slides, textbook, homework and exams fit together.</li>
+    <li><strong>Teach a hard skill, then make them use it.</strong> Each course builds a technical skill and applies it to a real dataset or a real client through a team project.</li>
+    <li><strong>Assess for growth.</strong> The project runs in graded milestones, so feedback arrives while it can still change the outcome.</li>
+    <li><strong>Build people skills deliberately.</strong> Team projects require communication, scheduling and playing to each other's strengths, which are the actual conditions of engineering work.</li>
+  </ul>
+
+  <h2>Earlier materials</h2>
+  <p>Worked examples from before UT Arlington, written for students and still free to use:</p>
+  <ul>
+    {earlier.map((s) => <li><a href={`/resources/${s}/`}>{materials[s]}</a></li>)}
+  </ul>
+</Base>
+
+<style>
+  .cards {
+    list-style: none; padding: 0; margin: 1rem 0 1.5rem; display: grid; gap: 1rem;
+  }
+  @media (min-width: 46rem) { .cards { grid-template-columns: 1fr 1fr; } }
+  .cards li {
+    border: 1px solid var(--rule); border-radius: 8px; padding: .9rem 1.1rem;
+    position: relative; transition: border-color .15s ease, background-color .15s ease;
+  }
+  .cards li:hover { border-color: var(--accent); background: var(--code-bg); }
+  .cards h3 { margin: 0 0 .2rem; font-size: 1.15rem; }
+  .cards h3 a { text-decoration: none; }
+  .cards h3 a::after { content: ""; position: absolute; inset: 0; }
+  .cards p { margin: .35rem 0 0; }
+  .meta { font-family: system-ui, sans-serif; font-size: .82rem; color: var(--muted); }
+  .programs li { margin-bottom: .55rem; }
+</style>

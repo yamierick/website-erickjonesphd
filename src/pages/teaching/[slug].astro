@@ -1,0 +1,76 @@
+---
+import Base from "../../layouts/Base.astro";
+import { courses, materials } from "../../data/courses.js";
+
+// One page per course, from its syllabus (see src/data/courses.js). The card
+// line on /teaching/ is not repeated here; the page opens with the syllabus
+// description instead.
+export function getStaticPaths() {
+  return courses.map((c) => ({ params: { slug: c.slug }, props: { c } }));
+}
+const { c } = Astro.props;
+---
+
+<Base title={c.title} description={`${c.code} ${c.title}: ${c.line}`}>
+  <p class="crumbs"><a href="/teaching/">Teaching</a> · {c.code} · UT Arlington · {c.since}</p>
+
+  <p>{c.description}</p>
+
+  {c.modules && (
+    <>
+      <h2>Modules</h2>
+      <ol class="modules">
+        {c.modules.map(([m, d]) => <li><strong>{m}</strong>: {d}</li>)}
+      </ol>
+    </>
+  )}
+
+  <h2>Topics</h2>
+  <ul>{c.topics.map((t) => <li>{t}</li>)}</ul>
+
+  <h2>How it is taught and assessed</h2>
+  <ul>{c.work.map((w) => <li>{w}</li>)}</ul>
+  <p><strong>Tools.</strong> {c.tools}</p>
+
+  {c.graduate && (
+    <>
+      <h3>Graduate sections</h3>
+      <p>Graduate students take the same course at a higher standard, and must also:</p>
+      <ul>{c.graduate.map((g) => <li>{g}</li>)}</ul>
+    </>
+  )}
+
+  <h2>Textbook</h2>
+  <p>
+    {c.book.url ? <a href={c.book.url}>{c.book.title}</a> : <em>{c.book.title}</em>}{c.book.by && <span>, {c.book.by}</span>}
+    {c.book.note && <span class="tag">{c.book.note}</span>}
+  </p>
+  {c.note && <p>{c.note}</p>}
+
+  {c.interactive.length > 0 && (
+    <>
+      <h2>Interactive models</h2>
+      <ul>{c.interactive.map((m) => <li><a href={m.url}>{m.title}</a>: {m.note}</li>)}</ul>
+    </>
+  )}
+
+  {c.materials.length > 0 && (
+    <>
+      <h2>Worked examples</h2>
+      <p class="meta">Free, reproducible R Markdown.</p>
+      <ul>{c.materials.map((s) => <li><a href={`/resources/${s}/`}>{materials[s]}</a></li>)}</ul>
+    </>
+  )}
+
+  <p class="back"><a href="/teaching/">← All teaching</a></p>
+</Base>
+
+<style>
+  .crumbs, .meta { font-family: system-ui, sans-serif; font-size: .85rem; color: var(--muted); }
+  .modules li { margin-bottom: .3rem; }
+  .tag {
+    font-family: system-ui, sans-serif; font-size: .75rem; margin-left: .5rem;
+    padding: .05rem .45rem; border: 1px solid var(--rule); border-radius: 999px; color: var(--muted);
+  }
+  .back { margin-top: 2rem; font-family: system-ui, sans-serif; font-size: .9rem; }
+</style>

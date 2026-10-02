@@ -1,0 +1,163 @@
+---
+import Base from "../layouts/Base.astro";
+import fs from "node:fs";
+
+/**
+ * Research, organised by the three layers of infrastructure. It replaces both
+ * the old Research page (eight topic headings) and the Labs page.
+ *
+ * The layers group the lab's CATEGORIES, not its projects (Jones, 2026-10-01).
+ * The categories are the Drive's student-folder categories that every project
+ * page already carries, and the project build refuses any other value, so a
+ * new project lands under the right layer with no edit here.
+ *
+ * Each category links into the project grid as /projects/?q=<category name>.
+ * The grid's finder reads ?q= and keeps a card only if every word of the query
+ * is in its search text. For all thirteen category names that selects exactly
+ * that category's cards and no others (checked 2026-10-01). If a project's text
+ * ever contains every word of another category's name, that link would show an
+ * extra card; a dedicated ?cat= filter in the project build would remove the
+ * risk.
+ *
+ * Counts are read from the built grid at build time, so they cannot go stale.
+ */
+const layers = [
+  {
+    id: "physical",
+    name: "Physical",
+    lead: "The systems that move energy and materials: mines and refineries, power plants, grids and pipelines, batteries, buildings and vehicles. The lab works on them at the bench and in the field, from recovering metals out of spent batteries to instrumenting microgrids and tracking equipment.",
+    cats: [
+      ["Critical Minerals and Supply Chains", "From mine to battery and back: black-mass recovery at the bench, and the supply-chain and trade-policy models around it."],
+      ["Lab Energy System", "The lab's rooftop solar, electricity use and building loads, collected and controlled as a live dataset."],
+      ["Microgrids and Second-Life Batteries", "Microgrids built from repurposed electric-vehicle batteries, and systems engineering for mobile microgrid testbeds."],
+      ["Manufacturing, Robotics and Automation", "Drones and lean-manufacturing modules that students build, test and document."],
+      ["RFID, Auto-ID and Digital Twins", "Radio tags that turn physical presence into records people can act on: lab equipment, inventory and naloxone kits."],
+    ],
+  },
+  {
+    id: "digital",
+    name: "Digital",
+    lead: "Models, optimization and analytics that make energy and material flows visible, and decide among the ways of building them.",
+    cats: [
+      ["Energy Systems and Grid Analytics", "How Texas's grid and wider energy system change over decades: ERCOT, ReEDS and GCAM scenarios, distributed energy, electric vehicles, and geothermal on legacy wells."],
+      ["AI and Computational Methods", "Quantum and other emerging computing approaches to planning problems."],
+      ["Geospatial and Infrastructure Analysis", "Maps of where services, property value and rooftop solar sit, from census tracts to parcels."],
+      ["Transportation and Mobility", "Shared self-driving fleets and high-speed rail for taking carbon out of travel."],
+      ["Food, Energy and Water Systems", "Planning power and water together for homes and farms, under an uncertain climate."],
+    ],
+  },
+  {
+    id: "institutional",
+    name: "Institutional",
+    lead: "The rules and agreements that make systems this large viable at all: the rule of law, contracts, financing, insurance and trust between parties, along with policy and the trained workforce that designs and runs them.",
+    cats: [
+      ["Green Building and Energy Efficiency", "Green building research with K–12 teachers, grid-interactive homes with NREL, and household energy affordability."],
+      ["Education, Outreach and Workforce", "Helping faculty across UT Arlington build sustainability into the courses they already teach."],
+      ["Community and Policy Analytics", "Public-health logistics and public-sector analytics, such as planning how scarce COVID-19 treatments reach the people who need them."],
+    ],
+  },
+];
+
+// Count each category's cards in the grid as built.
+const decode = (s) => s.replace(/&amp;/g, "&").replace(/&#x27;/g, "'").replace(/&quot;/g, '"');
+let counts = {};
+try {
+  const grid = fs.readFileSync(new URL("../../public/projects/index.html", import.meta.url), "utf-8");
+  for (const m of grid.matchAll(/<li class="card" data-cat="([^"]*)"/g)) {
+    const c = decode(m[1]);
+    counts[c] = (counts[c] ?? 0) + 1;
+  }
+} catch {
+  counts = {};
+}
+const known = new Set(Object.keys(counts));
+const listed = new Set(layers.flatMap((l) => l.cats.map(([c]) => c)));
+// Every category in the grid must sit under a layer, and every layer entry must
+// be a real category. Failing the build beats a silently missing section.
+for (const c of known) if (!listed.has(c)) throw new Error(`Category not under any layer: ${c}`);
+for (const c of listed) if (known.size && !known.has(c)) throw new Error(`Layer lists unknown category: ${c}`);
+
+const link = (c) => `/projects/?q=${encodeURIComponent(c.toLowerCase())}`;
+---
+
+<Base title="Research">
+  <p>
+    The work is organised by the three layers of infrastructure on the
+    <a href="/">home page</a>. Each category below opens its projects, and every
+    project has its own page with its papers and people.
+  </p>
+  <p class="jump">
+    {layers.map((l, i) => (<>{i > 0 && " · "}<a href={`#${l.id}`}>{l.name}</a></>))}
+    {" · "}<a href="#labs">The labs</a>
+  </p>
+
+  {layers.map((l) => (
+    <section class="layer-section" id={l.id}>
+      <h2>{l.name}</h2>
+      <p class="lead">{l.lead}</p>
+      <ul class="cats">
+        {l.cats.map(([c, d]) => (
+          <li>
+            <a href={link(c)}>
+              <span class="cat-name">{c}</span>
+              {counts[c] && <span class="count">{counts[c]} {counts[c] === 1 ? "project" : "projects"} →</span>}
+            </a>
+            <p>{d}</p>
+          </li>
+        ))}
+      </ul>
+    </section>
+  ))}
+
+  <h2 id="labs">The labs</h2>
+
+  <h3 id="sear">SEAR — Sustainable and Efficient Allocation of Resources</h3>
+  <p>
+    The SEAR Lab studies energy and critical mineral systems and the communities
+    they serve, end to end and back: from extraction through manufacturing and
+    deployment to end-of-life recovery. It is part of an interdisciplinary
+    ecosystem that includes RAID, COSMOS (the Center for Stochastic Modeling,
+    Optimization, and Statistics) and the Pulsed Power Energy Lab.
+  </p>
+  <p>
+    The lab's own site, <a href="https://searlab.uta.edu/">searlab.uta.edu</a>,
+    lists the team and what is running now, and is the place to ask about joining.
+  </p>
+
+  <h3 id="raid">RAID — RFID and Auto-ID Deployment Laboratory</h3>
+  <p>
+    The RAID Lab is one of the most comprehensively equipped RFID research
+    facilities in the country, with dedicated healthcare, logistics and digital
+    twin research cells. Its conviction: what cannot be tracked cannot be
+    managed, and what cannot be managed cannot be improved. Its work spans:
+  </p>
+  <ul>
+    <li>Pharmaceutical supply chain tracking from manufacturer to patient, to prevent diversion and counterfeiting</li>
+    <li>Smart pills: ingestible, biocompatible RFID sensors for in-vivo monitoring</li>
+    <li>RFID systems that prevent retained surgical instruments</li>
+    <li>RTLS patient and medication tracking with smart shelves, wristbands and hospital bedding</li>
+    <li>Materials tracking for the International Space Station</li>
+    <li>Methods: tag and antenna characterization, set-cover optimization for reader placement, GIS spatial analytics, and machine learning for anomaly detection, a stack now being adapted to community-level naloxone distribution</li>
+  </ul>
+</Base>
+
+<style>
+  .jump { font-family: system-ui, sans-serif; font-size: .9rem; }
+  .layer-section { margin-top: 2rem; }
+  .lead { font-size: 1.02rem; }
+  .cats { list-style: none; padding: 0; margin: 1rem 0 0; display: grid; gap: .8rem; }
+  @media (min-width: 46rem) { .cats { grid-template-columns: 1fr 1fr; } }
+  .cats li {
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    padding: .75rem .9rem;
+  }
+  .cats li:hover { border-color: var(--accent); background: var(--code-bg); }
+  .cats a {
+    display: flex; flex-direction: column; gap: .15rem;
+    text-decoration: none; font-weight: 600;
+  }
+  .cats a:hover .cat-name { text-decoration: underline; }
+  .count { font-family: system-ui, sans-serif; font-size: .8rem; font-weight: 400; color: var(--muted); }
+  .cats p { margin: .35rem 0 0; font-family: system-ui, sans-serif; font-size: .86rem; color: var(--muted); }
+</style>
