@@ -7,7 +7,7 @@
 /blog/ORIE/*          /resources/      301
 /blog/*               /resources/      301
 /courses/*            /teaching/       301
-/lab/*                /labs/           301
+/lab/*                /research/       301
 /about_org/*          /about/          301
 /talk/*               /projects/       301
 /home/*               /                301
@@ -26,3 +26,8 @@
 # The old site served its CV at /files/cv.pdf until 2026-09-03; keep links
 # to it (Scholar, LinkedIn, email signatures) landing on the current one.
 /files/cv.pdf         /files/erick-jones-cv.pdf  301
+
+# Retired 2026-10-01: Labs merged into Research; sentiment analysis retired.
+/labs/                /research/       301
+/labs/*               /research/       301
+/resources/sentimentanalysis/*  /teaching/  301
