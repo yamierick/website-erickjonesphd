@@ -225,7 +225,7 @@ export const courses = [
       "Quizzes (5%)",
     ],
     tools: "Statistical analysis in R and in spreadsheets such as Excel.",
-    book: { title: "Probability and Statistics for Engineers and Scientists, 9th edition", by: "Walpole, Myers, Myers and Ye" },
+    book: { title: "Probability and Statistics for Engineers and Scientists, 9th edition", by: "Walpole, Myers, Myers and Ye", note: "available through the UTA library" },
     interactive: [],
     materials: ["stat-basics", "simulation-basics"],
     concepts: [
@@ -238,6 +238,7 @@ export const courses = [
       ["p-value", "Assuming the null hypothesis is true, the probability of a result at least as extreme as the one observed."],
     ],
     resources: [
+      { group: "Learn", title: "End-to-end statistics for data science", url: "https://www.analyticsvidhya.com/blog/2021/10/end-to-end-statistics-for-data-science/", note: "Analytics Vidhya; a summary of most of the course's concepts as data science uses them" },
       { group: "Learn", title: "Introduction to Probability, Statistics, and Random Processes (Pishro-Nik)", url: "https://www.probabilitycourse.com/", note: "free online textbook" },
       { group: "Learn", title: "NIST/SEMATECH e-Handbook of Statistical Methods", url: "https://www.itl.nist.gov/div898/handbook/" },
       { group: "Learn", title: "Statistics by Jim", url: "https://statisticsbyjim.com/hypothesis-testing/one-tailed-two-tailed-hypothesis-tests/", note: "plain-language explanations" },
