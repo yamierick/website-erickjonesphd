@@ -44,6 +44,19 @@ const artRecovery = `
   <line x1="12" y1="74" x2="228" y2="74" stroke="var(--rule)" stroke-width="1"/>
 </svg>`;
 
+// A staircase and a smooth curve that fits it well, with the stretch where
+// they disagree enough to flip the next decision shaded.
+const artSurrogate = `
+<svg viewBox="0 0 240 86" class="thumb" aria-hidden="true" focusable="false">
+  <rect x="58" y="8" width="26" height="66" fill="var(--th-wrong)" fill-opacity=".18"/>
+  <rect x="150" y="8" width="22" height="66" fill="var(--th-wrong)" fill-opacity=".18"/>
+  <path d="M 12 18 L 70 18 L 70 44 L 160 44 L 160 62 L 228 62"
+        fill="none" stroke="var(--text)" stroke-width="2"/>
+  <path d="M 12 16 C 48 14, 58 22, 72 32 C 86 42, 120 48, 150 50 C 168 52, 176 60, 228 64"
+        fill="none" stroke="var(--accent)" stroke-width="2.2"/>
+  <line x1="12" y1="74" x2="228" y2="74" stroke="var(--rule)" stroke-width="1"/>
+</svg>`;
+
 const models = [
   {
     title: "What a Grid Is Made Of",
@@ -71,6 +84,19 @@ const models = [
     detail:
       "Two panels: push demand growth until a gap opens and try to close it with recycling; then "
       + "drag a target year toward the present and watch the required start date slide past today.",
+  },
+  {
+    title: "Accurate, and Still Wrong",
+    url: "/linked-models/",
+    art: artSurrogate,
+    line: "A planning model → a cheap surrogate of it → a supply-chain model that plans on the surrogate.",
+    thesis:
+      "A surrogate can fit a model's output well and still send the next model to the wrong "
+      + "decision, because small errors near a step flip which plants get opened. What matters is "
+      + "the decision, not the fit.",
+    detail:
+      "Add runs and watch the fit improve faster than the decisions do. Where What a Grid Is Made "
+      + "Of lets you choose the mix, here a model chooses it.",
   },
 ];
 
@@ -204,8 +230,8 @@ const demos = [
   </p>
   <p class="hint">
     The real versions of these questions — a mix that is chosen rather than
-    given, under capacity limits, lead times and recovery — are the actual
-    research. That work lives in <a href="/research/">Research</a> and in
+    given, under capacity limits, lead times and recovery, and models linked
+    so one's answer becomes the next one's input — are the actual research. That work lives in <a href="/research/">Research</a> and in
     <a href="/projects/">the projects</a>.
   </p>
 </Base>
@@ -222,9 +248,10 @@ const demos = [
     list-style: none; padding: 0; margin: 1.5rem 0; display: grid; gap: 1.1rem;
     --th-copper: #9c4f1c;
     --th-steel: #39424b;
+    --th-wrong: #b23a2e;
   }
   @media (prefers-color-scheme: dark) {
-    .models { --th-copper: #f0b57e; --th-steel: #6b7682; }
+    .models { --th-copper: #f0b57e; --th-steel: #6b7682; --th-wrong: #f07a6e; }
   }
   @media (min-width: 52rem) {
     .models { grid-template-columns: 1fr 1fr; }
