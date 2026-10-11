@@ -112,7 +112,15 @@
   .lead .readout dd small { font-size: .8rem; color: var(--muted); font-variant-numeric: normal; }
 
   .lead .stage-row { margin-top: .55rem; }
-  .lead .stage-row label { margin-top: 0; }
+  /* The stage rows' labels, outputs and sliders are built by the script too, so
+     the scoped .controls rules above never reached them: they rendered at body
+     size with the browser's blue slider (found 2026-10-11). Same rules, global. */
+  .lead .stage-row label {
+    display: block; font-family: system-ui, sans-serif; font-size: .82rem;
+    color: var(--muted); margin-top: 0;
+  }
+  .lead .stage-row input[type=range] { width: 100%; margin-top: .2rem; accent-color: var(--accent); }
+  .lead .stage-row output { float: right; font-variant-numeric: tabular-nums; color: var(--text); }
   .lead .stage-note {
     font-family: system-ui, sans-serif; font-size: .72rem; color: var(--muted);
     margin: .15rem 0 0; opacity: .85;
@@ -348,13 +356,17 @@
   function writeShare() {
     clearTimeout(shareTimer);
     shareTimer = setTimeout(() => {
-      const q = new URLSearchParams();
+      // Start from the current query and touch only this model's keys: the
+      // supply-gap page carries a second model whose settings share the URL.
+      const q = new URLSearchParams(location.search);
+      q.delete("y");
+      for (const s of STAGES) q.delete(s.key);
       if (state.targetYear !== BASE.targetYear) q.set("y", String(state.targetYear));
       for (const s of STAGES) {
         if (state.durations[s.key] !== BASE.durations[s.key]) q.set(s.key, String(state.durations[s.key]));
       }
       const qs = q.toString();
-      history.replaceState(null, "", qs ? `${location.pathname}?${qs}` : location.pathname);
+      history.replaceState(null, "", (qs ? `${location.pathname}?${qs}` : location.pathname) + location.hash);
     }, 150);
   }
 

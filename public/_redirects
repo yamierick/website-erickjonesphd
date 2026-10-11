@@ -16,7 +16,7 @@
 /materials-v2/*       /materials/      301
 
 # Renamed: /model/ was one letter from the /models/ index, and said nothing
-/model/               /recovery-loop/  301
+/model/               /supply-gap/#recovery  301
 
 # Retired 2026-10-01: Projects replaced Publications. Papers are listed on the
 # project they came from; the About page links Google Scholar and ORCID.
@@ -31,3 +31,9 @@
 /labs/                /research/       301
 /labs/*               /research/       301
 /resources/sentimentanalysis/*  /teaching/  301
+
+# 2026-10-11: Models became Interactive, and the two supply toys merged into one page.
+/models/              /interactive/    301
+/models/*             /interactive/    301
+/recovery-loop/       /supply-gap/#recovery   301
+/lead-time/           /supply-gap/#lead-time  301

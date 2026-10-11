@@ -69,8 +69,7 @@ export const courses = [
     note: "A companion graduate course, Energy Systems and Critical Mineral Supply Chain Modeling (IE 6301), begins in Fall 2026.",
     interactive: [
       { title: "What a Grid Is Made Of", url: "/materials/", note: "energy demand to generation to the metal and rock behind it" },
-      { title: "A Toy Linked Model", url: "/recovery-loop/", note: "battery demand, mining and end-of-life recovery" },
-      { title: "Too Late to Decide", url: "/lead-time/", note: "why a mine started today arrives in the 2040s" },
+      { title: "Why Supply Can't Catch Up", url: "/supply-gap/", note: "why recycling cannot ramp, and why a mine started today arrives in the 2040s" },
       { title: "The Texas grid", url: "/demos/texas-grid/", note: "where ERCOT's power is made and where demand is going" },
     ],
     materials: [],
