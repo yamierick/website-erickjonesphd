@@ -20,12 +20,19 @@ import fs from "node:fs";
  * risk.
  *
  * Counts are read from the built grid at build time, so they cannot go stale.
+ *
+ * The layer definitions (lead, today, old, sear) and the one-line summary are
+ * Jones's approved wording of 2026-10-11, from the tenure package. Keep them
+ * verbatim; the home page uses the short version of the same text.
  */
 const layers = [
   {
     id: "physical",
     name: "Physical",
-    lead: "The systems that move energy and materials: mines and refineries, power plants, grids and pipelines, batteries, buildings and vehicles. The lab works on them at the bench and in the field, from recovering metals out of spent batteries to instrumenting microgrids and tracking equipment.",
+    lead: "The roads, ports, pipelines, power lines and factories that move people, energy and materials and make what a society uses.",
+    today: "grids, batteries, data centres, mineral supply chains",
+    old: "the first road",
+    sear: "hardware, experiments, recovered batteries",
     cats: [
       ["Critical Minerals and Supply Chains", "From mine to battery and back: black-mass recovery at the bench, and the supply-chain and trade-policy models around it."],
       ["Lab Energy System", "The lab's rooftop solar, electricity use and building loads, collected and controlled as a live dataset."],
@@ -37,7 +44,10 @@ const layers = [
   {
     id: "digital",
     name: "Digital",
-    lead: "Models, optimization and analytics that make energy and material flows visible, and decide among the ways of building them.",
+    lead: "The records, measures and models that physical systems depend on and institutions decide from. They make those flows visible, accountable and optimizable.",
+    today: "mostly software and data",
+    old: "writing",
+    sear: "models, analytics, decision tools",
     cats: [
       ["Energy Systems and Grid Analytics", "How Texas's grid and wider energy system change over decades: ERCOT, ReEDS and GCAM scenarios, distributed energy, electric vehicles, and geothermal on legacy wells."],
       ["AI and Computational Methods", "Quantum and other emerging computing approaches to planning problems."],
@@ -49,7 +59,10 @@ const layers = [
   {
     id: "institutional",
     name: "Institutional",
-    lead: "The rules and agreements that make systems this large viable at all: the rule of law, contracts, financing, insurance and trust between parties, along with policy and the trained workforce that designs and runs them.",
+    lead: "The laws, policies and organisations that protect people, enforce agreements and decide who builds, who pays and who benefits.",
+    today: "courts, markets, insurers, agencies, community organisations",
+    old: "law",
+    sear: "policy, programs, deployment",
     cats: [
       ["Green Building and Energy Efficiency", "Green building research with K–12 teachers, grid-interactive homes with NREL, and household energy affordability."],
       ["Education, Outreach and Workforce", "Helping faculty across UT Arlington build sustainability into the courses they already teach."],
@@ -82,9 +95,15 @@ const link = (c) => `/projects/?q=${encodeURIComponent(c.toLowerCase())}`;
 
 <Base title="Research">
   <p>
-    The work is organised by the three layers of infrastructure on the
-    <a href="/">home page</a>. Each category below opens its projects, and every
-    project has its own page with its papers and people.
+    The work is organised by three layers of infrastructure. The physical layer
+    does the work, the digital layer records and models it, and the institutional
+    layer decides what it is for and who it serves. Hernando de Soto's example is a
+    house: the house is physical, its recorded title is digital, and the lender who
+    takes the risk, and the court that makes it safe to, are institutional.
+  </p>
+  <p>
+    Each category below opens its projects, and every project has its own page
+    with its papers and people.
   </p>
   <p class="jump">
     {layers.map((l, i) => (<>{i > 0 && " · "}<a href={`#${l.id}`}>{l.name}</a></>))}
@@ -95,6 +114,7 @@ const link = (c) => `/projects/?q=${encodeURIComponent(c.toLowerCase())}`;
     <section class="layer-section" id={l.id}>
       <h2>{l.name}</h2>
       <p class="lead">{l.lead}</p>
+      <p class="meta">Today: {l.today}. As old as {l.old}. In SEAR's work: {l.sear}.</p>
       <ul class="cats">
         {l.cats.map(([c, d]) => (
           <li>
@@ -124,7 +144,7 @@ const link = (c) => `/projects/?q=${encodeURIComponent(c.toLowerCase())}`;
     lists the team and what is running now, and is the place to ask about joining.
   </p>
 
-  <h3 id="raid">RAID — RFID and Auto-ID Deployment Laboratory</h3>
+  <h3 id="raid">RAID — Radio Frequency and Auto-ID Lab</h3>
   <p>
     The RAID Lab is one of the most comprehensively equipped RFID research
     facilities in the country, with dedicated healthcare, logistics and digital
@@ -145,6 +165,7 @@ const link = (c) => `/projects/?q=${encodeURIComponent(c.toLowerCase())}`;
   .jump { font-family: system-ui, sans-serif; font-size: .9rem; }
   .layer-section { margin-top: 2rem; }
   .lead { font-size: 1.02rem; }
+  .layer-section .meta { font-family: system-ui, sans-serif; font-size: .85rem; color: var(--muted); margin-top: -.4rem; }
   .cats { list-style: none; padding: 0; margin: 1rem 0 0; display: grid; gap: .8rem; }
   @media (min-width: 46rem) { .cats { grid-template-columns: 1fr 1fr; } }
   .cats li {

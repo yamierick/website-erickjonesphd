@@ -1,119 +1,133 @@
 ---
 import Base from "../layouts/Base.astro";
 
-// These 14 pages are R Markdown output containing raw HTML, code blocks, and
-// embedded figures. They are served verbatim from public/resources/ rather than
-// being converted to MDX, which would mangle them. Astro copies public/ through
-// untouched, so the original rendering is preserved exactly.
-//
-// `figure` is the most representative plot from each page, pulled from its own
-// output. Ten of the fourteen have one; the remaining four are code-only
-// (solver examples and decomposition walkthroughs) and appear in the full list
-// below rather than in the band. Paths are pre-encoded because the R Markdown
-// figure directories contain spaces.
-const posts = [
-  { slug: "stat-basics",       title: "Statistic Basics and Linear Regression",  date: "January 1, 2020",
-    figure: "/blog/ORIE/Stat%20Basics/Stat_basics_files/figure-html/unnamed-chunk-3-1.png",
-    alt: "Regression diagnostics" },
-  { slug: "simulation-basics", title: "The Basics of Simulation",                date: "January 2, 2020",
-    figure: "/blog/ORIE/Simulation%20Basics/Simulation_basics_files/figure-html/unnamed-chunk-1-1.png",
-    alt: "Simulation output distribution" },
-  { slug: "lp-algorithms",     title: "Linear Programming Examples and Applications", date: "January 3, 2020",
-    figure: "/blog/ORIE/LP%20Algorithms/LP_algorithms_files/figure-html/unnamed-chunk-3-1.png",
-    alt: "A linear programming feasible region" },
-  { slug: "markov-chains",     title: "Basics of Markov Chains",                 date: "January 4, 2020",
-    figure: "/blog/ORIE/Markov%20Chains/markovchains_files/figure-html/unnamed-chunk-3-1.png",
-    alt: "Markov chain state probabilities" },
-  { slug: "gurobi-examples",   title: "Gurobi Basic LP/MIP Examples",            date: "January 5, 2020" },
-  { slug: "gurobi-examples-2", title: "Gurobi's R Examples 2",                   date: "January 6, 2020" },
-  { slug: "qp-modeling",       title: "Quadratic Programming Examples and Algorithms", date: "January 7, 2020",
-    figure: "/blog/ORIE/QP%20Modeling/QP_algorithms_files/figure-html/gradient_descent_example-1.png",
-    alt: "Gradient descent on a quadratic surface" },
-  { slug: "bender-decomp",     title: "Benders Decomposition Algorithm Explained", date: "January 9, 2020" },
-  { slug: "decomp-algorithms", title: "Decomposition Algorithms Broken Down and Explained", date: "January 10, 2020" },
-  { slug: "slsdesign",         title: "A Selective Laser Sintering Creation — Wind Powered Tops", date: "March 21, 2020",
-    figure: "/resources/slsdesign/sls-top-designs.png",
-    alt: "Selective laser sintering top designs" },
-  { slug: "city-modeling",     title: "Monocentric City Modeling",               date: "March 3, 2019",
-    figure: "/blog/ORIE/City%20Modeling/Modeling_City_files/figure-html/unnamed-chunk-9-1.png",
-    alt: "Monocentric city density gradient" },
-  { slug: "sci-res-city",      title: "Sim CCS City",                            date: "May 3, 2019",
-    figure: "/blog/ORIE/Sci%20Res%20City/Sci_Res_City2_files/figure-html/unnamed-chunk-9-1.png",
-    alt: "Carbon capture siting model output" },
-  { slug: "austin-land-use",   title: "Austin Land Use",                         date: "September 21, 2018",
-    // card.jpg is a 900px derivative; the page itself still serves the full
-    // 1342px PNG. 474 KB was too much for a thumbnail.
-    figure: "/resources/austin-land-use/card.jpg",
-    alt: "Austin land use map" },
-];
+/**
+ * Approved by Jones for publication on 2026-10-11, after his UTA outside-
+ * activity disclosure was filed.
+ *
+ * Resources becomes the consulting soft sell (Jones, 2026-10-01 and 10-11).
+ * The R Markdown worked examples it used to list are all linked from Teaching
+ * (the course pages and "Earlier materials"), and keep their /resources/<slug>/
+ * addresses.
+ *
+ * Constraints, from the ventures chat (2026-10-11):
+ * - No firm name yet: Jones consulting personally, "consulting enquiries
+ *   welcome". No venture, partner, client, site or deal named; no pricing.
+ * - Texas Occupations Code 1001.405: a business may not offer or advertise
+ *   engineering services without a TBPELS firm registration. Design-type work
+ *   (pre-FEED, facility and process design, data-centre design, RFID system
+ *   design) is described as expertise, not offered as a service, and
+ *   "engineering services" stays out of the call to action. "PE" as his own
+ *   credential is fine.
+ * - UTA outside-activity and conflict-of-interest disclosure: filed
+ *   (Jones, 2026-10-11). The page keeps "separate from my role at UT
+ *   Arlington" at his request, to make the line clear.
+ * - Contact: his personal address, chosen 2026-10-11, not a UTA address.
+ */
+const CONTACT = "erickcjonesjr@gmail.com";
 
-const featured = posts.filter((p) => p.figure);
+const lines = [
+  {
+    title: "AI and analytics for operations",
+    lead: "Turn scattered data and documents into models and decisions.",
+    items: [
+      "Cleaning up operational data and document stores so they can be analysed",
+      "AI assistants that work on a company's own files and data",
+      "Automating production data acquisition and reporting",
+      "Taking a business beyond Excel and Power BI",
+      "Optimization, simulation and surrogate models for decisions too large to try by hand",
+    ],
+  },
+  {
+    title: "Inventory, RFID and tracking",
+    lead: "From a first inventory database to RFID across a facility.",
+    items: [
+      "Inventory and production systems: what to track, how often, and what to do with it",
+      "RFID and auto-ID: tag and reader selection, testing and pilots",
+      "GS1 preparation, RAIN RFID standards and retailer supplier mandates",
+    ],
+  },
+  {
+    title: "Operations and process improvement",
+    lead: "Measure the operation, then improve it.",
+    items: [
+      "Operational benchmarking against peers and against the operation's own best weeks",
+      "Lean and Six Sigma",
+      "Data-driven process improvement, with AI where it earns its place",
+    ],
+  },
+  {
+    title: "Energy, environment and community fit",
+    lead: "Energy and infrastructure projects that need to work for the people around them.",
+    items: [
+      "Energy system and supply-chain modelling for strategic and operational planning",
+      "Policy planning and impact analysis",
+      "Life-cycle and techno-economic assessment (LCA and TEA)",
+      "Zoning compliance and community engagement: helping companies follow zoning law and listen to the communities around their sites, so new facilities are good neighbours",
+    ],
+  },
+  {
+    title: "Assessment and due diligence",
+    lead: "An independent read before money is committed.",
+    items: [
+      "Business strategy assessment",
+      "Investment due diligence on energy, materials and operations assets",
+      "Early-stage project assessment, before front-end engineering",
+    ],
+  },
+];
 ---
 
-<Base title="Resources" wide={true}>
-  <p>Free, open teaching materials and worked examples from my courses — operations research, optimization solvers, simulation, and statistics, mostly in reproducible R Markdown. Originally written for students; useful to anyone learning the tools.</p>
+<Base title="Resources" description="Consulting on data, operations, inventory and RFID, and energy projects, from Erick C. Jones Jr., PhD, PE.">
 
-  <div class="feature-grid">
-    {featured.map((p) => (
-      <a class="feature-card" href={`/resources/${p.slug}/`}>
-        <img src={p.figure} alt={p.alt} loading="lazy" decoding="async">
-        <div class="feature-card-body">
-          <h2>{p.title}</h2>
-          <p class="feature-meta">{p.date}</p>
-        </div>
-      </a>
-    ))}
-  </div>
+  <p class="subhead">Put your data, documents and inventory to work.</p>
 
-  <hr class="feature-rule">
+  <p>
+    Alongside my faculty role I take on a small number of consulting
+    engagements for businesses and public bodies: companies with messy
+    operational data, organisations with inventory and tracking problems, and
+    energy or infrastructure projects that want to be good neighbours to the
+    communities around them.
+  </p>
+  <p>
+    I am a licensed Professional Engineer in Texas. Before academia I worked as a
+    process engineer at AMEC Foster Wheeler and a project engineer at Johnson
+    Controls, and my <a href="/research/">research</a> covers the same ground:
+    energy and critical-mineral supply chains, optimization and simulation, and
+    RFID and asset tracking.
+  </p>
 
-  <h2 class="pub-year">All resources</h2>
-  <ul class="post-list">
-    {posts.map((p) => (
-      <li>
-        <time>{p.date}</time>
-        <a href={`/resources/${p.slug}/`}>{p.title}</a>
-      </li>
-    ))}
-  </ul>
+  {lines.map((l) => (
+    <section class="line">
+      <h2>{l.title}</h2>
+      <p class="lead">{l.lead}</p>
+      <ul>{l.items.map((i) => <li>{i}</li>)}</ul>
+    </section>
+  ))}
+
+  <h2>Also within my expertise</h2>
+  <p>
+    Facility layout, operation and process design, data-centre planning, and
+    RFID system design. These are engineering work under Texas law, so I discuss
+    them as background and advice here rather than offering them as services.
+  </p>
+
+  <h2>Get in touch</h2>
+  <p>
+    Consulting enquiries are welcome: <a href={`mailto:${CONTACT}`}>{CONTACT}</a>. A short description of the
+    problem is enough to start.
+  </p>
+
+  <p class="hint">
+    Looking for the free teaching materials that used to be here? They are on
+    <a href="/teaching/">Teaching</a>, with the course each one belongs to. Consulting
+    is personal outside work, separate from my role at UT Arlington.
+  </p>
 </Base>
 
-<style is:global>
-  .feature-grid {
-    display: grid;
-    gap: .9rem;
-    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-    margin: 1.25rem 0 0;
-  }
-  .feature-card {
-    display: flex;
-    flex-direction: column;
-    border: 1px solid var(--rule);
-    border-radius: 8px;
-    overflow: hidden;
-    text-decoration: none;
-    color: inherit;
-    background: var(--bg);
-    transition: border-color .15s ease, transform .15s ease;
-  }
-  .feature-card:hover { border-color: var(--accent); transform: translateY(-2px); }
-  /* Plots are mostly white-background R output; `contain` keeps axes readable
-     and avoids cropping the legend off, which `cover` would do. */
-  .feature-card img {
-    width: 100%;
-    aspect-ratio: 16 / 10;
-    object-fit: contain;
-    background: #fff;
-    display: block;
-    padding: .35rem;
-  }
-  .feature-card-body { padding: .6rem .8rem .85rem; }
-  .feature-card-body h2 {
-    margin: 0 0 .25rem;
-    font-size: .92rem;
-    line-height: 1.3;
-    color: var(--accent);
-  }
-  .feature-meta { margin: 0; font-family: system-ui, sans-serif; font-size: .76rem; color: var(--muted); }
-  .feature-rule { border: 0; border-top: 1px solid var(--rule); margin: 2rem 0 .5rem; }
+<style>
+  .line { margin-top: 1.6rem; }
+  .line h2 { margin-bottom: .2rem; }
+  .line .lead { margin-top: 0; color: var(--muted); font-style: italic; }
+  .hint { font-family: system-ui, sans-serif; font-size: .85rem; color: var(--muted); margin-top: 2rem; }
 </style>

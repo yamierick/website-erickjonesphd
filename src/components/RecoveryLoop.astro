@@ -1,123 +1,83 @@
 ---
-import Base from "../layouts/Base.astro";
+/**
+ * The recovery-loop toy: battery demand -> mineral demand -> primary mining and
+ * end-of-life recovery. Moved out of src/pages/recovery-loop.astro (2026-10-11)
+ * so it can sit beside the lead-time model on /supply-gap/.
+ *
+ * Everything the script touches is found inside #loop, never document-wide:
+ * the lead-time model on the same page also has range inputs, outputs and a
+ * .controls block, and a document-wide query would wire its sliders into this
+ * model's state. The shared URL is handled the same way: this model reads and
+ * writes only its own keys and leaves the other model's alone.
+ */
 ---
 
-<Base title="A Toy Linked Model" wide={true} og="recovery-loop">
-  <p class="subhead">Battery demand → critical mineral demand → primary mining and end-of-life recovery. Move the knobs.</p>
-
-  <p class="disclaimer">
-    <strong>This is a teaching toy, not research.</strong> It is a deterministic
-    stock-and-flow sketch with order-of-magnitude parameters, rounded hard and
-    calibrated to nothing. It is not SEAR Lab output, it does not represent any
-    real supply chain, and no number it produces should be cited. It exists to
-    make one mechanism visible — see the note at the bottom.
-  </p>
-
-  <div class="model">
-    <div class="controls">
-      <fieldset>
-        <legend>Mineral</legend>
-        <div class="seg" id="mineral">
-          <button type="button" data-v="lithium" class="on">Lithium</button>
-          <button type="button" data-v="nickel">Nickel</button>
-          <button type="button" data-v="cobalt">Cobalt</button>
-        </div>
-        <p class="hint" id="chem-hint"></p>
-      </fieldset>
-
-      <fieldset>
-        <legend>Demand</legend>
-        <label>Cell demand growth <output data-for="demandGrowth"></output>
-          <input type="range" id="demandGrowth" min="0" max="30" step="1" value="12">
-        </label>
-        <label>LFP share of chemistry <output data-for="lfpShare"></output>
-          <input type="range" id="lfpShare" min="0" max="100" step="5" value="50">
-        </label>
-      </fieldset>
-
-      <fieldset>
-        <legend>Primary supply</legend>
-        <label>Mine capacity growth <output data-for="primaryGrowth"></output>
-          <input type="range" id="primaryGrowth" min="0" max="20" step="1" value="6">
-        </label>
-      </fieldset>
-
-      <fieldset>
-        <legend>The loop back</legend>
-        <label>Collection rate <output data-for="collection"></output>
-          <input type="range" id="collection" min="0" max="100" step="5" value="70">
-        </label>
-        <label>Recovery yield <output data-for="recovery"></output>
-          <input type="range" id="recovery" min="0" max="95" step="5" value="50">
-        </label>
-        <label>Pack lifetime <output data-for="life"></output>
-          <input type="range" id="life" min="5" max="20" step="1" value="12">
-        </label>
-        <label>Second-life share <output data-for="secondLifeShare"></output>
-          <input type="range" id="secondLifeShare" min="0" max="80" step="5" value="25">
-        </label>
-      </fieldset>
-
-      <div class="actions">
-        <button type="button" id="reset" class="reset">Reset</button>
-        <button type="button" id="share" class="reset">Copy link</button>
+<div id="loop" class="model">
+  <div class="controls">
+    <fieldset>
+      <legend>Mineral</legend>
+      <div class="seg" id="mineral">
+        <button type="button" data-v="lithium" class="on">Lithium</button>
+        <button type="button" data-v="nickel">Nickel</button>
+        <button type="button" data-v="cobalt">Cobalt</button>
       </div>
-    </div>
+      <p class="hint" id="chem-hint"></p>
+    </fieldset>
 
-    <div class="output">
-      <svg id="chart" viewBox="0 0 720 360" role="img" aria-labelledby="chart-title">
-        <title id="chart-title">Mineral demand against primary and recovered supply, by year</title>
-      </svg>
-      <div class="legend">
-        <span><i class="sw sw-primary"></i>Primary mining</span>
-        <span><i class="sw sw-recycled"></i>Recovered (end-of-life)</span>
-        <span><i class="sw sw-demand"></i>Demand</span>
-        <span><i class="sw sw-gap"></i>Unmet</span>
-      </div>
-      <dl class="readout" id="readout"></dl>
+    <fieldset>
+      <legend>Demand</legend>
+      <label>Cell demand growth <output data-for="demandGrowth"></output>
+        <input type="range" id="demandGrowth" min="0" max="30" step="1" value="12">
+      </label>
+      <label>LFP share of chemistry <output data-for="lfpShare"></output>
+        <input type="range" id="lfpShare" min="0" max="100" step="5" value="50">
+      </label>
+    </fieldset>
+
+    <fieldset>
+      <legend>Primary supply</legend>
+      <label>Mine capacity growth <output data-for="primaryGrowth"></output>
+        <input type="range" id="primaryGrowth" min="0" max="20" step="1" value="6">
+      </label>
+    </fieldset>
+
+    <fieldset>
+      <legend>The loop back</legend>
+      <label>Collection rate <output data-for="collection"></output>
+        <input type="range" id="collection" min="0" max="100" step="5" value="70">
+      </label>
+      <label>Recovery yield <output data-for="recovery"></output>
+        <input type="range" id="recovery" min="0" max="95" step="5" value="50">
+      </label>
+      <label>Pack lifetime <output data-for="life"></output>
+        <input type="range" id="life" min="5" max="20" step="1" value="12">
+      </label>
+      <label>Second-life share <output data-for="secondLifeShare"></output>
+        <input type="range" id="secondLifeShare" min="0" max="80" step="5" value="25">
+      </label>
+    </fieldset>
+
+    <div class="actions">
+      <button type="button" id="reset" class="reset">Reset</button>
+      <button type="button" id="share" class="reset">Copy link</button>
     </div>
   </div>
 
-  <h2>What this is showing</h2>
-  <p>
-    The recovered-supply band is the whole point. Its size in any given year is
-    set by how many packs were built ten to fifteen years earlier, multiplied by
-    how many of them are actually collected and how much metal the process
-    recovers. Those are decisions made long before the shortfall appears.
-  </p>
-  <p>
-    Try it: push demand growth up until a gap opens, then try to close it by
-    raising the recovery yield. You cannot — not quickly. The material simply is
-    not in the waste stream yet. Now lower the pack lifetime and watch the loop
-    arrive sooner but carry less. Then set LFP share to 100% and watch the
-    nickel and cobalt problems vanish while the lithium problem does not.
-  </p>
-  <p>
-    That is the argument for studying these systems <em>end to end and back</em>
-    rather than one stage at a time. A model of mining alone cannot see the
-    recovery loop; a model of recycling alone cannot see what feeds it. The
-    interesting behaviour lives in the coupling, and it is a decade-scale lag.
-  </p>
-  <p>
-    This model says nothing about where the primary supply comes from — it
-    arrives as a line on a chart. The companion toy,
-    <a href="/materials/">what a grid is made of</a>, opens that line up into
-    components, metal and ore, and in exchange ignores time entirely.
-  </p>
-
-  <p class="hint">
-    Model source: <code>src/scripts/linkedModel.js</code>. Roughly eighty lines,
-    no dependencies, all parameters at the top.
-  </p>
-</Base>
+  <div class="output">
+    <svg id="chart" viewBox="0 0 720 360" role="img" aria-labelledby="chart-title">
+      <title id="chart-title">Mineral demand against primary and recovered supply, by year</title>
+    </svg>
+    <div class="legend">
+      <span><i class="sw sw-primary"></i>Primary mining</span>
+      <span><i class="sw sw-recycled"></i>Recovered (end-of-life)</span>
+      <span><i class="sw sw-demand"></i>Demand</span>
+      <span><i class="sw sw-gap"></i>Unmet</span>
+    </div>
+    <dl class="readout" id="readout"></dl>
+  </div>
+</div>
 
 <style>
-  .disclaimer {
-    border-left: 3px solid var(--accent);
-    padding: .6rem .9rem;
-    background: var(--code-bg);
-    font-size: .92rem;
-  }
   .model { display: grid; grid-template-columns: 15rem 1fr; gap: 1.5rem; margin: 1.5rem 0; }
   @media (max-width: 800px) { .model { grid-template-columns: 1fr; } }
   .controls fieldset {
@@ -189,18 +149,20 @@ import Base from "../layouts/Base.astro";
 
 <style is:global>
   /* The readout's cells are built by the script below with createElement, and
-     an Astro-scoped rule is an attribute selector that only markup satisfies --
-     so these three never matched anything and the readout has been rendering
-     as plain body text since this page shipped. Verified on the live site
-     2026-09-06: border 0px, padding 0px, dt at 17px instead of ~11.5px.
-     Global, held under .model so nothing leaks. */
-  .model .readout div { border: 1px solid var(--rule); border-radius: 6px; padding: .5rem .7rem; }
-  .model .readout dt { font-size: .72rem; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
-  .model .readout dd { margin: .15rem 0 0; font-size: 1.15rem; font-variant-numeric: tabular-nums; }
+     an Astro-scoped rule is an attribute selector that only markup satisfies,
+     so these must be global. Held under #loop so nothing leaks, including into
+     the lead-time model that shares the supply-gap page. */
+  #loop .readout div { border: 1px solid var(--rule); border-radius: 6px; padding: .5rem .7rem; }
+  #loop .readout dt { font-size: .72rem; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+  #loop .readout dd { margin: .15rem 0 0; font-size: 1.15rem; font-variant-numeric: tabular-nums; }
 </style>
 
 <script>
-  import { run, DEFAULTS, intensity } from "../scripts/linkedModel.js";
+  import { run, intensity } from "../scripts/linkedModel.js";
+
+  const root = document.getElementById("loop");
+  const $ = (s) => root.querySelector(s);
+  const $$ = (s) => root.querySelectorAll(s);
 
   const PCT = new Set(["demandGrowth", "primaryGrowth", "lfpShare", "recovery", "collection", "secondLifeShare"]);
   const state = {
@@ -210,7 +172,6 @@ import Base from "../layouts/Base.astro";
   };
   const INITIAL = { ...state };
 
-  const $ = (s) => document.querySelector(s);
   const svg = $("#chart");
   const NS = "http://www.w3.org/2000/svg";
 
@@ -236,7 +197,6 @@ import Base from "../layouts/Base.astro";
   const fmt = (v) => (v >= 100 ? Math.round(v).toLocaleString() : v.toFixed(1));
 
   function draw(r) {
-    while (svg.firstChild && svg.firstChild.nodeName !== "title") svg.removeChild(svg.lastChild);
     while (svg.childNodes.length > 1) svg.removeChild(svg.lastChild);
 
     const W = 720, H = 360, L = 56, R = 12, T = 14, B = 30;
@@ -246,7 +206,6 @@ import Base from "../layouts/Base.astro";
     const x = (i) => L + (i / (n - 1)) * (W - L - R);
     const y = (v) => H - B - (v / yMax) * (H - T - B);
 
-    // gridlines
     const steps = 5;
     for (let s = 0; s <= steps; s++) {
       const v = (yMax / steps) * s;
@@ -266,7 +225,6 @@ import Base from "../layouts/Base.astro";
       "font-family": "system-ui, sans-serif",
     }, "kt/yr"));
 
-    // x labels every 5 years
     for (let i = 0; i < n; i += 5) {
       svg.appendChild(el("text", {
         x: x(i), y: H - B + 16, "text-anchor": "middle",
@@ -287,20 +245,14 @@ import Base from "../layouts/Base.astro";
     svg.appendChild(el("path", { d: area(zero, r.primary), fill: "var(--muted)", opacity: .45 }));
     svg.appendChild(el("path", { d: area(r.primary, stacked), fill: "var(--accent)", opacity: .75 }));
 
-    // unmet demand hatched between supply and demand where demand is higher
-    const hasGap = r.gap.some((g) => g > 0.001);
-    if (hasGap) {
+    if (r.gap.some((g) => g > 0.001)) {
       const top = r.demand.map((d, i) => Math.max(d, stacked[i]));
-      svg.appendChild(el("path", {
-        d: area(stacked, top), fill: "var(--muted)", opacity: .18,
-      }));
+      svg.appendChild(el("path", { d: area(stacked, top), fill: "var(--muted)", opacity: .18 }));
     }
 
     let dl = `M ${x(0)} ${y(r.demand[0])}`;
     for (let i = 1; i < n; i++) dl += ` L ${x(i)} ${y(r.demand[i])}`;
-    svg.appendChild(el("path", {
-      d: dl, fill: "none", stroke: "var(--text)", "stroke-width": 2.2,
-    }));
+    svg.appendChild(el("path", { d: dl, fill: "none", stroke: "var(--text)", "stroke-width": 2.2 }));
 
     svg.appendChild(el("line", {
       x1: L, x2: W - R, y1: H - B, y2: H - B, stroke: "var(--rule)", "stroke-width": 1,
@@ -327,7 +279,7 @@ import Base from "../layouts/Base.astro";
   }
 
   function syncLabels() {
-    document.querySelectorAll("output[data-for]").forEach((o) => {
+    $$("output[data-for]").forEach((o) => {
       const k = o.dataset.for;
       o.textContent = PCT.has(k) ? `${state[k]}%` : `${state[k]} yr`;
     });
@@ -338,16 +290,19 @@ import Base from "../layouts/Base.astro";
   }
 
   // --- shareable state ------------------------------------------------------
-  /**
-   * Same contract as the cascade model: the controls live in the query string,
-   * so "push demand growth until a shortfall opens" can be a link rather than
-   * an instruction. Only values differing from the default are written, and
-   * everything read back is clamped against the control that owns it.
-   */
+  // The controls live in the query string, so "push demand growth until a
+  // shortfall opens" can be a link. Only values differing from the default are
+  // written, everything read back is clamped, and the other model's keys on
+  // this page are left untouched.
   const SHARE_KEYS = { m: "mineral", dg: "demandGrowth", pg: "primaryGrowth",
                        lfp: "lfpShare", rec: "recovery", col: "collection",
                        life: "life", sl: "secondLifeShare" };
   const MINERALS_OK = new Set(["lithium", "nickel", "cobalt"]);
+
+  function syncControls() {
+    $$(".controls input[type=range]").forEach((i) => { i.value = state[i.id]; });
+    $$("#mineral button").forEach((o) => o.classList.toggle("on", o.dataset.v === state.mineral));
+  }
 
   function readShareState() {
     const q = new URLSearchParams(location.search);
@@ -361,26 +316,24 @@ import Base from "../layouts/Base.astro";
       }
       const v = Number(raw);
       if (!Number.isFinite(v)) continue;
-      const inp = document.getElementById(prop);
+      const inp = $(`#${prop}`);
       state[prop] = inp ? Math.min(Number(inp.max), Math.max(Number(inp.min), v)) : v;
     }
-    document.querySelectorAll(".controls input[type=range]").forEach((i) => { i.value = state[i.id]; });
-    document.querySelectorAll("#mineral button").forEach((o) =>
-      o.classList.toggle("on", o.dataset.v === state.mineral));
+    syncControls();
     return true;
   }
 
   let shareTimer = null;
   function writeShareState() {
-    // replaceState, debounced: a slider drag must not fill the back button.
     clearTimeout(shareTimer);
     shareTimer = setTimeout(() => {
-      const q = new URLSearchParams();
+      const q = new URLSearchParams(location.search);
       for (const [key, prop] of Object.entries(SHARE_KEYS)) {
+        q.delete(key);
         if (state[prop] !== INITIAL[prop]) q.set(key, String(state[prop]));
       }
       const qs = q.toString();
-      history.replaceState(null, "", qs ? `${location.pathname}?${qs}` : location.pathname);
+      history.replaceState(null, "", (qs ? `${location.pathname}?${qs}` : location.pathname) + location.hash);
     }, 150);
   }
 
@@ -392,18 +345,17 @@ import Base from "../layouts/Base.astro";
     writeShareState();
   }
 
-  document.querySelectorAll(".controls input[type=range]").forEach((inp) => {
+  $$(".controls input[type=range]").forEach((inp) => {
     inp.addEventListener("input", () => {
       state[inp.id] = Number(inp.value);
       update();
     });
   });
 
-  document.querySelectorAll("#mineral button").forEach((b) => {
+  $$("#mineral button").forEach((b) => {
     b.addEventListener("click", () => {
-      document.querySelectorAll("#mineral button").forEach((o) => o.classList.remove("on"));
-      b.classList.add("on");
       state.mineral = b.dataset.v;
+      syncControls();
       update();
     });
   });
@@ -422,13 +374,10 @@ import Base from "../layouts/Base.astro";
 
   $("#reset").addEventListener("click", () => {
     Object.assign(state, INITIAL);
-    document.querySelectorAll(".controls input[type=range]").forEach((i) => { i.value = state[i.id]; });
-    document.querySelectorAll("#mineral button").forEach((o) =>
-      o.classList.toggle("on", o.dataset.v === state.mineral));
+    syncControls();
     update();
   });
 
   readShareState();
-
   update();
 </script>

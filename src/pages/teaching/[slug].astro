@@ -47,6 +47,16 @@ const { c } = Astro.props;
   </p>
   {c.note && <p>{c.note}</p>}
 
+  {c.concepts?.length > 0 && (
+    <>
+      <h2>Key concepts</h2>
+      <p class="meta">Short definitions of the ideas the course is built on.</p>
+      <dl class="concepts">
+        {c.concepts.map(([term, def]) => (<><dt>{term}</dt><dd>{def}</dd></>))}
+      </dl>
+    </>
+  )}
+
   {c.interactive.length > 0 && (
     <>
       <h2>Interactive models</h2>
@@ -62,12 +72,34 @@ const { c } = Astro.props;
     </>
   )}
 
+  {c.resources?.length > 0 && (
+    <>
+      <h2>Free tools and readings</h2>
+      <p class="meta">Open and free resources used in or alongside the course.</p>
+      {[...new Set(c.resources.map((r) => r.group))].map((g) => (
+        <>
+          <h3>{g}</h3>
+          <ul class="res">
+            {c.resources.filter((r) => r.group === g).map((r) => (
+              <li><a href={r.url} rel="noopener">{r.title}</a>{r.note && <span class="meta"> — {r.note}</span>}</li>
+            ))}
+          </ul>
+        </>
+      ))}
+    </>
+  )}
+
   <p class="back"><a href="/teaching/">← All teaching</a></p>
 </Base>
 
 <style>
   .crumbs, .meta { font-family: system-ui, sans-serif; font-size: .85rem; color: var(--muted); }
   .modules li { margin-bottom: .3rem; }
+  .concepts { margin: .6rem 0 0; }
+  .concepts dt { font-weight: 700; margin-top: .7rem; }
+  .concepts dd { margin: .15rem 0 0; }
+  .res li { margin-bottom: .25rem; }
+  h3 { font-size: 1rem; margin: 1rem 0 .3rem; }
   .tag {
     font-family: system-ui, sans-serif; font-size: .75rem; margin-left: .5rem;
     padding: .05rem .45rem; border: 1px solid var(--rule); border-radius: 999px; color: var(--muted);

@@ -1,0 +1,449 @@
+---
+import Base from "../layouts/Base.astro";
+
+/**
+ * Teaching toy: two optimization models linked through a surrogate (Jones,
+ * 2026-10-11). The model is src/scripts/surrogateLinkModel.js, with tests
+ * beside it. Every number is illustrative and made up for this page; nothing
+ * comes from a paper, a proposal or a real plant. The page names no proposal
+ * and no review status, and credits the surrogate-optimization line it builds
+ * on (UTA's COSMOS center).
+ *
+ * Its companion is "What a Grid Is Made Of", where the reader picks the mix.
+ * Here a model picks it, and the question is whether the next model can trust
+ * a cheap stand-in for the first.
+ */
+---
+
+<Base title="Accurate, and Still Wrong" wide={true} og="models"
+      description="A teaching toy: a surrogate can predict one model's output well and still send the next model to the wrong decision.">
+  <p class="subhead">Two optimization models, linked through a cheap stand-in for the first. The stand-in fits well and still sends the second model the wrong way.</p>
+
+  <p class="disclaimer">
+    <strong>This is a teaching toy, not research.</strong> Both models are
+    tiny, every number is made up for this page, and none of it describes a
+    real grid, plant or supply chain. No number it produces should be cited.
+    It exists to make one mechanism visible.
+  </p>
+
+  <h2>The setup</h2>
+  <p>
+    A <strong>planning model</strong> picks the cheapest way to meet a fixed
+    demand for power from four candidate plans, from solar with storage to all
+    gas. Solar panels and batteries need far more metal than gas plants, so as
+    the price of materials rises the cheapest plan jumps from one to the next.
+    The metal the chosen plan needs is handed to a <strong>supply-chain
+    model</strong>, which picks which of three processing plants to open to
+    supply it.
+  </p>
+  <p>
+    In real studies the planning model takes hours to run, so it is run a
+    handful of times and a <strong>surrogate</strong> (here a Gaussian process,
+    fitted by maximum likelihood) is trained on those runs to predict its output
+    at any price. The supply-chain model then plans on the surrogate's
+    prediction instead of the real thing.
+  </p>
+
+  <div class="model" id="link">
+    <div class="controls">
+      <fieldset>
+        <legend>Runs of the planning model</legend>
+        <label>Spread over the price range <output data-for="n"></output>
+          <input type="range" id="n" min="4" max="16" step="1" value="8">
+        </label>
+        <div class="actions stack">
+          <button type="button" id="add" class="reset">Add a run where it is least certain</button>
+          <button type="button" id="resample" class="reset">Resample</button>
+        </div>
+        <p class="hint" id="runs-hint"></p>
+      </fieldset>
+
+      <fieldset>
+        <legend>Look at one price</legend>
+        <label>Material price index <output data-for="p"></output>
+          <input type="range" id="p" min="0.5" max="2.5" step="0.01" value="1">
+        </label>
+        <p class="hint">1.0 is today's price in this toy.</p>
+      </fieldset>
+
+      <div class="actions">
+        <button type="button" id="reset" class="reset">Reset</button>
+        <button type="button" id="share" class="reset">Copy link</button>
+      </div>
+    </div>
+
+    <div class="output">
+      <svg id="chart" viewBox="0 0 720 340" role="img" aria-labelledby="chart-title chart-desc">
+        <title id="chart-title">Metal the planning model's plan needs, against material price: the true staircase and the surrogate's smooth fit</title>
+        <desc id="chart-desc"></desc>
+      </svg>
+      <div class="legend">
+        <span><i class="sw sw-true"></i>Planning model (true)</span>
+        <span><i class="sw sw-gp"></i>Surrogate's prediction</span>
+        <span><i class="sw sw-band"></i>Surrogate's uncertainty (±2σ)</span>
+        <span><i class="sw sw-run"></i>A run of the planning model</span>
+        <span><i class="sw sw-wrong"></i>Wrong plants opened</span>
+      </div>
+
+      <svg id="strip" viewBox="0 0 720 96" role="img" aria-labelledby="strip-title">
+        <title id="strip-title">Which processing plants the supply-chain model opens at each price: planning on the true model, and planning on the surrogate</title>
+      </svg>
+      <p class="hint">Plants: A large refinery (500 kt), B mid-size plant (300 kt), C small plant (200 kt). Darker means more capacity opened.</p>
+
+      <dl class="readout" id="here"></dl>
+      <dl class="readout" id="overall"></dl>
+    </div>
+  </div>
+
+  <h2>What this is showing</h2>
+  <p>
+    The black line is a staircase because a planning model's answer does not
+    slide; it jumps between a few corner solutions as the price moves. The
+    surrogate is smooth. With eight runs it explains most of the variation and
+    looks like a good fit. But each step's flat top sits just above or below a
+    point where the supply-chain model needs another plant, so a prediction off
+    by a few percent lands on the wrong side and opens the wrong plants. The red
+    bands are those prices. Where the plan comes up short, the metal has to be
+    bought in a hurry at a premium.
+  </p>
+  <p>
+    Try it: add runs and watch the fit improve faster than the decisions do.
+    Resample and see how much depends on where the runs happened to land. Then
+    move the price into a red band and read the cost of acting on the
+    surrogate.
+  </p>
+
+  <h2>Why it matters</h2>
+  <p>
+    Linking models is how one study's output becomes another's input: a grid
+    plan becomes a materials forecast, which becomes a supply chain. When the
+    first model is too slow to run everywhere, a surrogate stands in for it.
+    This toy's lesson is that the usual test of a surrogate, how well it
+    predicts, is the wrong test when its prediction feeds a decision. What
+    matters is whether the next model makes the same choice it would have made
+    with the real thing: the same plants, the same binding limits, a plan that
+    can actually be carried out. Judging a surrogate on the decision, and
+    choosing where to run the expensive model by what it does to the decision,
+    is open research.
+  </p>
+
+  <h2>What it leaves out</h2>
+  <p>
+    Nearly everything that makes real linked models hard. One input instead of
+    dozens; four candidate plans instead of a continuous build-out; three plants
+    and no geography, transport or time. Real planning models are linear or
+    mixed-integer programs with thousands of variables, and real supply-chain
+    models have many tiers. The surrogate here is a textbook Gaussian process on
+    a one-dimensional Latin hypercube; the "add a run" button uses the textbook
+    rule of sampling where the surrogate is least certain.
+  </p>
+  <p class="hint">
+    The approach builds on the design and analysis of computer experiments
+    (DACE) and surrogate-optimization work of UT Arlington's COSMOS center
+    (V. Chen, J. Rosenberger and colleagues). Model:
+    <code>src/scripts/surrogateLinkModel.js</code>, with its tests beside it, no
+    dependencies. Companion toy: <a href="/materials/">What a Grid Is Made Of</a>,
+    where you choose the mix instead of a model.
+  </p>
+</Base>
+
+<style>
+  .disclaimer {
+    border-left: 3px solid var(--accent);
+    padding: .6rem .9rem;
+    background: var(--code-bg);
+    font-size: .92rem;
+  }
+  .model { display: grid; grid-template-columns: 15rem 1fr; gap: 1.5rem; margin: 1.5rem 0; }
+  @media (max-width: 800px) { .model { grid-template-columns: 1fr; } }
+  .controls fieldset {
+    border: 1px solid var(--rule); border-radius: 6px;
+    padding: .6rem .8rem .8rem; margin: 0 0 .8rem;
+  }
+  .controls legend {
+    font-family: system-ui, sans-serif; font-size: .78rem; text-transform: uppercase;
+    letter-spacing: .06em; color: var(--accent); padding: 0 .3rem;
+  }
+  .controls label {
+    display: block; font-family: system-ui, sans-serif; font-size: .82rem;
+    color: var(--muted); margin-top: .5rem;
+  }
+  .controls input[type=range] { width: 100%; margin-top: .2rem; accent-color: var(--accent); }
+  .controls output { float: right; font-variant-numeric: tabular-nums; color: var(--text); }
+  .actions { display: flex; gap: .4rem; flex-wrap: wrap; }
+  .actions.stack { flex-direction: column; align-items: stretch; margin-top: .6rem; }
+  .reset {
+    font-family: system-ui, sans-serif; font-size: .8rem; background: none;
+    border: 1px solid var(--rule); border-radius: 4px; padding: .3rem .7rem;
+    color: var(--muted); cursor: pointer; text-align: center;
+  }
+  .reset:hover { border-color: var(--accent); color: var(--text); }
+  .hint { font-family: system-ui, sans-serif; font-size: .78rem; color: var(--muted); margin: .5rem 0 0; }
+  #chart, #strip { width: 100%; height: auto; display: block; }
+  #strip { margin-top: .8rem; }
+  .legend {
+    display: flex; flex-wrap: wrap; gap: .2rem 1rem;
+    font-family: system-ui, sans-serif; font-size: .78rem; color: var(--muted); margin-top: .4rem;
+  }
+  .sw { display: inline-block; width: .9rem; height: .7rem; margin-right: .3rem; vertical-align: -1px; border-radius: 2px; }
+  .sw-true { background: var(--text); height: .16rem; border-radius: 0; vertical-align: 3px; }
+  .sw-gp { background: var(--accent); height: .2rem; border-radius: 0; vertical-align: 3px; }
+  .sw-band { background: var(--accent); opacity: .18; }
+  .sw-run { width: .6rem; height: .6rem; border-radius: 50%; background: var(--accent); }
+  .sw-wrong { background: var(--wrong); opacity: .25; }
+  .model { --wrong: #b23a2e; }
+  @media (prefers-color-scheme: dark) { .model { --wrong: #f07a6e; } }
+</style>
+
+<style is:global>
+  /* Readout cells are built by the script, so these must be global; held under #link. */
+  #link .readout {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+    gap: .6rem; margin: 1rem 0 0; font-family: system-ui, sans-serif;
+  }
+  #link .readout div { border: 1px solid var(--rule); border-radius: 6px; padding: .5rem .7rem; }
+  #link .readout div.bad { border-color: var(--wrong); }
+  #link .readout dt { font-size: .72rem; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+  #link .readout dd { margin: .15rem 0 0; font-size: 1.15rem; font-variant-numeric: tabular-nums; }
+  #link .readout dd small { font-size: .78rem; color: var(--muted); }
+</style>
+
+<script>
+  import {
+    PRICE, PROCESSORS, upstreamBreaks, latinHypercube, evaluate, nextRun, operate, downstream,
+  } from "../scripts/surrogateLinkModel.js";
+
+  const root = document.getElementById("link");
+  const $ = (s) => root.querySelector(s);
+  const NS = "http://www.w3.org/2000/svg";
+  const el = (name, attrs = {}, text) => {
+    const n = document.createElementNS(NS, name);
+    for (const k in attrs) n.setAttribute(k, attrs[k]);
+    if (text != null) n.textContent = text;
+    return n;
+  };
+  const clear = (svg) => { while (svg.childNodes.length) {
+    const last = svg.lastChild;
+    if (last.nodeName === "title" || last.nodeName === "desc") break;
+    svg.removeChild(last);
+  } };
+
+  const DEFAULT = { n: 8, seed: 1, extra: [], p: 1 };
+  const state = { ...DEFAULT, extra: [] };
+  const BREAKS = upstreamBreaks();
+  // Darker = more capacity opened.
+  const SETS = ["C", "B", "BC", "A", "AC", "AB", "ABC"];
+  const shade = (k) => 0.18 + 0.72 * (SETS.indexOf(k) / (SETS.length - 1));
+  const plants = (k) => k.split("").join("+");
+
+  let ev = null;
+  function recompute() {
+    const xs = [...latinHypercube(state.n, state.seed), ...state.extra];
+    ev = evaluate(xs);
+  }
+
+  // ------------------------------------------------------------ main chart
+  function drawChart() {
+    const svg = $("#chart");
+    clear(svg);
+    const W = 720, H = 340, L = 56, R = 12, T = 30, B = 34;
+    const yMax = 1000;
+    const x = (p) => L + ((p - PRICE.min) / (PRICE.max - PRICE.min)) * (W - L - R);
+    const y = (v) => H - B - (Math.max(0, Math.min(yMax, v)) / yMax) * (H - T - B);
+    const rows = ev.rows;
+    const dx = (rows[1].p - rows[0].p) / 2;
+
+    // Wrong-decision bands, behind everything.
+    for (let i = 0; i < rows.length; ) {
+      if (rows[i].chosen === rows[i].truth) { i++; continue; }
+      let j = i;
+      while (j + 1 < rows.length && rows[j + 1].chosen !== rows[j + 1].truth) j++;
+      svg.appendChild(el("rect", {
+        x: x(rows[i].p - dx), y: T, width: x(rows[j].p + dx) - x(rows[i].p - dx), height: H - T - B,
+        fill: "var(--wrong)", opacity: .13,
+      }));
+      i = j + 1;
+    }
+
+    for (let v = 0; v <= yMax; v += 200) {
+      svg.appendChild(el("line", { x1: L, x2: W - R, y1: y(v), y2: y(v), stroke: "var(--rule)", "stroke-width": 1 }));
+      svg.appendChild(el("text", { x: L - 8, y: y(v) + 4, "text-anchor": "end", "font-size": 11, fill: "var(--muted)",
+        "font-family": "system-ui, sans-serif" }, v));
+    }
+    svg.appendChild(el("text", { x: L - 8, y: T - 12, "text-anchor": "end", "font-size": 10, fill: "var(--muted)",
+      "font-family": "system-ui, sans-serif" }, "kt of metal"));
+    for (let p = 0.5; p <= 2.501; p += 0.5) {
+      svg.appendChild(el("text", { x: x(p), y: H - B + 16, "text-anchor": "middle", "font-size": 11, fill: "var(--muted)",
+        "font-family": "system-ui, sans-serif" }, p.toFixed(1)));
+    }
+    svg.appendChild(el("text", { x: (L + W - R) / 2, y: H - 4, "text-anchor": "middle", "font-size": 11,
+      fill: "var(--muted)", "font-family": "system-ui, sans-serif" }, "material price index"));
+
+    // Regime boundaries and the plan chosen in each.
+    const edges = [PRICE.min, ...BREAKS.map((b) => b.p), PRICE.max];
+    const mixes = [BREAKS[0].from, ...BREAKS.map((b) => b.to)];
+    BREAKS.forEach((b) => svg.appendChild(el("line", { x1: x(b.p), x2: x(b.p), y1: T - 4, y2: H - B,
+      stroke: "var(--muted)", "stroke-width": 1, "stroke-dasharray": "3 3" })));
+    mixes.forEach((m, i) => svg.appendChild(el("text", { x: (x(edges[i]) + x(edges[i + 1])) / 2, y: T - 12,
+      "text-anchor": "middle", "font-size": 10.5, fill: "var(--text)", "font-family": "system-ui, sans-serif" }, m.label)));
+
+    // Uncertainty band.
+    let band = `M ${x(rows[0].p)} ${y(rows[0].Dhat + 2 * rows[0].sd)}`;
+    for (const r of rows) band += ` L ${x(r.p)} ${y(r.Dhat + 2 * r.sd)}`;
+    for (let i = rows.length - 1; i >= 0; i--) band += ` L ${x(rows[i].p)} ${y(rows[i].Dhat - 2 * rows[i].sd)}`;
+    svg.appendChild(el("path", { d: band + " Z", fill: "var(--accent)", opacity: .15 }));
+
+    // True staircase.
+    let st = `M ${x(rows[0].p)} ${y(rows[0].D)}`;
+    for (let i = 1; i < rows.length; i++) st += ` L ${x(rows[i].p)} ${y(rows[i - 1].D)} L ${x(rows[i].p)} ${y(rows[i].D)}`;
+    svg.appendChild(el("path", { d: st, fill: "none", stroke: "var(--text)", "stroke-width": 2 }));
+
+    // Surrogate mean.
+    let gp = `M ${x(rows[0].p)} ${y(rows[0].Dhat)}`;
+    for (const r of rows) gp += ` L ${x(r.p)} ${y(r.Dhat)}`;
+    svg.appendChild(el("path", { d: gp, fill: "none", stroke: "var(--accent)", "stroke-width": 2.2 }));
+
+    // Runs.
+    ev.xs.forEach((p, i) => svg.appendChild(el("circle", { cx: x(p), cy: y(ev.ys[i]), r: 4.5,
+      fill: "var(--accent)", stroke: "var(--bg)", "stroke-width": 1.5 })));
+
+    // The price being inspected.
+    svg.appendChild(el("line", { x1: x(state.p), x2: x(state.p), y1: T, y2: H - B,
+      stroke: "var(--text)", "stroke-width": 1.2, opacity: .7 }));
+  }
+
+  // ----------------------------------------------------------- decision strip
+  function drawStrip() {
+    const svg = $("#strip");
+    clear(svg);
+    const W = 720, L = 56, R = 12, rowH = 30;
+    const x = (p) => L + ((p - PRICE.min) / (PRICE.max - PRICE.min)) * (W - L - R);
+    const rows = ev.rows;
+    const dx = (rows[1].p - rows[0].p) / 2;
+    const lanes = [["True plan", "truth", 8], ["Surrogate", "chosen", 52]];
+    for (const [label, key, top] of lanes) {
+      svg.appendChild(el("text", { x: L - 6, y: top + rowH / 2 + 4, "text-anchor": "end", "font-size": 10.5,
+        fill: "var(--muted)", "font-family": "system-ui, sans-serif" }, label));
+      for (let i = 0; i < rows.length; ) {
+        let j = i;
+        while (j + 1 < rows.length && rows[j + 1][key] === rows[i][key]) j++;
+        const x0 = x(rows[i].p - dx), x1 = x(rows[j].p + dx);
+        svg.appendChild(el("rect", { x: x0, y: top, width: Math.max(0.5, x1 - x0), height: rowH,
+          fill: "var(--accent)", "fill-opacity": shade(rows[i][key]) }));
+        if (x1 - x0 > 30) {
+          svg.appendChild(el("text", { x: (x0 + x1) / 2, y: top + rowH / 2 + 4, "text-anchor": "middle",
+            "font-size": 10.5, "font-weight": 600, fill: "var(--text)",
+            "font-family": "system-ui, sans-serif" }, plants(rows[i][key])));
+        }
+        i = j + 1;
+      }
+    }
+    // Outline the surrogate's wrong stretches.
+    for (let i = 0; i < rows.length; ) {
+      if (rows[i].chosen === rows[i].truth) { i++; continue; }
+      let j = i;
+      while (j + 1 < rows.length && rows[j + 1].chosen !== rows[j + 1].truth) j++;
+      svg.appendChild(el("rect", { x: x(rows[i].p - dx), y: 52, width: x(rows[j].p + dx) - x(rows[i].p - dx),
+        height: rowH, fill: "none", stroke: "var(--wrong)", "stroke-width": 2 }));
+      i = j + 1;
+    }
+    svg.appendChild(el("line", { x1: x(state.p), x2: x(state.p), y1: 4, y2: 86,
+      stroke: "var(--text)", "stroke-width": 1.2, opacity: .7 }));
+  }
+
+  // ---------------------------------------------------------------- readouts
+  function cells(dl, items) {
+    dl.innerHTML = "";
+    for (const [k, v, sub, bad] of items) {
+      const d = document.createElement("div");
+      if (bad) d.className = "bad";
+      const dt = document.createElement("dt"); dt.textContent = k;
+      const dd = document.createElement("dd"); dd.textContent = v;
+      if (sub) { const s = document.createElement("small"); s.textContent = ` ${sub}`; dd.appendChild(s); }
+      d.append(dt, dd); dl.appendChild(d);
+    }
+  }
+
+  function readouts() {
+    const rows = ev.rows;
+    const r = rows.reduce((b, q) => (Math.abs(q.p - state.p) < Math.abs(b.p - state.p) ? q : b), rows[0]);
+    const wrong = r.chosen !== r.truth;
+    const ran = operate(downstream(Math.max(0.01, r.Dhat)).open, r.D);
+    cells($("#here"), [
+      ["Metal needed", `${Math.round(r.D)} kt`, r.mix.label],
+      ["Surrogate says", `${Math.round(r.Dhat)} kt`, `±${Math.round(2 * r.sd)}`],
+      ["Plants, true plan", plants(r.truth)],
+      ["Plants, surrogate", plants(r.chosen), wrong ? "wrong" : "same", wrong],
+      ["Cost of trusting it", r.regret < 0.05 ? "none" : `+${r.regret.toFixed(1)}`,
+        ran.short > 0 ? `short ${Math.round(ran.short)} kt` : (wrong ? "overbuilt" : ""), wrong],
+    ]);
+    const s = ev.summary;
+    cells($("#overall"), [
+      ["Runs used", String(ev.xs.length)],
+      ["Fit across prices", `R² ${s.r2.toFixed(2)}`, `error ${s.maePct.toFixed(0)}% of range`],
+      ["Wrong plants at", `${Math.round(s.wrongPct)}%`, "of prices", s.wrongPct > 0.5],
+      ["Short of metal at", `${Math.round(s.shortPct)}%`, "of prices", s.shortPct > 0.5],
+    ]);
+    $("#runs-hint").textContent = state.extra.length
+      ? `${state.n} spread evenly at random, plus ${state.extra.length} added where the surrogate was least certain.`
+      : `Spread by a Latin hypercube: one at random in each of ${state.n} equal slices of the price range.`;
+    $("#chart-desc").textContent = `With ${ev.xs.length} runs the surrogate's fit has R squared ${s.r2.toFixed(2)}, `
+      + `yet the supply-chain model opens the wrong plants at ${Math.round(s.wrongPct)} percent of prices.`;
+  }
+
+  function labels() {
+    root.querySelector('output[data-for="n"]').textContent = String(state.n);
+    root.querySelector('output[data-for="p"]').textContent = state.p.toFixed(2);
+  }
+
+  // ----------------------------------------------------------- share state
+  function readShare() {
+    const q = new URLSearchParams(location.search);
+    const num = (k, lo, hi) => { const v = Number(q.get(k)); return q.has(k) && Number.isFinite(v) ? Math.min(hi, Math.max(lo, v)) : null; };
+    const n = num("n", 4, 16); if (n != null) state.n = Math.round(n);
+    const s = num("s", 1, 9999); if (s != null) state.seed = Math.round(s);
+    const p = num("p", PRICE.min, PRICE.max); if (p != null) state.p = p;
+    if (q.has("x")) state.extra = q.get("x").split(",").map(Number)
+      .filter((v) => Number.isFinite(v) && v >= PRICE.min && v <= PRICE.max).slice(0, 12);
+    $("#n").value = state.n; $("#p").value = state.p;
+  }
+  let shareTimer = null;
+  function writeShare() {
+    clearTimeout(shareTimer);
+    shareTimer = setTimeout(() => {
+      const q = new URLSearchParams();
+      if (state.n !== DEFAULT.n) q.set("n", state.n);
+      if (state.seed !== DEFAULT.seed) q.set("s", state.seed);
+      if (state.p !== DEFAULT.p) q.set("p", state.p.toFixed(2));
+      if (state.extra.length) q.set("x", state.extra.map((v) => v.toFixed(3)).join(","));
+      const qs = q.toString();
+      history.replaceState(null, "", (qs ? `${location.pathname}?${qs}` : location.pathname) + location.hash);
+    }, 150);
+  }
+
+  function render() { drawChart(); drawStrip(); readouts(); labels(); writeShare(); }
+  function update() { recompute(); render(); }
+
+  $("#n").addEventListener("input", (e) => { state.n = Number(e.target.value); state.extra = []; update(); });
+  $("#p").addEventListener("input", (e) => { state.p = Number(e.target.value); render(); });
+  $("#add").addEventListener("click", () => {
+    if (state.extra.length >= 12) return;
+    const p = nextRun(ev);
+    if (p != null) { state.extra = [...state.extra, p]; update(); }
+  });
+  $("#resample").addEventListener("click", () => { state.seed += 1; state.extra = []; update(); });
+  $("#reset").addEventListener("click", () => {
+    Object.assign(state, DEFAULT, { extra: [] });
+    $("#n").value = state.n; $("#p").value = state.p;
+    update();
+  });
+  $("#share").addEventListener("click", async (e) => {
+    const b = e.currentTarget, said = b.textContent;
+    try { await navigator.clipboard.writeText(location.href); b.textContent = "Copied"; }
+    catch { b.textContent = "Copy failed"; }
+    setTimeout(() => { b.textContent = said; }, 1600);
+  });
+
+  readShare();
+  update();
+</script>

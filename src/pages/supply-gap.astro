@@ -1,0 +1,141 @@
+---
+import Base from "../layouts/Base.astro";
+import RecoveryLoop from "../components/RecoveryLoop.astro";
+import LeadTime from "../components/LeadTime.astro";
+
+/**
+ * Two teaching toys that make one argument, merged at Jones's request
+ * (2026-10-11): "A Toy Linked Model" (/recovery-loop/) and "Too Late to Decide"
+ * (/lead-time/). Both old addresses 301 here, to the matching panel. The two
+ * models share the page's query string; each reads and writes only its own keys.
+ */
+---
+
+<Base title="Why Supply Can't Catch Up" wide={true} og="recovery-loop"
+      description="Two teaching toys: recycling cannot ramp because the material is not in the waste stream yet, and a new mine takes about sixteen years.">
+  <p class="subhead">Demand for battery metals can rise in a few years. The two other sources of supply cannot follow it that fast.</p>
+
+  <p class="disclaimer">
+    <strong>These are teaching toys, not research.</strong> The first is a
+    deterministic stock-and-flow sketch with order-of-magnitude parameters; the
+    second is calendar arithmetic on a published average. Neither represents a
+    real supply chain, and no number either produces should be cited. Each
+    exists to make one mechanism visible.
+  </p>
+
+  <p class="jump"><a href="#recovery">A · The loop back arrives late</a> · <a href="#lead-time">B · Too late to decide</a></p>
+
+  <section class="panel" id="recovery">
+    <p class="kicker">A · Recycling</p>
+    <h2>The loop back arrives late</h2>
+    <p>
+      Battery demand → critical mineral demand → primary mining and end-of-life
+      recovery. Move the knobs.
+    </p>
+
+    <RecoveryLoop />
+
+    <h3>What this is showing</h3>
+    <p>
+      The recovered-supply band is the whole point. Its size in any given year
+      is set by how many packs were built ten to fifteen years earlier,
+      multiplied by how many of them are actually collected and how much metal
+      the process recovers. Those are decisions made long before the shortfall
+      appears.
+    </p>
+    <p>
+      Try it: push demand growth up until a gap opens, then try to close it by
+      raising the recovery yield. You cannot, not quickly: the material simply
+      is not in the waste stream yet. Now lower the pack lifetime and watch the
+      loop arrive sooner but carry less. Then set LFP share to 100% and watch
+      the nickel and cobalt problems vanish while the lithium problem does not.
+    </p>
+    <p>
+      That is the argument for studying these systems <em>end to end and
+      back</em> rather than one stage at a time. A model of mining alone cannot
+      see the recovery loop; a model of recycling alone cannot see what feeds
+      it. The interesting behaviour lives in the coupling, and it is a
+      decade-scale lag.
+    </p>
+  </section>
+
+  <section class="panel" id="lead-time">
+    <p class="kicker">B · New mines</p>
+    <h2>Too late to decide</h2>
+    <p>
+      If recycling cannot close the gap in time, the other door is a new mine.
+      A mine takes about sixteen years. Pick a year you want metal, and see when
+      the decision had to be made.
+    </p>
+
+    <LeadTime />
+
+    <h3>What this is showing</h3>
+    <p>
+      S&amp;P Global put the average at <strong>15.7 years</strong> from
+      discovery to production for mines that opened in the 2010s, and the IEA
+      uses a comparable figure. Sixteen years is longer than most policy
+      horizons, longer than most political terms, and longer than the interval
+      between a target being announced and the year it falls due.
+    </p>
+    <p>
+      Which produces the result worth sitting with: <strong>for any target
+      inside the next decade and a half, the decision is already behind
+      us.</strong> A 2030 target needed work under way in 2014. A 2035 target
+      needed 2019. The date does not move because the target is important.
+    </p>
+    <p>
+      Try it: drag the target year toward the present and watch the required
+      schedule slide backwards past the dashed line marking today. Then push
+      <em>Permitting</em> to its upper end, the widest stage and where most of
+      the difference between two otherwise identical projects lives.
+    </p>
+  </section>
+
+  <h2>Read together</h2>
+  <p>
+    Panel A says recovery cannot ramp; panel B says new mines cannot arrive in
+    time. What is left inside the window is expansion of mines that already
+    exist, substitution toward materials that are easier to get, or less demand,
+    and <a href="/materials/">how much is needed in the first place</a> depends
+    heavily on which technologies get built.
+  </p>
+
+  <h2>What they leave out</h2>
+  <p>
+    Almost everything that makes supply hard. Projects fail, and most
+    discoveries never become mines: the sixteen-year average is drawn from the
+    ones that made it, which flatters it. There is no price signal, and price
+    is what actually starts and stops these projects. No community consent, no
+    water, no tailings, no ore body worse than the drill core promised.
+    Expansions of existing mines are faster than greenfield and are not
+    modelled, and neither is the chance that permitting reform shortens the
+    middle of the chain. The recovery model does not say where primary supply
+    comes from; it arrives as a line on the chart.
+  </p>
+  <p class="hint">
+    Recovery model: <code>src/scripts/linkedModel.js</code>, about eighty lines,
+    all parameters at the top. Lead-time model: <code>src/scripts/leadTimeModel.js</code>,
+    with stage durations in <code>src/scripts/leadTimeData.js</code>, each
+    labelled with its source. The 15.7-year total is from S&amp;P Global Market
+    Intelligence; the stage split is an order-of-magnitude apportionment made
+    for this page that sums to it.
+  </p>
+</Base>
+
+<style>
+  .disclaimer {
+    border-left: 3px solid var(--accent);
+    padding: .6rem .9rem;
+    background: var(--code-bg);
+    font-size: .92rem;
+  }
+  .jump { font-family: system-ui, sans-serif; font-size: .9rem; }
+  .panel { border-top: 1px solid var(--rule); padding-top: 1.2rem; margin-top: 2rem; }
+  .kicker {
+    font-family: system-ui, sans-serif; font-size: .72rem; text-transform: uppercase;
+    letter-spacing: .07em; color: var(--accent); margin: 0 0 .2rem;
+  }
+  .panel h2 { margin-top: 0; }
+  .hint { font-family: system-ui, sans-serif; font-size: .82rem; color: var(--muted); }
+</style>
