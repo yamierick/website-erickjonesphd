@@ -3,7 +3,7 @@ layout: ../layouts/Base.astro
 title: "About"
 ---
 
-Erick C. Jones Jr. is an assistant professor in the Industrial, Manufacturing, and Systems Engineering department and an affiliate of the Resource and Energy Engineering program at the University of Texas at Arlington, where he founded the Sustainable and Efficient Allocation of Resources (SEAR) Lab and directs the RFID and Auto-ID Deployment (RAID) Laboratory.
+Erick C. Jones Jr. is an assistant professor in the Industrial, Manufacturing, and Systems Engineering department and an affiliate of the Resource and Energy Engineering program at the University of Texas at Arlington, where he founded the Sustainable and Efficient Allocation of Resources (SEAR) Lab and directs the Radio Frequency and Auto-ID (RAID) Lab.
 
 His work focuses on energy and critical mineral systems — studied end to end and back, from extraction through manufacturing, deployment, and monitoring to end-of-life recovery and back to materials. He applies that toolkit to problems as varied as systems engineering for Navy electrical power systems and RFID-powered naloxone tracking networks addressing the opioid epidemic, and a newly awarded USDA project will use smart-trap technology to help combat screwworms.
 
