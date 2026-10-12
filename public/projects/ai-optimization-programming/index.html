@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI for Optimization Programming: Plain English In, Decisions Out · Erick C. Jones Jr., PhD, PE</title>
+<meta name="description" content="Using language models so that a manager can describe a shipping or supply-chain problem in plain English and get an answer, with an optimization model doing the deciding.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Erick C. Jones Jr., PhD, PE">
+<meta property="og:title" content="AI for Optimization Programming: Plain English In, Decisions Out">
+<meta property="og:description" content="Using language models so that a manager can describe a shipping or supply-chain problem in plain English and get an answer, with an optimization model doing the deciding.">
+<link rel="canonical" href="https://www.erickjonesphd.com/projects/ai-optimization-programming/">
+<meta property="og:url" content="https://www.erickjonesphd.com/projects/ai-optimization-programming/">
+<meta property="og:image" content="https://www.erickjonesphd.com/projects/ai-optimization-programming/img/thumb.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="stylesheet" href="../css/projects.css">
+</head>
+<body>
+<header class="site-header">
+  <a class="site-title" href="/">Erick C. Jones Jr., PhD, PE</a>
+  <nav><a href="/about/">About</a><a href="/research/">Research</a><a href="/projects/">Projects</a><a href="/teaching/">Teaching</a><a href="/resources/">Resources</a><a href="/interactive/">Interactive</a><a href="/beyond/">Beyond</a></nav>
+</header>
+<main class="wide project">
+<article>
+  <p class="crumbs meta"><a href="../">Projects</a> · AI and Computational Methods</p>
+  <h1>AI for Optimization Programming: Plain English In, Decisions Out</h1>
+  <p class="dek">Using language models so that a manager can describe a shipping or supply-chain problem in plain English and get an answer, with an optimization model doing the deciding.</p>
+  <ul class="chips"><li class="status">Active</li><li>2025–present</li><li>Generative AI</li><li>Optimization</li><li>Supply chains</li><li>Logistics</li></ul>
+  <figure class="media"><img src="img/hero.png" alt="The shipment assistant&#x27;s results panel. A &#x27;Current Details&#x27; table lists product type electronics, product value 50000, 2 TEUs, factory location Shanghai and customer location Los Angeles, with a green &#x27;All details extracted!&#x27; bar. Below, &#x27;Estimated Costs&#x27; shows a JSON breakdown: shipping cost 2464.1 per container, tariff 0.05 and total cost 7428.2, with buttons to download shipping and customer CSV files." loading="eager"><figcaption>The 2025 shipment assistant after reading a plain-English request: the fields it extracted, and the costs it looked up.<span class="credit">Screenshot from the student team&#x27;s 2025 report, SEAR Lab</span></figcaption></figure>
+  <section><h2>In plain English</h2><p>Optimization models make good logistics decisions, but writing one takes training most managers do not have. This project asks whether a language model can sit between the two: take a plain-English request, turn it into the inputs a model needs, and explain the answer back. In 2025 SEAR Lab students first built a warehouse-allocation app on the Gurobi solver, then a chat-based shipment assistant. A user types something like &quot;ship two containers of electronics from Shanghai to Los Angeles&quot;; the assistant extracts the product, value, container count and ports, asks for anything missing, and returns freight, tariff and total cost from tables of port-to-port rates and tariff schedules.</p><p>That assistant looks costs up; it does not optimize. The current phase rebuilds it around a real optimization model with Gurobi as the engine, so that the language model handles the conversation and the solver makes the decision.</p></section>
+  <section><h2>Main points</h2><ul class="points"><li>Turns free text into structured model inputs, and asks follow-up questions when something is missing.</li><li>2025 prototypes: a Gurobi warehouse-allocation app and a shipment-cost assistant, both built in Streamlit.</li><li>Freight rates across major container ports from a commercial rate service; tariffs by product category and country pair.</li><li>Next: replace the cost lookup with an optimization model, so the answer is a decision rather than a quote.</li></ul></section>
+  
+  
+  
+  
+  
+  <section><h2>People</h2><ul class="people"><li><span class="who"><span class="name">Erick C. Jones Jr., PhD, PE</span><span class="role">Principal Investigator · SEAR Lab director</span></span><a class="li" href="https://www.linkedin.com/in/erickjones2/" rel="noopener" aria-label="Erick C. Jones Jr., PhD, PE on LinkedIn">in</a></li><li><span class="who"><span class="name">Srujan Chinta</span><span class="role">Student researcher (2025): freight data and model building</span></span></li><li><span class="who"><span class="name">Kushwanth Sai Bollepalli</span><span class="role">Student researcher (2025): freight data and model building</span></span></li><li><span class="who"><span class="name">Anish Jamedar</span><span class="role">Student researcher (2025): freight data and model building</span></span><a class="li" href="https://www.linkedin.com/in/anishjamedar/" rel="noopener" aria-label="Anish Jamedar on LinkedIn">in</a></li><li><span class="who"><span class="name">Anand Manohar Agnihotram</span><span class="role">Student researcher (2025): tariff data</span></span></li><li><span class="who"><span class="name">Gurusai Ravi Raja Reddy Ankireddy</span><span class="role">Student researcher (2025): tariff data</span></span></li><li><span class="who"><span class="name">Sushma Ayenampudi</span><span class="role">Student researcher (2025): tariff data</span></span></li><li><span class="who"><span class="name">Greeshma Gajula</span><span class="role">Student researcher (2025): port data</span></span></li><li><span class="who"><span class="name">Savan Reddy Poduturi</span><span class="role">Student researcher (2025): report co-author</span></span></li><li><span class="who"><span class="name">Lohith Surampudi</span><span class="role">Student researcher (2025): report co-author</span></span></li><li><span class="who"><span class="name">Ananthakrishnan Valiyaparambil Sreekumar</span><span class="role">Student researcher (2025): report co-author</span></span></li><li><span class="who"><span class="name">Pratham Patel</span><span class="role">Student researcher (fall 2026 team)</span></span></li><li><span class="who"><span class="name">Sadaswi Talluru</span><span class="role">Student researcher (fall 2026 team)</span></span></li></ul><p class="people-note">Also contributed: Lakshmi Priyanka Bhallamudi, Rajeswari Jeevanrao and Bhavya Sai Sree Yatham (2025), and Anurag Pravinbhai Bhanderi, Darshan Rajubhai Kheni, Srikeerthi Srinivasan, Sathya Sundararajan and Venkata Naga Sri Harsha Achyutuni (an early ChatGPT optimization strand, 2023–24). Profiles marked <strong>in</strong> link to LinkedIn. More past and present lab members are on the <a href="https://searlab.uta.edu/team/">SEAR Lab team page</a>.</p></section>
+  <p class="back"><a href="../">← All projects</a></p>
+</article>
+</main>
+<footer class="site-footer">
+  <p>
+    <a href="mailto:erick.jones@uta.edu">erick.jones@uta.edu</a> ·
+    <a href="https://scholar.google.com/citations?hl=en&amp;user=03RL76wAAAAJ">Google Scholar</a> ·
+    <a href="https://www.linkedin.com/in/erickjones2/">LinkedIn</a> ·
+    <a href="https://github.com/yamierick">GitHub</a> ·
+    <a href="https://searlab.uta.edu/">SEAR Lab</a>
+  </p>
+  <p class="constellation">Professional site · <a href="https://engineerliving.com">Engineer Living (ideas &amp; writing)</a> · <em>The Friction Deficit</em> (fiction, coming soon)</p>
+</footer>
+</body>
+</html>

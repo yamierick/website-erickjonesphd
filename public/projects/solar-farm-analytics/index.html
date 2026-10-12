@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Solar Farm Analytics: How Reused Panels Hold Up · Erick C. Jones Jr., PhD, PE</title>
+<meta name="description" content="Measuring how a farm&#x27;s array of second-life solar panels performs against the weather, and whether its output is slipping over time.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Erick C. Jones Jr., PhD, PE">
+<meta property="og:title" content="Solar Farm Analytics: How Reused Panels Hold Up">
+<meta property="og:description" content="Measuring how a farm&#x27;s array of second-life solar panels performs against the weather, and whether its output is slipping over time.">
+<link rel="canonical" href="https://www.erickjonesphd.com/projects/solar-farm-analytics/">
+<meta property="og:url" content="https://www.erickjonesphd.com/projects/solar-farm-analytics/">
+<meta property="og:image" content="https://www.erickjonesphd.com/projects/solar-farm-analytics/img/thumb.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="stylesheet" href="../css/projects.css">
+</head>
+<body>
+<header class="site-header">
+  <a class="site-title" href="/">Erick C. Jones Jr., PhD, PE</a>
+  <nav><a href="/about/">About</a><a href="/research/">Research</a><a href="/projects/">Projects</a><a href="/teaching/">Teaching</a><a href="/resources/">Resources</a><a href="/interactive/">Interactive</a><a href="/beyond/">Beyond</a></nav>
+</header>
+<main class="wide project">
+<article>
+  <p class="crumbs meta"><a href="../">Projects</a> · Lab Energy System</p>
+  <h1>Solar Farm Analytics: How Reused Panels Hold Up</h1>
+  <p class="dek">Measuring how a farm&#x27;s array of second-life solar panels performs against the weather, and whether its output is slipping over time.</p>
+  <ul class="chips"><li class="status done">Completed</li><li>2022–2025</li><li>Solar</li><li>Reused panels</li><li>Degradation</li><li>Regression</li></ul>
+  <figure class="media"><img src="img/hero.png" alt="Chart titled &#x27;A farm&#x27;s array of reused solar panels: daily production, January 2023 to May 2024&#x27;. Daily output in kWh is shown as scattered dots with a 30-day average line. The average climbs from about 60 kWh a day in January 2023 to about 125 in July 2023, falls to about 52 in December 2023 and January 2024, and rises to about 90 by May 2024. Individual days range from near zero on overcast days to about 145." loading="eager"><figcaption>Daily production of the reused-panel array over the period the 2025 IISE paper analysed. Days with no reported output are left out.<span class="credit">Drawn by the SEAR Lab from the array&#x27;s microinverter monitoring</span></figcaption></figure>
+  <section><h2>In plain English</h2><p>Can solar panels taken out of service elsewhere be given a second life? In 2022 Dr. Jones and a partner set up a testbed to find out: about 100 used panels from three manufacturers, three to ten years old, on a farm in North Texas, with microinverters reporting every 15 minutes. SEAR Lab students then spent several semesters relating the array&#x27;s output to the weather: sun angle, cloud cover, humidity and temperature.</p><p>The work led to a 2025 IISE conference paper by students Siddharth Shivaji Murkute and Abinash Bastola, the subject of Bastola&#x27;s undergraduate research (UROP). They paired two years of daily production with weather records and built a regression model that explains about 86 to 89 percent of day-to-day variation on data it had not seen. In early 2024 about 17 percent of days fell below the model&#x27;s lower bound, far more than chance would give, which they read as a sign of degradation: an average shortfall of about 0.55 percent, in line with manufacturers&#x27; typical 0.5 to 1 percent a year, with the caution that the estimate carries model uncertainty.</p></section>
+  <section><h2>Main points</h2><ul class="points"><li>About 100 second-life panels from three manufacturers, 3 to 10 years old, monitored every 15 minutes since August 2022.</li><li>Students related output to sun angle, cloud cover, humidity and temperature, first in R and later in Python.</li><li>A 2025 IISE paper used two years of daily production and weather data to test for degradation.</li><li>Archived; the data and code are kept for a future team.</li></ul></section>
+  
+  
+  <section><h2>Papers</h2><div class="paper"><h3>Is a reused solar array wearing out?</h3><p class="citation">Murkute, S.S., &amp; Bastola, A. (2025). Measuring Microgrid Degradation: Collecting Meteorological and Microinverter Data. <em>Proceedings of the IISE Annual Conference &amp; Expo 2025</em>, 471–476. <a href="https://doi.org/10.21872/annual2025_5962" rel="noopener">https://doi.org/10.21872/annual2025_5962</a></p><p>Two years of daily production and weather, a regression model, and a test for degradation.</p><ul class="points"><li>A linear regression on solar radiation, temperature, humidity, cloud cover and related weather measures explained about 86 to 89 percent of day-to-day variation in production on held-out data.</li><li>Solar radiation and diffuse irradiance raised output; temperature, humidity, cloud and snow lowered it.</li><li>In early 2024, 17.36 percent of days fell below the model&#x27;s 95 percent lower bound, against the 5 percent expected by chance, so the authors reject &#x27;no degradation&#x27;.</li><li>The estimated mean shortfall of about 0.55 percent is in line with manufacturers&#x27; typical 0.5 to 1 percent a year, though the authors caution that it carries model uncertainty and covers only a few months.</li></ul></div></section>
+  
+  
+  <section><h2>People</h2><ul class="people"><li><span class="who"><span class="name">Erick C. Jones Jr., PhD, PE</span><span class="role">Principal Investigator · SEAR Lab director</span></span><a class="li" href="https://www.linkedin.com/in/erickjones2/" rel="noopener" aria-label="Erick C. Jones Jr., PhD, PE on LinkedIn">in</a></li><li><span class="who"><span class="name">Abhisheksinh Gohil</span><span class="role">Student researcher (2023): analysis and poster</span></span></li><li><span class="who"><span class="name">Madhuri Pawar</span><span class="role">Student researcher (2023): analysis and report</span></span></li><li><span class="who"><span class="name">Saquib Raza Mohammed</span><span class="role">Student researcher (2023): data analytics report</span></span><a class="li" href="https://www.linkedin.com/in/saquib-raza-mohammed-4216b2211/" rel="noopener" aria-label="Saquib Raza Mohammed on LinkedIn">in</a></li><li><span class="who"><span class="name">Siddharth Shivaji Murkute</span><span class="role">Student researcher (2024–25): 2025 IISE paper · Author, Proceedings of the IISE Annual Conference &amp; Expo 2025</span></span><a class="li" href="https://www.linkedin.com/in/siddharth-murkute-b67aa3241/" rel="noopener" aria-label="Siddharth Shivaji Murkute on LinkedIn">in</a></li><li><span class="who"><span class="name">Abinash Bastola</span><span class="role">Student researcher (2024–25): 2025 IISE paper; undergraduate research (UROP) · Author, Proceedings of the IISE Annual Conference &amp; Expo 2025</span></span><a class="li" href="https://www.linkedin.com/in/bastolaabinash/" rel="noopener" aria-label="Abinash Bastola on LinkedIn">in</a></li></ul><p class="people-note">Also contributed: Chandramouli Munjurpet Sridharan, Akshaya Kolla, Arun Sreekanth, Rajvi Dilipkumar Kapadia, Sesha Sai Srilekha Moturi, Shweta Ramanand, Surya Venkat Chenna, Swaroop Rayapudi and Swetha Reddy Pabbathi Reddy (2023); Deepak Dandamudi, Harshavardhan Paladugu, Sai Surya Gorrepati, Sathya Sundararajan, Sreeja Boppana, Divi Teja Kaka and Vinay Kumar Shiva Kumar (2024); and Anushka Pawar, Gayathri Sri Muthuvelavan and Lokesh Ram Hariram (2025). Profiles marked <strong>in</strong> link to LinkedIn. More past and present lab members are on the <a href="https://searlab.uta.edu/team/">SEAR Lab team page</a>.</p></section>
+  <p class="back"><a href="../">← All projects</a></p>
+</article>
+</main>
+<footer class="site-footer">
+  <p>
+    <a href="mailto:erick.jones@uta.edu">erick.jones@uta.edu</a> ·
+    <a href="https://scholar.google.com/citations?hl=en&amp;user=03RL76wAAAAJ">Google Scholar</a> ·
+    <a href="https://www.linkedin.com/in/erickjones2/">LinkedIn</a> ·
+    <a href="https://github.com/yamierick">GitHub</a> ·
+    <a href="https://searlab.uta.edu/">SEAR Lab</a>
+  </p>
+  <p class="constellation">Professional site · <a href="https://engineerliving.com">Engineer Living (ideas &amp; writing)</a> · <em>The Friction Deficit</em> (fiction, coming soon)</p>
+</footer>
+</body>
+</html>

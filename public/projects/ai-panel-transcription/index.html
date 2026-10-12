@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Panel: Live Transcription and Images from a Discussion · Erick C. Jones Jr., PhD, PE</title>
+<meta name="description" content="Software that listens to a panel discussion, transcribes it as people speak, and turns what they say into images, summaries and speaking-time charts, all on one laptop.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Erick C. Jones Jr., PhD, PE">
+<meta property="og:title" content="AI Panel: Live Transcription and Images from a Discussion">
+<meta property="og:description" content="Software that listens to a panel discussion, transcribes it as people speak, and turns what they say into images, summaries and speaking-time charts, all on one laptop.">
+<link rel="canonical" href="https://www.erickjonesphd.com/projects/ai-panel-transcription/">
+<meta property="og:url" content="https://www.erickjonesphd.com/projects/ai-panel-transcription/">
+<meta property="og:image" content="https://www.erickjonesphd.com/projects/ai-panel-transcription/img/thumb.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="stylesheet" href="../css/projects.css">
+</head>
+<body>
+<header class="site-header">
+  <a class="site-title" href="/">Erick C. Jones Jr., PhD, PE</a>
+  <nav><a href="/about/">About</a><a href="/research/">Research</a><a href="/projects/">Projects</a><a href="/teaching/">Teaching</a><a href="/resources/">Resources</a><a href="/interactive/">Interactive</a><a href="/beyond/">Beyond</a></nav>
+</header>
+<main class="wide project">
+<article>
+  <p class="crumbs meta"><a href="../">Projects</a> · AI and Computational Methods</p>
+  <h1>AI Panel: Live Transcription and Images from a Discussion</h1>
+  <p class="dek">Software that listens to a panel discussion, transcribes it as people speak, and turns what they say into images, summaries and speaking-time charts, all on one laptop.</p>
+  <ul class="chips"><li class="status">Active</li><li>2025–present</li><li>Speech recognition</li><li>Generative AI</li><li>Local AI</li><li>Events</li></ul>
+  <figure class="media"><img src="img/hero.png" alt="Diagram of the AI Panel pipeline inside a dashed box labelled &#x27;One laptop, local models only&#x27;. Four boxes in a row with arrows: 1 Listen (microphone; detects speech and cuts at pauses), 2 Transcribe (speech to text with an open Whisper model), 3 Interpret (a local language model writes an image prompt and the end-of-session summary), 4 Draw (an open image model draws the prompt). Arrows lead down to 5 Show, a live dashboard with panels for the running transcript, the newest image, speaking time and repeated words with a summary." loading="eager"><figcaption>How the AI Panel software turns what is said in the room into what the audience sees. Every step runs on one laptop.<span class="credit">Schematic by the SEAR Lab; words and bars are illustrative</span></figcaption></figure>
+  <section><h2>In plain English</h2><p>Panel discussions are hard to follow and harder to remember. This project asks whether a live discussion can be captured as it happens and turned into something an audience can see. Small cooperating programs do the work: one listens to the microphone and cuts the audio at pauses, one transcribes it with an open speech-recognition model, Whisper, and one asks a local language model to turn the latest sentences into a short image prompt, which an open image model then draws. A dashboard shows the running transcript, the newest image, who has spoken for how long, the most repeated words, and a summary at the end.</p><p>Everything runs on a single laptop with no cloud services, so nothing said in the room leaves the machine. Students rebuilt the pipeline several times, from a browser-and-cloud prototype in 2025 to a fully local version tuned for an ordinary laptop graphics card in 2026. One fix along the way, switching off the language model&#x27;s step-by-step &quot;thinking&quot; mode, cut each image prompt from a minute or more to about 3 seconds. The newest version follows two microphones and switches to whoever is speaking loudest. Separating every speaker on a full panel is next.</p></section>
+  <section><h2>Main points</h2><ul class="points"><li>Transcribes speech in real time with an open Whisper model, cut at natural pauses.</li><li>A local language model turns recent speech into image prompts, and an open image model draws them.</li><li>The dashboard tracks speaking time, repeated words and an end-of-session summary, and exports a PDF.</li><li>Runs entirely on one laptop: no cloud services, and no data leaves the room.</li><li>Next: telling multiple speakers apart, and capturing a whole room.</li></ul></section>
+  
+  
+  
+  
+  
+  <section><h2>People</h2><ul class="people"><li><span class="who"><span class="name">Erick C. Jones Jr., PhD, PE</span><span class="role">Principal Investigator · SEAR Lab director</span></span><a class="li" href="https://www.linkedin.com/in/erickjones2/" rel="noopener" aria-label="Erick C. Jones Jr., PhD, PE on LinkedIn">in</a></li><li><span class="who"><span class="name">Varad Nair</span><span class="role">Student researcher (2025–26): server, team coordination and prompt design</span></span></li><li><span class="who"><span class="name">Venkata Sai Nikhil Vuyyuru</span><span class="role">Student researcher (2025–26): live audio streaming, Whisper and the local image pipeline</span></span></li><li><span class="who"><span class="name">Devaki Sudhakaran Jeevan</span><span class="role">Student researcher (2025–26): the first live interface</span></span><a class="li" href="https://www.linkedin.com/in/devaki-s-jeevan/" rel="noopener" aria-label="Devaki Sudhakaran Jeevan on LinkedIn">in</a></li><li><span class="who"><span class="name">Athira S Pillai</span><span class="role">Student researcher (2025–26): audio testing and image validation</span></span><a class="li" href="https://www.linkedin.com/in/athira-pillai788/" rel="noopener" aria-label="Athira S Pillai on LinkedIn">in</a></li><li><span class="who"><span class="name">Sujeeth Sundarajan Rajkumar</span><span class="role">Student researcher (2025–26): testing, documentation and dashboard redesign</span></span></li><li><span class="who"><span class="name">Sunil Puvvala</span><span class="role">Student researcher (2025–26): language-model integration, session summaries and speaking time</span></span></li><li><span class="who"><span class="name">Sai Anwesh Mamillapally</span><span class="role">Student researcher (2026): the laptop edition and two-microphone mode</span></span></li><li><span class="who"><span class="name">Karunakar Kalvala</span><span class="role">Student researcher (2026): multi-speaker identification</span></span></li></ul><p class="people-note">Also contributed: Kankshita Siddhabathuni, Navya Manjunatha and Thejaswi Vepati (2025–26), and Dishant Koli and Harshada Santosh Padwal (an early image-generation precursor, 2023). Profiles marked <strong>in</strong> link to LinkedIn. More past and present lab members are on the <a href="https://searlab.uta.edu/team/">SEAR Lab team page</a>.</p></section>
+  <p class="back"><a href="../">← All projects</a></p>
+</article>
+</main>
+<footer class="site-footer">
+  <p>
+    <a href="mailto:erick.jones@uta.edu">erick.jones@uta.edu</a> ·
+    <a href="https://scholar.google.com/citations?hl=en&amp;user=03RL76wAAAAJ">Google Scholar</a> ·
+    <a href="https://www.linkedin.com/in/erickjones2/">LinkedIn</a> ·
+    <a href="https://github.com/yamierick">GitHub</a> ·
+    <a href="https://searlab.uta.edu/">SEAR Lab</a>
+  </p>
+  <p class="constellation">Professional site · <a href="https://engineerliving.com">Engineer Living (ideas &amp; writing)</a> · <em>The Friction Deficit</em> (fiction, coming soon)</p>
+</footer>
+</body>
+</html>
