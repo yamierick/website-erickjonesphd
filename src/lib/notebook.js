@@ -33,6 +33,12 @@ export function loadNotebook(slug) {
   return JSON.parse(fs.readFileSync(path.join(ROOT, slug, `${slug}.ipynb`), "utf8"));
 }
 
+/** The lesson's R twin notebook, or null when it is Python only. */
+export function loadRNotebook(slug) {
+  const f = path.join(ROOT, slug, `${slug}-r.ipynb`);
+  return fs.existsSync(f) ? JSON.parse(fs.readFileSync(f, "utf8")) : null;
+}
+
 const text = (v) => (Array.isArray(v) ? v.join("") : v ?? "");
 const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
@@ -47,7 +53,9 @@ export function markdown(src) {
   let s = src.replace(/\\\$/g, "DOLLARSIGN");
   s = s.replace(/\$\$([\s\S]+?)\$\$/g, (_, t) => `\n\n${keep(t, true)}\n\n`);
   // Inline math as pandoc reads it: no space inside the dollars, no digit straight after the closing one.
-  s = s.replace(/\$(?=\S)((?:[^$\\\n]|\\.)+?)(?<=\S)\$(?!\d)/g, (_, t) => keep(t, false));
+  // It may wrap onto the next source line (a "+ ..." there would otherwise start a list), but not
+  // across a blank line.
+  s = s.replace(/\$(?=\S)((?:[^$\\]|\\.)+?)(?<=\S)\$(?!\d)/g, (all, t) => (/\n\s*\n/.test(t) ? all : keep(t, false)));
   let html = String(md.processSync(s));
   html = html.replace(/<p>KATEXSLOT(\d+)END<\/p>/g, (_, i) => math[+i]).replace(/KATEXSLOT(\d+)END/g, (_, i) => math[+i]);
   return html.replace(/DOLLARSIGN/g, "$");
@@ -73,35 +81,65 @@ function cutTable(html) {
   });
 }
 
-/** Notebook -> [{kind: "md"|"code"|"out"|"img", ...}] in reading order. */
-export function blocks(nb, slug) {
+/** One code cell -> {lang, code, outs: [{kind: "out"|"img"|"table", ...}]}. */
+function codeCell(cell, slug, lang) {
+  const src = text(cell.source);
+  const step = cell.metadata?.step;
+  const alt = (src.match(/^# alt: (.+)$/m) ?? [])[1] ?? "";
+  const code = src.replace(/^# alt: .+$\n?/m, "").trimEnd();
+  const outs = [];
+  const pngs = (cell.outputs ?? []).filter((o) => o.data?.["image/png"]).length;
+  let k = 0;
+  for (const o of cell.outputs ?? []) {
+    if (o.output_type === "stream") outs.push({ kind: "out", html: cutLines(text(o.text)) });
+    else if (o.data?.["image/png"]) {
+      const name = pngs === 1 ? `fig-${step}.png` : `fig-${step}-${k++}.png`;
+      outs.push({ kind: "img", src: `/resources/${slug}/${name}`, alt });
+    } else if (lang === "py" && o.data?.["text/html"] && text(o.data["text/html"]).includes("<table")) {
+      // pandas tables read better as HTML; R's print form is what an R user sees, so R keeps it.
+      outs.push({ kind: "table", html: cutTable(text(o.data["text/html"])) });
+    } else if (o.data?.["text/plain"]) outs.push({ kind: "out", html: cutLines(text(o.data["text/plain"])) });
+  }
+  // Merge consecutive text outputs (stdout printed in pieces) into one box.
+  return {
+    lang, code,
+    outs: outs.reduce((acc, b) => {
+      const last = acc[acc.length - 1];
+      if (b.kind === "out" && last?.kind === "out") last.html += "\n" + b.html;
+      else acc.push(b);
+      return acc;
+    }, []),
+  };
+}
+
+/**
+ * The page, in reading order: [{kind: "md", html, lang}, {kind: "cell", cell},
+ * {kind: "twin", py, r}]. `rnb` is the lesson's R notebook, if it has one: its
+ * prose and code are merged in by step, and an R cell sits beside the Python
+ * cell it twins. lang is "both" for prose shown in either language.
+ */
+export function blocks(nb, slug, rnb = null) {
+  const cells = nb.cells.map((c, i) => ({ c, lang: "py", step: c.metadata?.step ?? i }));
+  for (const c of rnb?.cells ?? []) {
+    // Prose shared by both languages is already in the Python notebook.
+    if (c.cell_type === "markdown" && cells.some((x) => x.step === c.metadata.step)) continue;
+    cells.push({ c, lang: "r", step: c.metadata.step });
+  }
+  cells.sort((a, b) => a.step - b.step);
+  const rSteps = new Set((rnb?.cells ?? []).map((c) => c.metadata.step));
   const out = [];
-  nb.cells.forEach((cell, i) => {
-    const src = text(cell.source);
-    if (cell.cell_type === "markdown") {
-      out.push({ kind: "md", html: markdown(src) });
-      return;
+  for (const { c, lang, step } of cells) {
+    if (c.cell_type === "markdown") {
+      // Python-notebook prose the R notebook lacks is Python-only; R prose that reached here is R-only.
+      const shown = !rnb ? "both" : lang === "r" ? "r" : rSteps.has(step) ? "both" : "py";
+      out.push({ kind: "md", html: markdown(text(c.source)), lang: shown });
+      continue;
     }
-    const alt = (src.match(/^# alt: (.+)$/m) ?? [])[1] ?? "";
-    const code = src.replace(/^# alt: .+$\n?/m, "").trimEnd();
-    out.push({ kind: "code", code });
-    const pngs = (cell.outputs ?? []).filter((o) => o.data?.["image/png"]).length;
-    let k = 0;
-    for (const o of cell.outputs ?? []) {
-      if (o.output_type === "stream") out.push({ kind: "out", html: cutLines(text(o.text)) });
-      else if (o.data?.["image/png"]) {
-        const name = pngs === 1 ? `fig-${i}.png` : `fig-${i}-${k++}.png`;
-        out.push({ kind: "img", src: `/resources/${slug}/${name}`, alt });
-      } else if (o.data?.["text/html"] && text(o.data["text/html"]).includes("<table")) {
-        out.push({ kind: "table", html: cutTable(text(o.data["text/html"])) });
-      } else if (o.data?.["text/plain"]) out.push({ kind: "out", html: cutLines(text(o.data["text/plain"])) });
-    }
-  });
-  // Merge consecutive outputs of one cell (stdout printed in pieces) into one box.
-  return out.reduce((acc, b) => {
-    const last = acc[acc.length - 1];
-    if (b.kind === "out" && last?.kind === "out") last.html += "\n" + b.html;
-    else acc.push(b);
-    return acc;
-  }, []);
+    const cell = codeCell(c, slug, lang);
+    const prev = out[out.length - 1];
+    if (lang === "r" && prev?.kind === "cell" && prev.cell.lang === "py" && c.metadata.twin === prev.step) {
+      out[out.length - 1] = { kind: "twin", py: prev.cell, r: cell };
+    } else out.push({ kind: "cell", cell, step: c.metadata?.step });
+  }
+  return out;
 }

@@ -35,6 +35,7 @@ export const materials = {
   "sci-res-city":      "Light rail in a model city",
   "austin-land-use":   "Austin land use",
   "slsdesign":         "Selective laser sintering: wind-powered tops",
+  "r-python":          "R and Python cheat sheet: the same statistics in both, and the traps",
 };
 
 export const courses = [
@@ -238,10 +239,12 @@ export const courses = [
       "Homework (10%)",
       "Quizzes (5%)",
     ],
-    tools: "Statistical analysis in Python (pandas, SciPy and statsmodels) and in spreadsheets such as Excel.",
+    tools: "Statistical analysis in Python (pandas, SciPy and statsmodels) or R, and in spreadsheets such as Excel.",
     book: { title: "Probability and Statistics for Engineers and Scientists, 9th edition", by: "Walpole, Myers, Myers and Ye", note: "available through the UTA library" },
     interactive: [],
-    materials: ["stat-basics", "simulation-basics"],
+    // Both languages for this course (Jones, 2026-10-12): the two lessons carry R twins.
+    materials: ["stat-basics", "simulation-basics", "r-python"],
+    codeNote: "In Python and in R, step by step, with a switch to show either or both. Read them here, or download a notebook and run it.",
     concepts: [
       ["Random variable", "A number whose value depends on chance, described by its distribution: discrete (counts) or continuous (measurements)."],
       ["Conditional probability", "The probability of A given that B has happened: P(A | B) = P(A and B) / P(B)."],
@@ -259,6 +262,7 @@ export const courses = [
       { group: "Learn", title: "Linear regression in Python, Real Python", url: "https://realpython.com/linear-regression-in-python/" },
       { group: "Tools", title: "SciPy distributions", url: "https://docs.scipy.org/doc/scipy/reference/stats.html", note: "every distribution's pdf, cdf, ppf (quantile) and rvs (random draws), and the common tests" },
       { group: "Tools", title: "statsmodels", url: "https://www.statsmodels.org/stable/index.html", note: "regression, intervals and diagnostics in Python" },
+      { group: "Tools", title: "Posit Cloud", url: "https://posit.cloud/", note: "R and RStudio in the browser" },
       { group: "Tools", title: "Google Colab", url: "https://colab.research.google.com/", note: "Python in the browser" },
     ],
   },

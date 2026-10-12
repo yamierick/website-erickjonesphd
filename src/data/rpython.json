@@ -1,0 +1,87 @@
+{
+  "_about": "The R and Python cheat sheet at /resources/r-python/ (Jones, 2026-10-12: keep both languages for IE 3301, with a one-page cheat sheet). Each row's r and py are shown on the page. A row with `check` is run in both languages by notebooks/check_rpython.py, which fails if the two numbers differ; `check` holds the expression to compare when the shown code does not itself return one number. Rows marked random are run but not compared, because the two languages' random numbers differ even with the same seed. The data the checks use is in `preamble`.",
+  "preamble": {
+    "r": "suppressPackageStartupMessages({ library(car); library(lmtest) })\nx <- c(4.2, 5.1, 6.3, 5.8, 4.9, 6.1, 5.5, 4.7, 5.9, 6.4)\ny <- c(3.9, 4.8, 6.0, 5.2, 4.4, 6.3, 5.0, 4.1, 5.6, 6.2)\nz <- c(1.2, 0.8, 1.9, 1.1, 0.7, 2.2, 1.5, 0.9, 1.4, 2.0)\ng <- c(\"a\", \"a\", \"a\", \"b\", \"b\", \"b\", \"c\", \"c\", \"c\", \"c\")\ndf <- data.frame(x, y, z, g)\ntab <- matrix(c(20, 15, 30, 25, 10, 20), nrow = 2)\nfit <- lm(y ~ x, data = df)\nfit2 <- lm(y ~ x + z, data = df)\nnew <- data.frame(x = 5)",
+    "py": "import numpy as np\nimport pandas as pd\nfrom scipy import stats\nimport statsmodels.api as sm\nimport statsmodels.formula.api as smf\nfrom statsmodels.stats.proportion import proportions_ztest\nfrom statsmodels.stats.outliers_influence import variance_inflation_factor\nfrom statsmodels.stats.diagnostic import het_breuschpagan\nx = np.array([4.2, 5.1, 6.3, 5.8, 4.9, 6.1, 5.5, 4.7, 5.9, 6.4])\ny = np.array([3.9, 4.8, 6.0, 5.2, 4.4, 6.3, 5.0, 4.1, 5.6, 6.2])\nz = np.array([1.2, 0.8, 1.9, 1.1, 0.7, 2.2, 1.5, 0.9, 1.4, 2.0])\ng = [\"a\", \"a\", \"a\", \"b\", \"b\", \"b\", \"c\", \"c\", \"c\", \"c\"]\ndf = pd.DataFrame({\"x\": x, \"y\": y, \"z\": z, \"g\": g})\ntab = np.array([[20, 30, 10], [15, 25, 20]])\nfit = smf.ols(\"y ~ x\", data=df).fit()\nfit2 = smf.ols(\"y ~ x + z\", data=df).fit()\nnew = pd.DataFrame({\"x\": [5]})\nrng = np.random.default_rng(1)"
+  },
+  "groups": [
+    {
+      "title": "Getting started",
+      "rows": [
+        { "task": "Tools", "r": "# built in: stats, graphics\nlibrary(car); library(lmtest)", "py": "import numpy as np, pandas as pd\nfrom scipy import stats\nimport statsmodels.formula.api as smf", "note": "R's statistics are built in; Python's come from three libraries." },
+        { "task": "Read a whitespace-separated file", "r": "df <- read.table(\"rents.txt\", header = TRUE)", "py": "df = pd.read_csv(\"rents.txt\", sep=r\"\\s+\")" },
+        { "task": "Column, rows, size", "r": "df$Rent; df[1:5, ]; dim(df)", "py": "df[\"Rent\"]; df.head(); df.shape" },
+        { "task": "Random seed", "r": "set.seed(1)", "py": "rng = np.random.default_rng(1)", "note": "Same seed, different numbers: the two languages use different generators.", "trap": true }
+      ]
+    },
+    {
+      "title": "Describing data",
+      "rows": [
+        { "task": "Mean", "r": "mean(x)", "py": "np.mean(x)", "check": true },
+        { "task": "Sample standard deviation", "r": "sd(x)", "py": "np.std(x, ddof=1)", "note": "numpy's default (ddof=0) divides by n. pandas' .std() divides by n − 1, like R.", "trap": true, "check": true },
+        { "task": "Sample variance", "r": "var(x)", "py": "np.var(x, ddof=1)", "trap": true, "check": true },
+        { "task": "Percentile", "r": "quantile(x, 0.9)", "py": "np.quantile(x, 0.9)", "note": "Both default to the same (linear) rule.", "check": true },
+        { "task": "Summary", "r": "summary(x)", "py": "pd.Series(x).describe()" },
+        { "task": "Covariance", "r": "cov(x, y)", "py": "np.cov(x, y)[0, 1]", "note": "np.cov divides by n − 1 by default, unlike np.std.", "check": true },
+        { "task": "Correlation", "r": "cor(x, y)", "py": "np.corrcoef(x, y)[0, 1]", "check": true },
+        { "task": "Histogram, scatter", "r": "hist(x); plot(x, y)", "py": "plt.hist(x); plt.scatter(x, y)" }
+      ]
+    },
+    {
+      "title": "Distributions",
+      "intro": "R names each function by a letter and the distribution: d (density or mass), p (cumulative probability), q (quantile) and r (random draws). SciPy uses methods on the distribution: pdf or pmf, cdf, ppf and rvs.",
+      "rows": [
+        { "task": "Normal density", "r": "dnorm(1, mean = 0, sd = 2)", "py": "stats.norm.pdf(1, loc=0, scale=2)", "check": true },
+        { "task": "P(Z ≤ 1.96)", "r": "pnorm(1.96)", "py": "stats.norm.cdf(1.96)", "check": true },
+        { "task": "P(Z > 1.96)", "r": "pnorm(1.96, lower.tail = FALSE)", "py": "stats.norm.sf(1.96)", "check": true },
+        { "task": "z for 97.5%", "r": "qnorm(0.975)", "py": "stats.norm.ppf(0.975)", "check": true },
+        { "task": "Five normal draws", "r": "rnorm(5, mean = 10, sd = 2)", "py": "rng.normal(10, 2, size=5)", "random": true, "check": true },
+        { "task": "Binomial P(X = 3)", "r": "dbinom(3, size = 10, prob = 0.2)", "py": "stats.binom.pmf(3, 10, 0.2)", "note": "Discrete distributions have pmf, not pdf, in SciPy.", "trap": true, "check": true },
+        { "task": "Binomial P(X ≤ 3)", "r": "pbinom(3, size = 10, prob = 0.2)", "py": "stats.binom.cdf(3, 10, 0.2)", "check": true },
+        { "task": "Poisson P(X = 2), mean 3", "r": "dpois(2, lambda = 3)", "py": "stats.poisson.pmf(2, 3)", "check": true },
+        { "task": "Exponential P(X ≤ 2), rate 0.5", "r": "pexp(2, rate = 0.5)", "py": "stats.expon.cdf(2, scale=1/0.5)", "note": "SciPy takes the mean (scale = 1/rate), not the rate.", "trap": true, "check": true },
+        { "task": "Gamma P(X ≤ 3), shape 2, rate 0.5", "r": "pgamma(3, shape = 2, rate = 0.5)", "py": "stats.gamma.cdf(3, a=2, scale=1/0.5)", "note": "Shape is a; again scale = 1/rate.", "trap": true, "check": true },
+        { "task": "Uniform on [0, 2]: P(X ≤ 0.3)", "r": "punif(0.3, min = 0, max = 2)", "py": "stats.uniform.cdf(0.3, loc=0, scale=2)", "note": "SciPy's scale is the width, not the maximum.", "trap": true, "check": true },
+        { "task": "t for 97.5%, 9 df", "r": "qt(0.975, df = 9)", "py": "stats.t.ppf(0.975, df=9)", "check": true },
+        { "task": "Chi-square 95th percentile, 4 df", "r": "qchisq(0.95, df = 4)", "py": "stats.chi2.ppf(0.95, 4)", "check": true },
+        { "task": "F 95th percentile, 3 and 20 df", "r": "qf(0.95, 3, 20)", "py": "stats.f.ppf(0.95, 3, 20)", "check": true }
+      ]
+    },
+    {
+      "title": "Intervals and tests",
+      "rows": [
+        { "task": "One-sample t test", "r": "t.test(x, mu = 5)", "py": "stats.ttest_1samp(x, 5)", "rcheck": "t.test(x, mu = 5)$p.value", "pycheck": "stats.ttest_1samp(x, 5).pvalue", "check": true },
+        { "task": "95% CI for the mean", "r": "t.test(x)$conf.int", "py": "stats.ttest_1samp(x, 0).confidence_interval()", "note": "R prints it with every t test.", "rcheck": "t.test(x)$conf.int[1]", "pycheck": "stats.ttest_1samp(x, 0).confidence_interval().low", "check": true },
+        { "task": "Two-sample t test", "r": "t.test(x, y)", "py": "stats.ttest_ind(x, y, equal_var=False)", "note": "R defaults to Welch's test; SciPy pools the variances unless equal_var=False.", "trap": true, "rcheck": "t.test(x, y)$p.value", "pycheck": "stats.ttest_ind(x, y, equal_var=False).pvalue", "check": true },
+        { "task": "Paired t test", "r": "t.test(x, y, paired = TRUE)", "py": "stats.ttest_rel(x, y)", "rcheck": "t.test(x, y, paired = TRUE)$p.value", "pycheck": "stats.ttest_rel(x, y).pvalue", "check": true },
+        { "task": "F test of two variances", "r": "var.test(x, y)", "py": "F = np.var(x, ddof=1) / np.var(y, ddof=1)\np = 2 * min(stats.f.cdf(F, 9, 9), stats.f.sf(F, 9, 9))", "note": "No one-line SciPy version.", "rcheck": "var.test(x, y)$p.value", "pycheck": "2 * min(stats.f.cdf(np.var(x, ddof=1) / np.var(y, ddof=1), 9, 9), stats.f.sf(np.var(x, ddof=1) / np.var(y, ddof=1), 9, 9))", "check": true },
+        { "task": "Test of one proportion", "r": "prop.test(45, 100, p = 0.5, correct = FALSE)", "py": "proportions_ztest(45, 100, 0.5, prop_var=0.5)", "note": "From statsmodels; R matches it only with correct = FALSE.", "trap": true, "rcheck": "prop.test(45, 100, p = 0.5, correct = FALSE)$p.value", "pycheck": "proportions_ztest(45, 100, 0.5, prop_var=0.5)[1]", "check": true },
+        { "task": "Chi-square test of independence", "r": "chisq.test(tab)", "py": "stats.chi2_contingency(tab)", "rcheck": "chisq.test(tab)$p.value", "pycheck": "stats.chi2_contingency(tab).pvalue", "check": true },
+        { "task": "Shapiro-Wilk normality test", "r": "shapiro.test(x)", "py": "stats.shapiro(x)", "rcheck": "shapiro.test(x)$p.value", "pycheck": "stats.shapiro(x).pvalue", "check": true }
+      ]
+    },
+    {
+      "title": "Regression",
+      "rows": [
+        { "task": "Fit y on x", "r": "fit <- lm(y ~ x, data = df)", "py": "fit = smf.ols(\"y ~ x\", data=df).fit()", "note": "The same formula language in both." },
+        { "task": "Coefficients", "r": "coef(fit)", "py": "fit.params", "rcheck": "coef(fit)[[\"x\"]]", "pycheck": "fit.params[\"x\"]", "check": true },
+        { "task": "Full table", "r": "summary(fit)", "py": "fit.summary()" },
+        { "task": "R²", "r": "summary(fit)$r.squared", "py": "fit.rsquared", "check": true },
+        { "task": "CIs for the coefficients", "r": "confint(fit)", "py": "fit.conf_int()", "rcheck": "confint(fit)[\"x\", 1]", "pycheck": "fit.conf_int().loc[\"x\", 0]", "check": true },
+        { "task": "Confidence interval for the mean at x = 5", "r": "predict(fit, new, interval = \"confidence\")", "py": "fit.get_prediction(new).summary_frame()", "note": "Columns mean_ci_lower, mean_ci_upper.", "rcheck": "predict(fit, new, interval = \"confidence\")[1, \"lwr\"]", "pycheck": "fit.get_prediction(new).summary_frame()[\"mean_ci_lower\"][0]", "check": true },
+        { "task": "Prediction interval at x = 5", "r": "predict(fit, new, interval = \"prediction\")", "py": "fit.get_prediction(new).summary_frame()", "note": "Columns obs_ci_lower, obs_ci_upper.", "rcheck": "predict(fit, new, interval = \"prediction\")[1, \"lwr\"]", "pycheck": "fit.get_prediction(new).summary_frame()[\"obs_ci_lower\"][0]", "check": true },
+        { "task": "Residual plots", "r": "plot(fit)", "py": "sm.qqplot(fit.resid, line=\"s\")\nplt.scatter(fit.fittedvalues, fit.resid)", "note": "R draws four diagnostic plots at once." },
+        { "task": "Variance inflation factors", "r": "vif(fit2)", "py": "X = fit2.model.exog\n[variance_inflation_factor(X, j) for j in (1, 2)]", "note": "car in R. Python needs the design matrix, intercept included; skip column 0.", "trap": true, "rcheck": "vif(fit2)[[\"x\"]]", "pycheck": "variance_inflation_factor(fit2.model.exog, 1)", "check": true },
+        { "task": "Breusch-Pagan test", "r": "bptest(fit)", "py": "het_breuschpagan(fit.resid, fit.model.exog)", "note": "From lmtest in R. Both default to the studentized (Koenker) form.", "rcheck": "bptest(fit)$p.value[[1]]", "pycheck": "het_breuschpagan(fit.resid, fit.model.exog)[1]", "check": true },
+        { "task": "One-way ANOVA", "r": "summary(aov(y ~ g, data = df))", "py": "sm.stats.anova_lm(smf.ols(\"y ~ C(g)\", data=df).fit())", "note": "Wrap a text column in C() in Python to treat it as categories.", "rcheck": "summary(aov(y ~ g, data = df))[[1]][[\"F value\"]][1]", "pycheck": "sm.stats.anova_lm(smf.ols(\"y ~ C(g)\", data=df).fit())[\"F\"].iloc[0]", "check": true }
+      ]
+    },
+    {
+      "title": "Simulation",
+      "rows": [
+        { "task": "Roll a die ten times", "r": "sample(1:6, 10, replace = TRUE)", "py": "rng.integers(1, 7, size=10)", "note": "Python's upper bound is excluded: 7, not 6.", "trap": true, "random": true, "check": true },
+        { "task": "1,000 means of 5 exponentials", "r": "replicate(1000, mean(rexp(5, rate = 1)))", "py": "rng.exponential(1, size=(1000, 5)).mean(axis=1)", "note": "Python draws a whole table at once and averages each row.", "random": true, "check": true }
+      ]
+    }
+  ]
+}
