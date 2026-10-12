@@ -1,0 +1,217 @@
+---
+import Base from "../../../layouts/Base.astro";
+import { t, d } from "../../../lib/tex.js";
+import { plot, canvas } from "../../../lib/fig.js";
+import DecisionExplorer from "../../../components/teach/DecisionExplorer.astro";
+import QueueExplorer from "../../../components/teach/QueueExplorer.astro";
+import MarkovExplorer from "../../../components/teach/MarkovExplorer.astro";
+import "katex/dist/katex.min.css";
+import "../../../styles/examples.css";
+
+/**
+ * IE 5301 worked examples (Jones, 2026-10-12). The deterministic core is the
+ * same as IE 3315's, so this page links to those sections and adds the
+ * stochastic three: a Markov chain, a queue and a decision tree, all about one
+ * fast charger so each result feeds the next. Every number was checked in
+ * Python before it was written down.
+ */
+
+// ---- Markov chain -----------------------------------------------------------
+const mc = canvas(520, 200);
+mc.circle(150, 105, 42, "Up", "node-a").circle(370, 105, 42, "Down", "node")
+  .path("M 185 82 Q 260 40 335 82", "arr").text(260, 46, "0.05: breaks", "note")
+  .path("M 335 128 Q 260 170 185 128", "arr").text(260, 178, "0.50: repaired", "note")
+  .path("M 118 78 C 70 30, 50 120, 108 118", "arr").text(48, 60, "0.95", "note")
+  .path("M 402 78 C 450 30, 470 120, 412 118", "arr").text(472, 60, "0.50", "note");
+const mcSvg = mc.svg("Two-state Markov chain. From Up, the charger stays up with probability 0.95 and breaks with 0.05. From Down, it is repaired with probability 0.5 and stays down with 0.5.");
+
+const conv = plot({ w: 460, h: 260, x: [0, 10], y: [0, 1] })
+  .axes({ xt: [0, 2, 4, 6, 8, 10], yt: [0, 0.25, 0.5, 0.75, 1], xl: "days since it broke", yl: "P(up)", grid: true, yfmt: (v) => v.toFixed(2) })
+  .line([[0, 10 / 11], [10, 10 / 11]], "dash-a")
+  .text(9.9, 10 / 11 + 0.045, "steady state 10/11 ≈ 0.909", { cls: "accent", anchor: "end" });
+const pts = [];
+for (let n = 0; n <= 10; n++) pts.push([n, (10 / 11) * (1 - 0.45 ** n)]);
+conv.line(pts, "ln");
+pts.forEach(([n, p]) => conv.dot(n, p, "pt", 3.5));
+conv.text(1.2, 0.5, "0.50 after 1 day").text(2.2, 0.69, "0.725 after 2");
+const convSvg = conv.svg("Probability the charger is up n days after it broke: 0, 0.5, 0.725, 0.826, 0.872 and so on, approaching the steady state 10/11 ≈ 0.909 within about a week.");
+
+// ---- Queue ------------------------------------------------------------------
+const bd = canvas(560, 120);
+for (let n = 0; n <= 4; n++) bd.circle(60 + n * 105, 60, 24, String(n), n === 0 ? "node-a" : "node");
+bd.text(560 - 18, 64, "…", "nodet");
+for (let n = 0; n < 4; n++) {
+  const x = 60 + n * 105;
+  bd.path(`M ${x + 20} 46 Q ${x + 52} 26 ${x + 85} 46`, "arr").text(x + 52, 24, "λ = 3", "note");
+  bd.path(`M ${x + 85} 74 Q ${x + 52} 94 ${x + 20} 74`, "arr").text(x + 52, 106, "μ = 4", "note");
+}
+const bdSvg = bd.svg("Birth-death chain for the M/M/1 queue: states 0, 1, 2, 3, 4 and so on count the cars at the charger. Each state moves up one at the arrival rate 3 per hour and down one at the service rate 4 per hour.");
+
+const wq = (r) => (60 * r) / (4 * (1 - r)); // minutes, mu = 4 per hour
+const qp = plot({ w: 520, h: 320, x: [0, 1], y: [0, 160] })
+  .axes({ xt: [0, 0.25, 0.5, 0.75, 1], yt: [0, 40, 80, 120, 160], xl: "utilization ρ = λ/μ", yl: "average wait in line (minutes)", grid: true, xfmt: (v) => v.toFixed(2) })
+  .fn(wq, 0, 0.912, "ln-a"); // stops where the wait reaches the top of the axis, 160 min
+for (const [l, lab, dx] of [[2, "λ = 2: 15 min", 8], [3, "λ = 3: 45 min", 8], [3.5, "λ = 3.5: 105 min", -8]]) {
+  qp.dot(l / 4, wq(l / 4), "pt", 4.5).text(l / 4, wq(l / 4), lab, { dx, dy: -6, anchor: dx > 0 ? "start" : "end", cls: "strong" });
+}
+qp.line([[1, 0], [1, 160]], "dash").text(0.985, 150, "ρ = 1: no steady state", { anchor: "end" });
+const qpSvg = qp.svg("Average wait in line for an M/M/1 queue with service rate 4 per hour, against utilization. The curve is flat at first, then climbs steeply: 15 minutes at utilization 0.5, 45 at 0.75, 105 at 0.875, and without bound as utilization approaches 1.");
+
+// ---- Decision tree ----------------------------------------------------------
+const v = { oneL: 114.55, oneH: -429.55, twoL: 36.41, twoH: 158.37 };
+const money = (x) => (x < 0 ? "−$" : "$") + Math.abs(x).toFixed(2);
+const dt = canvas(600, 330);
+dt.add(`<rect class="node-a" x="22" y="143" width="44" height="44" rx="3"/>`).text(44, 206, "decide", "note")
+  .edge(66, 165, 230, 85, { cls: "arr-m", label: "keep one charger", at: 0.5, ly: -16 })
+  .edge(66, 165, 230, 245, { cls: "flow", label: "add a second ($150/day)", at: 0.5, ly: 22, lcls: "accent" })
+  .circle(250, 85, 20, "", "node").text(250, 120, `EV ${money(-103.09)}`, "warn")
+  .circle(250, 245, 20, "", "node-a").text(250, 280, `EV ${money(85.20)}`, "accent")
+  .edge(270, 85, 430, 40, { cls: "arr-m", label: "low demand, 0.6", ly: -14 })
+  .edge(270, 85, 430, 130, { cls: "arr-m", label: "high demand, 0.4", ly: 22 })
+  .edge(270, 245, 430, 200, { cls: "arr-m", label: "low demand, 0.6", ly: -14 })
+  .edge(270, 245, 430, 290, { cls: "arr-m", label: "high demand, 0.4", ly: 22 })
+  .text(440, 44, `${money(v.oneL)} a day`, "nodet", "start")
+  .text(440, 134, `${money(v.oneH)} a day`, "warn", "start")
+  .text(440, 204, `${money(v.twoL)} a day`, "nodet", "start")
+  .text(440, 294, `${money(v.twoH)} a day`, "nodet", "start");
+const dtSvg = dt.svg("Decision tree. Keeping one charger is worth 114.55 dollars a day if demand is low and loses 429.55 if it is high, an expected value of minus 103.09. Adding a second charger is worth 36.41 if low and 158.37 if high, an expected value of 85.20, so the second charger is the better choice.");
+---
+
+<Base title="IE 5301 Worked Examples" wide={true} description="Advanced Operations Research, interactive: a Markov chain, a queue you can watch, and a decision tree, all about one EV fast charger, plus the deterministic core shared with IE 3315.">
+<div class="ex">
+  <p class="crumbs"><a href="/teaching/">Teaching</a> · <a href="/teaching/advanced-operations-research/">IE 5301 Advanced Operations Research</a> · Worked examples</p>
+
+  <p>
+    IE 5301 covers the deterministic core of operations research at graduate depth, then adds the stochastic
+    tools. Each section has one idea, a short explanation and something to try; the worked example is folded
+    underneath.
+  </p>
+
+  <h2 class="plain">The deterministic core</h2>
+  <p>Interactive on the <a href="/teaching/operations-research/examples/">IE 3315 page</a>:</p>
+  <ol class="toc">
+    <li><a href="/teaching/operations-research/examples/#lp">Simplex, corner to corner</a></li>
+    <li><a href="/teaching/operations-research/examples/#dual">Shadow prices and KKT</a></li>
+    <li><a href="/teaching/operations-research/examples/#transport">A transportation network</a></li>
+    <li><a href="/teaching/operations-research/examples/#bnb">Branch and bound</a></li>
+    <li><a href="/teaching/operations-research/examples/#convex">Convexity: Hessians and Sylvester</a></li>
+    <li><a href="/teaching/operations-research/examples/#qp">Nonconvex problems and global solvers</a></li>
+  </ol>
+
+  <h2 class="plain">The stochastic three: one fast charger</h2>
+  <div class="problem">
+    <p><strong>The setting.</strong> A workplace has one EV fast charger, open 12 hours a day. About 3 cars arrive an
+    hour, at random, and a charge takes 15 minutes on average. Sometimes it breaks. Should the site add a second one?</p>
+    <ol>
+      <li><strong>How often is it working?</strong> A Markov chain.</li>
+      <li><strong>How long do drivers wait?</strong> A queue.</li>
+      <li><strong>Is a second charger worth it</strong> when demand is uncertain? A decision tree.</li>
+    </ol>
+  </div>
+
+  <!-- Markov -------------------------------------------------------------- -->
+  <section id="markov">
+    <h2>1. A Markov chain: how often is it working?</h2>
+    <ul class="able">
+      <li>Define the states and build the transition matrix</li>
+      <li>Find n-step probabilities</li>
+      <li>Solve for the steady state</li>
+    </ul>
+    <p class="demo-lead">
+      The charger is Up or Down each morning, and tomorrow depends only on today. Put the daily chances in a
+      transition matrix <Fragment set:html={t`P`} /> (rows sum to 1). Multiplying by <Fragment set:html={t`P`} /> steps a day ahead, and the
+      steady state solves <Fragment set:html={t`\pi = \pi P`} /> with <Fragment set:html={t`\sum \pi = 1`} /> (drop one redundant equation).
+    </p>
+
+    <MarkovExplorer />
+
+    <details class="full">
+      <summary>Worked example: breaks 5% of days, fixed half the time</summary>
+      <ol class="steps">
+        <li><strong>Transition matrix:</strong>
+          <Fragment set:html={d`P = \begin{array}{c} \text{Up} \\ \text{Down} \end{array}\!\!\begin{bmatrix} 0.95 & 0.05 \\ 0.50 & 0.50 \end{bmatrix}`} /></li>
+        <li><strong>Two days after a breakdown:</strong> <Fragment set:html={t`(0.5)(0.95) + (0.5)(0.5) = 0.725`} />.</li>
+        <li><strong>Steady state:</strong> <Fragment set:html={t`\pi_U = 0.95\pi_U + 0.5\pi_D`} />, so <Fragment set:html={t`0.05\pi_U = 0.5\pi_D`} />; with <Fragment set:html={t`\pi_U + \pi_D = 1`} />, <span class="answer"><Fragment set:html={t`\pi_U = 10/11 \approx 0.909`} /></span></li>
+        <li>Two independent chargers are both down only <Fragment set:html={t`(1/11)^2 \approx 0.8\%`} /> of days.</li>
+      </ol>
+      <figure class="fig"><Fragment set:html={mcSvg} /><figcaption>The chain as a diagram: each arrow is one entry of P.</figcaption></figure>
+      <figure class="fig"><Fragment set:html={convSvg} /><figcaption>From a breakdown, the chance of being up settles within about a week.</figcaption></figure>
+    </details>
+  </section>
+
+  <!-- Queue ---------------------------------------------------------------- -->
+  <section id="queue">
+    <h2>2. A queue: how long is the wait?</h2>
+    <ul class="able">
+      <li>Identify the arrival rate λ and service rate μ</li>
+      <li>Find the average number waiting</li>
+      <li>Use Little's law to turn numbers into waiting times</li>
+    </ul>
+    <p class="demo-lead">
+      Cars arrive at random at rate <Fragment set:html={t`\lambda`} /> and charge at rate <Fragment set:html={t`\mu`} />. Utilization <Fragment set:html={t`\rho = \lambda/\mu`} /> must
+      stay below 1. For one charger (M/M/1), <Fragment set:html={t`L_q = \rho^2/(1-\rho)`} /> cars wait on average, and Little's law,
+      <Fragment set:html={t`L = \lambda W`} />, turns that into time: <Fragment set:html={t`W_q = L_q/\lambda`} />.
+    </p>
+
+    <QueueExplorer />
+
+    <details class="full">
+      <summary>Worked example: 3 cars an hour, 15-minute charges</summary>
+      <ol class="steps">
+        <li><strong>Rates:</strong> <Fragment set:html={t`\lambda = 3`} />, <Fragment set:html={t`\mu = 4`} />, <Fragment set:html={t`\rho = 0.75`} />.</li>
+        <li><strong>State probabilities:</strong> the queue is a Markov chain too, so <Fragment set:html={t`p_n = (1-\rho)\rho^n`} />: idle <Fragment set:html={t`p_0 = 25\%`} /> of the time.</li>
+        <li><strong>Average number:</strong> <Fragment set:html={t`L = \rho/(1-\rho) = 3`} />, <Fragment set:html={t`L_q = \rho^2/(1-\rho) = 2.25`} />.</li>
+        <li><strong>Little's law:</strong> <Fragment set:html={t`W = 3/3 = 1`} /> hour, <Fragment set:html={t`W_q = 2.25/3 = 0.75`} /> hours: <span class="answer">45 minutes</span>.</li>
+        <li>At 3.5 cars an hour the wait is 105 minutes; a second charger (M/M/2) cuts it to about 3.6.</li>
+      </ol>
+      <figure class="fig"><Fragment set:html={bdSvg} /><figcaption>The queue as a chain: up at rate λ, down at rate μ.</figcaption></figure>
+      <figure class="fig"><Fragment set:html={qpSvg} /><figcaption>Wait against utilization: the last few points cost the most.</figcaption></figure>
+    </details>
+  </section>
+
+  <!-- Decision tree -------------------------------------------------------- -->
+  <section id="decision">
+    <h2>3. A decision tree: add a second charger?</h2>
+    <ul class="able">
+      <li>Draw a tree of decisions (squares) and chance events (circles)</li>
+      <li>Fold back the tree to find the best decision by expected value</li>
+      <li>Find the expected value of perfect information</li>
+    </ul>
+    <p class="demo-lead">
+      Value each ending, then fold the tree back: average at each circle (expected value), and take the best branch
+      at each square. Here each ending's value comes from the first two tools: revenue times availability, minus
+      the cost of waiting, minus the second charger's cost.
+    </p>
+
+    <DecisionExplorer />
+
+    <details class="full">
+      <summary>Worked example: a 40% chance of high demand</summary>
+      <p>Low demand is 2 cars an hour (probability 0.6), high is 3.5 (0.4). A charge earns $8, a waiting hour costs $10, a second charger $150 a day.</p>
+      <div class="scroll"><table class="num">
+        <thead><tr><th>Option, demand</th><th>Revenue</th><th>Waiting cost</th><th>Value a day</th></tr></thead>
+        <tbody>
+          <tr><td>One charger, low</td><td>$174.55</td><td>$60.00</td><td>$114.55</td></tr>
+          <tr><td>One charger, high</td><td>$305.45</td><td>$735.00</td><td>−$429.55</td></tr>
+          <tr><td>Two chargers, low</td><td>$190.41</td><td>$4.00</td><td>$36.41</td></tr>
+          <tr><td>Two chargers, high</td><td>$333.22</td><td>$24.86</td><td>$158.37</td></tr>
+        </tbody>
+      </table></div>
+      <ol class="steps">
+        <li><strong>Fold back:</strong> one charger <Fragment set:html={t`0.6(114.55) + 0.4(-429.55) = -103.09`} />; two <Fragment set:html={t`0.6(36.41) + 0.4(158.37) = 85.20`} />.</li>
+        <li><strong>Decide:</strong> <span class="answer">add the second charger, EV $85.20 a day</span></li>
+        <li><strong>EVPI:</strong> <Fragment set:html={t`0.6(114.55) + 0.4(158.37) - 85.20 = 46.88`} /> dollars a day. The options tie at about a 12% chance of high demand.</li>
+      </ol>
+      <figure class="fig"><Fragment set:html={dtSvg} /><figcaption>The tree folded back.</figcaption></figure>
+      <p class="note-box">Revenue is <Fragment set:html={t`12\lambda \times \$8 \times A`} /> with availability <Fragment set:html={t`A`} /> = 0.909 (one) or 0.992 (two); waiting is <Fragment set:html={t`12 L_q \times \$10`} />. Breakdowns scale revenue, but the queue is computed as if the chargers never break; a simulation would combine the two.</p>
+    </details>
+  </section>
+
+  <p class="meta">
+    More worked material: <a href="/resources/markov-chains/">basics of Markov chains</a>,
+    <a href="/resources/simulation-basics/">the basics of simulation</a> and the
+    <a href="/resources/qp-modeling/">quadratic programming examples</a>, in R.
+  </p>
+  <p class="back"><a href="/teaching/advanced-operations-research/">← IE 5301 Advanced Operations Research</a></p>
+</div>
+</Base>

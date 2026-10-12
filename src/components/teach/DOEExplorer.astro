@@ -1,0 +1,61 @@
+---
+/**
+ * A 2×2 factorial, live. Four sliders set the yield at each corner of the design;
+ * the main effects, the interaction, the coded regression and the interaction plot
+ * update together. Presets show no interaction, the page's example, and a crossover.
+ * Engine: effects() in stats.js.
+ */
+---
+<div class="sx" data-doe>
+  <p class="sx-head"><strong>Try it.</strong> Set the yield at each of the four runs. Make the lines parallel to kill the interaction, or cross them.</p>
+  <div class="hx-presets">
+    <button type="button" data-p="60,72,64,84">The page's example</button>
+    <button type="button" data-p="60,72,64,76">No interaction</button>
+    <button type="button" data-p="60,80,75,62">Crossover</button>
+  </div>
+  <div class="sx-sliders">
+    <label>Run 1: A low, B low <output data-o="y1"></output><input type="range" min="40" max="100" step="1" data-k="y1" value="60" /></label>
+    <label>Run 2: A high, B low <output data-o="y2"></output><input type="range" min="40" max="100" step="1" data-k="y2" value="72" /></label>
+    <label>Run 3: A low, B high <output data-o="y3"></output><input type="range" min="40" max="100" step="1" data-k="y3" value="64" /></label>
+    <label>Run 4: A high, B high <output data-o="y4"></output><input type="range" min="40" max="100" step="1" data-k="y4" value="84" /></label>
+  </div>
+  <div class="sx-grid">
+    <div class="fig sx-graph" data-graph></div>
+    <div class="sx-side"><div data-read></div></div>
+  </div>
+</div>
+
+<script>
+  import { effects } from "../../scripts/teach/stats.js";
+  import { plot } from "../../lib/fig.js";
+  import { bind, fmt, readout } from "../../scripts/teach/ui.js";
+
+  const sgn = (v) => (v < 0 ? " − " : " + ") + fmt(Math.abs(v));
+  for (const root of document.querySelectorAll("[data-doe]")) {
+    const st = { y1: 60, y2: 72, y3: 64, y4: 84 };
+    const set = bind(root, st, () => draw(), { y1: String, y2: String, y3: String, y4: String });
+    function draw() {
+      const y = [st.y1, st.y2, st.y3, st.y4], E = effects(y);
+      const g = plot({ w: 420, h: 290, x: [-1.4, 1.4], y: [35, 105], pad: [14, 16, 40, 46] })
+        .axes({ xt: [-1, 1], yt: [40, 60, 80, 100], xl: "A: temperature (coded)", yl: "yield", xfmt: (v) => (v < 0 ? "−1 (low)" : "+1 (high)") })
+        .line([[-1, y[0]], [1, y[1]]], "ln-m").line([[-1, y[2]], [1, y[3]]], "ln-a");
+      [[-1, y[0], "pt-m"], [1, y[1], "pt-m"], [-1, y[2], "pt"], [1, y[3], "pt"]].forEach(([x, v, c]) => g.dot(x, v, c, 5).text(x, v, String(v), { dx: x < 0 ? -10 : 10, dy: 4, anchor: x < 0 ? "end" : "start" }));
+      g.text(1.35, y[3], "B high", { anchor: "end", dy: y[3] >= y[1] ? -10 : 18, cls: "accent" }).text(1.35, y[1], "B low", { anchor: "end", dy: y[1] > y[3] ? -10 : 18 });
+      root.querySelector("[data-graph]").innerHTML = g.svg(`Interaction plot: effect A ${fmt(E.A)}, B ${fmt(E.B)}, AB ${fmt(E.AB)}.`);
+      root.querySelector("[data-read]").innerHTML = readout([
+        ["Effect of A = (y₂ + y₄)/2 − (y₁ + y₃)/2", `<strong>${fmt(E.A)}</strong>`],
+        ["Effect of B = (y₃ + y₄)/2 − (y₁ + y₂)/2", `<strong>${fmt(E.B)}</strong>`],
+        ["Interaction AB = (y₁ + y₄)/2 − (y₂ + y₃)/2", `<strong>${fmt(E.AB)}</strong>`],
+      ]) + `<p class="sx-say">As a regression on coded x₁, x₂: <strong>ŷ = ${fmt(E.mean)}${sgn(E.A / 2)}x₁${sgn(E.B / 2)}x₂${sgn(E.AB / 2)}x₁x₂</strong>. Each coefficient is half its effect.
+        ${Math.abs(E.AB) < 1e-9 ? "No interaction: the lines are parallel, and A's effect is the same at either level of B." :
+          Math.sign(y[1] - y[0]) !== Math.sign(y[3] - y[2]) && y[1] !== y[0] && y[3] !== y[2] ? "A crossover: raising A helps at one level of B and hurts at the other, so A's main effect alone would mislead." :
+          "The lines are not parallel: A's effect depends on B. That is the interaction."}</p>`;
+    }
+    root.addEventListener("click", (e) => {
+      const b = e.target.closest("[data-p]");
+      if (!b) return;
+      b.dataset.p.split(",").map(Number).forEach((v, i) => set(`y${i + 1}`, v));
+      draw();
+    });
+  }
+</script>

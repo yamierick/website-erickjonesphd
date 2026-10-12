@@ -1,0 +1,81 @@
+---
+/**
+ * Transportation network, live: edit any unit cost and the cheapest plan re-solves
+ * (every whole-number plan is checked; see transport() in or.js). The network
+ * redraws with the used arcs thick, and the dual prices check optimality when the
+ * plan uses exactly plants + stores − 1 arcs.
+ */
+const plants = [["Plant 1", 50], ["Plant 2", 60], ["Plant 3", 40]];
+const cost0 = [[4, 6], [5, 3], [3, 7]];
+---
+<div class="sx" data-transport>
+  <p class="sx-head"><strong>Try it.</strong> Change any shipping cost. The cheapest plan re-solves, and the network shows which arcs it uses.</p>
+  <div class="sx-grid">
+    <div class="sx-side">
+      <div class="scroll"><table class="num sx-costs">
+        <thead><tr><th>Cost per unit</th><th>Store A (needs 70)</th><th>Store B (needs 80)</th></tr></thead>
+        <tbody>
+          {plants.map(([n, s], i) => (
+            <tr><th>{n} (has {s})</th>
+              {[0, 1].map((j) => <td>$<input type="number" min="1" max="20" step="1" value={cost0[i][j]} data-k={`c${i}${j}`} aria-label={`${n} to Store ${"AB"[j]} cost`} /></td>)}
+            </tr>
+          ))}
+        </tbody>
+      </table></div>
+      <p class="sx-say" data-say aria-live="polite"></p>
+      <div class="sx-buttons"><button type="button" data-act="reset">Back to the example</button></div>
+    </div>
+    <div class="fig sx-graph" data-graph></div>
+  </div>
+</div>
+
+<script>
+  import { transport } from "../../scripts/teach/or.js";
+  import { canvas } from "../../lib/fig.js";
+  import { bind, fmt } from "../../scripts/teach/ui.js";
+
+  const supply = [50, 60, 40], demand = [70, 80];
+  const SY = [60, 160, 260], DY = [105, 215];
+
+  for (const root of document.querySelectorAll("[data-transport]")) {
+    const st = {};
+    const cost = () => [0, 1, 2].map((i) => [0, 1].map((j) => Math.max(1, st[`c${i}${j}`] || 1)));
+    const draw = () => {
+      const C = cost(), r = transport(C, supply, demand);
+      const net = canvas(560, 320);
+      for (let i = 0; i < 3; i++) for (let j = 0; j < 2; j++) {
+        const f = r.x[i][j], used = f > 0;
+        net.edge(160, SY[i] + (j === 0 ? -9 : 9), 402, DY[j] + (i - 1) * 11, {
+          cls: used ? "flow" : "arr-m", arrow: used, tag: true, at: 0.2,
+          label: used ? `${f} units · $${C[i][j]}` : `unused · $${C[i][j]}`, lcls: used ? "accent" : "note",
+        });
+      }
+      SY.forEach((y, i) => net.box(100, y, 112, 46, [`Plant ${i + 1}`, `supplies ${supply[i]}`], "node"));
+      DY.forEach((y, j) => net.box(462, y, 112, 46, [`Store ${"AB"[j]}`, `needs ${demand[j]}`], "node"));
+      root.querySelector("[data-graph]").innerHTML = net.svg(`The cheapest plan costs ${r.z} dollars.`);
+
+      // Dual check: prices u (plants) and v (stores) from the used arcs, when they form a spanning tree.
+      const used = [];
+      r.x.forEach((row, i) => row.forEach((f, j) => { if (f > 0) used.push([i, j]); }));
+      let check = "";
+      if (used.length === 4) {
+        const u = [0, null, null], v = [null, null];
+        for (let pass = 0; pass < 4; pass++) for (const [i, j] of used) {
+          if (u[i] !== null && v[j] === null) v[j] = C[i][j] - u[i];
+          else if (v[j] !== null && u[i] === null) u[i] = C[i][j] - v[j];
+        }
+        const rc = [];
+        for (let i = 0; i < 3; i++) for (let j = 0; j < 2; j++) if (!r.x[i][j]) rc.push(`Plant ${i + 1} to ${"AB"[j]}: ${fmt(C[i][j] - u[i] - v[j])}`);
+        check = ` Unused arcs' reduced costs: ${rc.join("; ")}. ${rc.every((s) => !s.includes("−")) ? `None is negative, so no reroute saves money${rc.some((s) => /: 0$/.test(s)) ? " (a zero means another plan costs exactly the same)" : ""}.` : ""}`;
+      }
+      root.querySelector("[data-say]").innerHTML = `<strong>Cheapest plan: $${fmt(r.z, 0)}.</strong> ` +
+        r.x.map((row, i) => row.map((f, j) => (f ? `Plant ${i + 1} → ${"AB"[j]}: ${f}` : "")).filter(Boolean).join(", ")).join("; ") + "." + check;
+    };
+    bind(root, st, draw);
+    root.querySelector("[data-act=reset]").addEventListener("click", () => {
+      const c0 = [[4, 6], [5, 3], [3, 7]];
+      for (const inp of root.querySelectorAll("[data-k]")) { const [i, j] = inp.dataset.k.slice(1).split("").map(Number); inp.value = String(c0[i][j]); st[inp.dataset.k] = c0[i][j]; }
+      draw();
+    });
+  }
+</script>

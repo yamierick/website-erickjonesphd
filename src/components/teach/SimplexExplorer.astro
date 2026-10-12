@@ -1,0 +1,148 @@
+---
+/**
+ * Step through the simplex method on the product-mix LP, with the tableau and the
+ * graph side by side (Jones, 2026-10-12: "the interactive shows how the table
+ * explores the vertices"). Click a negative number in the z row to choose the
+ * entering variable; the ratio test and the edge it walks appear; Pivot moves to
+ * the next corner. Profit sliders change c, so other paths and optima show up.
+ *
+ * The engine is src/scripts/teach/simplex.js (tested in simplex.test.mjs). The DOM
+ * here is built at run time, so its styles live in src/styles/examples.css, not in
+ * a scoped <style> (Astro's scoped CSS never reaches run-time elements).
+ * Without JavaScript the page's static figure and worked steps still stand alone.
+ */
+---
+<div class="sx" data-simplex>
+  <p class="sx-head"><strong>Try it.</strong> Click a <span class="sx-neg-key">negative number</span> in the z row to pick the entering variable, then press Pivot. Watch the table and the graph move together.</p>
+  <div class="sx-sliders">
+    <label>Profit per chair <output data-out="c1">$40</output><input type="range" min="10" max="100" step="5" value="40" data-c="0" /></label>
+    <label>Profit per table <output data-out="c2">$50</output><input type="range" min="10" max="100" step="5" value="50" data-c="1" /></label>
+  </div>
+  <div class="sx-grid">
+    <div class="fig sx-graph" data-graph></div>
+    <div class="sx-side">
+      <div class="scroll"><table class="num sx-table" data-table></table></div>
+      <p class="sx-say" data-say aria-live="polite"></p>
+      <div class="sx-buttons">
+        <button type="button" data-act="pivot" disabled>Pivot</button>
+        <button type="button" data-act="auto">Choose for me (largest coefficient)</button>
+        <button type="button" data-act="reset">Start over</button>
+      </div>
+    </div>
+  </div>
+  <noscript><p class="meta">The step-through needs JavaScript; the worked steps above cover the same ground.</p></noscript>
+</div>
+
+<script>
+  import * as S from "../../scripts/teach/simplex.js";
+  import { plot } from "../../lib/fig.js";
+
+  const A = [[1, 2], [4, 3]], b = [40, 120];
+  const NAMES = ["x<sub>1</sub>", "x<sub>2</sub>", "s<sub>1</sub>", "s<sub>2</sub>"];
+  const PLAIN = ["x₁ (chairs)", "x₂ (tables)", "s₁ (spare labor)", "s₂ (spare wood)"];
+  const ROWNAME = ["labor", "wood"];
+  const CORNERS = [["A", 0, 0], ["B", 30, 0], ["C", 0, 20], ["D", 24, 8]];
+  const fmt = (v) => {
+    const r = Math.round(v * 100) / 100;
+    return (r < 0 ? "−" : "") + Math.abs(r).toLocaleString("en-US", { maximumFractionDigits: 2 });
+  };
+  const corner = ([x, y]) => (CORNERS.find(([, a, b2]) => Math.abs(a - x) < 1e-6 && Math.abs(b2 - y) < 1e-6) || ["?"])[0];
+  const at = (p) => `${corner(p)} (${fmt(p[0])}, ${fmt(p[1])})`;
+
+  for (const root of document.querySelectorAll("[data-simplex]")) {
+    const $ = (q) => root.querySelector(q);
+    let c = [40, 50], s, path, enter;
+
+    function reset() {
+      s = S.init(c, A, b);
+      path = [S.point(s)];
+      enter = null;
+      draw("start");
+    }
+
+    function draw(why) {
+      const p = S.point(s), z = S.objective(s), cand = S.candidates(s);
+      const leave = enter !== null ? S.leaving(s, enter) : null;
+      const ratios = enter !== null ? S.ratios(s, enter) : null;
+      const next = leave !== null ? S.point(S.pivot(s, leave, enter)) : null;
+
+      // ---- graph
+      const g = plot({ w: 460, h: 380, x: [0, 42], y: [0, 42], pad: [20, 12, 40, 46] })
+        .axes({ xt: [0, 10, 20, 30, 40], yt: [0, 10, 20, 30, 40], xl: "x₁ chairs", yl: "x₂ tables", grid: true })
+        .area([[0, 0], [30, 0], [24, 8], [0, 20]])
+        .line([[0, 20], [40, 0]], "ln").line([[0, 40], [30, 0]], "ln")
+        .text(40.5, 2.6, "labor", { anchor: "end" }).text(9.5, 29, "wood");
+      // Iso-profit line through the current corner (skipped at the origin, where z = 0).
+      if (z > 1e-9) {
+        // Where c·x = z crosses the edges of the 0–42 box; keep the two that lie on it.
+        const hits = [[0, z / c[1]], [z / c[0], 0], [42, (z - 42 * c[0]) / c[1]], [(z - 42 * c[1]) / c[0], 42]]
+          .filter(([x, y]) => x >= -1e-9 && x <= 42 + 1e-9 && y >= -1e-9 && y <= 42 + 1e-9);
+        if (hits.length >= 2) {
+          const [p1, p2] = hits.sort((u, v) => u[0] - v[0]);
+          g.line([p1, p2], "dash-a").text(...p1, `z = ${fmt(z)}`, { cls: "accent", dx: 6, dy: p1[1] > 38 ? 14 : -6 });
+        }
+      }
+      for (let k = 1; k < path.length; k++) g.arrow(...path[k - 1], ...path[k]);
+      if (next) g.line([p, next], "dash").dot(...next, "pt-m", 5).text(...next, "next", { dx: 10, dy: 16, cls: "accent" });
+      for (const [L, x, y] of CORNERS) g.dot(x, y, "pt-o", 4).text(x, y, L, { dx: 7, dy: -7, cls: "strong" });
+      g.dot(...p, "pt", 7);
+      $("[data-graph]").innerHTML = g.svg(`Feasible region with corners A to D. The simplex method is at ${at(p)} with z = ${fmt(z)}.`);
+
+      // ---- table
+      const head = `<thead><tr><th>basis</th>${NAMES.map((n, j) => `<th class="${j === enter ? "sx-enter" : ""}">${n}</th>`).join("")}<th>RHS</th>${ratios ? "<th>ratio</th>" : ""}</tr></thead>`;
+      const rows = s.T.slice(0, s.m).map((row, i) => {
+        const cls = i === leave ? "sx-leave" : "";
+        const cells = row.slice(0, -1).map((v, j) => `<td class="${j === enter ? "sx-enter" : ""}${j === enter && i === leave ? " sx-pivot" : ""}">${fmt(v)}</td>`).join("");
+        const rt = ratios ? `<td>${ratios[i] === null ? "—" : `${fmt(row[row.length - 1])} ÷ ${fmt(row[enter])} = <strong>${fmt(ratios[i])}</strong>`}</td>` : "";
+        return `<tr class="${cls}"><th>${NAMES[s.basis[i]]} <span class="meta">(${ROWNAME[i]})</span></th>${cells}<td>${fmt(row[row.length - 1])}</td>${rt}</tr>`;
+      }).join("");
+      const zr = s.T[s.m];
+      const zcells = zr.slice(0, -1).map((v, j) => cand.includes(j)
+        ? `<td class="${j === enter ? "sx-enter" : ""}"><button type="button" class="sx-neg" data-j="${j}" aria-pressed="${j === enter}" aria-label="enter ${PLAIN[j]}">${fmt(v)}</button></td>`
+        : `<td class="${j === enter ? "sx-enter" : ""}">${fmt(v)}</td>`).join("");
+      $("[data-table]").innerHTML = `${head}<tbody>${rows}<tr class="sx-z"><th>z</th>${zcells}<td><strong>${fmt(z)}</strong></td>${ratios ? "<td></td>" : ""}</tr></tbody>`;
+
+      // ---- words
+      const nb = [0, 1, 2, 3].filter((j) => !s.basis.includes(j)).map((j) => PLAIN[j].split(" ")[0]);
+      let say;
+      if (S.optimal(s)) {
+        say = `<strong>Optimal.</strong> No negative numbers are left in the z row, so no neighbouring corner is better. ` +
+          `${at(p)} earns <strong>$${fmt(z)}</strong>. The numbers under s₁ and s₂ in the z row, ${fmt(zr[2])} and ${fmt(zr[3])}, are the shadow prices of labor and wood.`;
+      } else if (enter === null) {
+        say = `${why === "start" ? "We start at the origin. " : ""}The basis is {${s.basis.map((j) => PLAIN[j].split(" ")[0]).join(", ")}}. ` +
+          `The other variables, ${nb.join(" and ")}, are 0, which puts us at corner <strong>${at(p)}</strong>, z = ${fmt(z)}. ` +
+          `Each negative number in the z row is a variable that would still raise profit: click one to bring it in.`;
+      } else if (leave === null) {
+        say = `${PLAIN[enter]} can grow forever: the LP is unbounded.`;
+      } else {
+        say = `<strong>${PLAIN[enter]} enters.</strong> Ratio test: the smallest ratio, ${fmt(ratios[leave])}, is the ${ROWNAME[leave]} row, ` +
+          `the constraint that runs out first, so ${PLAIN[s.basis[leave]]} leaves. On the graph we slide along an edge from ${corner(p)} to ` +
+          `<strong>${at(next)}</strong>. Press Pivot.`;
+      }
+      $("[data-say]").innerHTML = say;
+      $("[data-act=pivot]").disabled = leave === null;
+      $("[data-act=auto]").disabled = S.optimal(s);
+    }
+
+    root.addEventListener("click", (e) => {
+      const t = e.target.closest("button");
+      if (!t) return;
+      if (t.dataset.j !== undefined) { enter = Number(t.dataset.j); draw(); return; }
+      if (t.dataset.act === "pivot" && enter !== null) {
+        const i = S.leaving(s, enter);
+        s = S.pivot(s, i, enter); path.push(S.point(s)); enter = null; draw();
+      } else if (t.dataset.act === "auto") {
+        if (enter === null) { enter = S.dantzig(s); draw(); }
+        else { const i = S.leaving(s, enter); s = S.pivot(s, i, enter); path.push(S.point(s)); enter = null; draw(); }
+      } else if (t.dataset.act === "reset") reset();
+    });
+    for (const r of root.querySelectorAll("[data-c]")) {
+      r.addEventListener("input", () => {
+        c[Number(r.dataset.c)] = Number(r.value);
+        root.querySelector(`[data-out=c${Number(r.dataset.c) + 1}]`).textContent = `$${r.value}`;
+        reset();
+      });
+    }
+    reset();
+  }
+</script>

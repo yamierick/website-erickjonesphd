@@ -9,6 +9,9 @@
  * Materials are the R Markdown worked examples in public/resources/. They keep
  * their own URLs so older links still work, and one can belong to two courses.
  *
+ * `examples` (optional) is the one-line summary of the course's worked-examples
+ * page, src/pages/teaching/<slug>/examples.astro; the course page links to it.
+ *
  * `concepts` are short definitions of each course's core ideas, written for
  * the page in plain words (Energy Systems Modeling's follow Jones's open
  * textbook draft). `resources` are free tools, readings and data gathered from
@@ -110,6 +113,7 @@ export const courses = [
   },
   {
     slug: "operations-research",
+    examples: "Interactive: step through simplex corner to corner, move resources and watch shadow prices and KKT, re-solve a transportation network, grow a branch-and-bound tree, test convexity with a Hessian, and watch a local method miss the global minimum.",
     code: "IE 3315",
     title: "Operations Research I",
     since: "2023–",
@@ -157,6 +161,7 @@ export const courses = [
   },
   {
     slug: "advanced-operations-research",
+    examples: "Interactive: a Markov chain, a queue you can watch fill up, and a decision tree, all about one EV fast charger, plus the deterministic core shared with IE 3315.",
     code: "IE 5301",
     title: "Advanced Operations Research",
     since: "2023–",
@@ -204,6 +209,7 @@ export const courses = [
   },
   {
     slug: "engineering-probability",
+    examples: "Interactive: explore distributions, watch the central limit theorem, build a correlation, see Type I and II errors and power, fit a regression by clicking, and run a 2×2 experiment.",
     code: "IE 3301",
     title: "Engineering Probability",
     since: "2021–",
