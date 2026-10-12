@@ -1,0 +1,103 @@
+---
+/**
+ * Convexity explorer: sliders set f(x, y) = a x² + b xy + c y²; the page shows its
+ * contours, the Hessian, Sylvester's two leading minors and the eigenvalues, with
+ * the eigenvectors drawn as the contours' axes. Engine: src/scripts/teach/quadform.js
+ * (tested in quadform.test.mjs). Styles are global in src/styles/examples.css because
+ * the DOM is built at run time.
+ */
+---
+<div class="sx hx" data-hessian>
+  <p class="sx-head"><strong>Try it.</strong> Move the sliders, or pick a shape. The checks update as you go.</p>
+  <div class="hx-presets">
+    <button type="button" data-p="2,2,2">Bowl (example A)</button>
+    <button type="button" data-p="1,4,1">Saddle (example B)</button>
+    <button type="button" data-p="1,2,1">Valley</button>
+    <button type="button" data-p="-1,1,-2">Dome</button>
+  </div>
+  <div class="sx-sliders">
+    <label>a <output data-o="a"></output><input type="range" min="-3" max="3" step="0.5" value="2" data-k="a" /></label>
+    <label>b <output data-o="b"></output><input type="range" min="-4" max="4" step="0.5" value="2" data-k="b" /></label>
+    <label>c <output data-o="c"></output><input type="range" min="-3" max="3" step="0.5" value="2" data-k="c" /></label>
+  </div>
+  <div class="sx-grid">
+    <div class="fig sx-graph" data-graph></div>
+    <div class="sx-side hx-read" data-read aria-live="polite"></div>
+  </div>
+</div>
+
+<script>
+  import { eig2, hessian, classify, KIND } from "../../scripts/teach/quadform.js";
+  import { plot } from "../../lib/fig.js";
+
+  const fmt = (v) => { const r = Math.round(v * 1000) / 1000; return (r < 0 ? "−" : "") + Math.abs(r).toLocaleString("en-US", { maximumFractionDigits: 3 }); };
+  const term = (k, s, first) => (k === 0 ? "" : `${k < 0 ? " − " : first ? "" : " + "}${Math.abs(k) === 1 ? "" : fmt(Math.abs(k))}${s}`);
+
+  for (const root of document.querySelectorAll("[data-hessian]")) {
+    const v = { a: 2, b: 2, c: 2 };
+    const inBox = ([x, y]) => Math.abs(x) <= 2 && Math.abs(y) <= 2;
+
+    function draw() {
+      const { a, b, c } = v;
+      for (const k of "abc") root.querySelector(`[data-o=${k}]`).textContent = fmt(v[k]);
+      // f = vᵀ M v with M = H/2; in M's eigen-coordinates (u, w), f = m1 u² + m2 w².
+      const E = eig2(a, b / 2, c), [m1, m2] = E.values, [e1, e2] = E.vectors;
+      const toXY = (u, w) => [u * e1[0] + w * e2[0], u * e1[1] + w * e2[1]];
+      const g = plot({ w: 400, h: 400, x: [-2, 2], y: [-2, 2], pad: [16, 12, 36, 40] })
+        .axes({ xt: [-2, -1, 0, 1, 2], yt: [-2, -1, 0, 1, 2], xl: "x", yl: "y", grid: true });
+      const curve = (pts, cls) => {
+        let seg = [];
+        for (const p of pts) { if (inBox(p)) seg.push(p); else { if (seg.length > 1) g.line(seg, cls); seg = []; } }
+        if (seg.length > 1) g.line(seg, cls);
+      };
+      const T = Array.from({ length: 241 }, (_, k) => -6 + k / 20);
+      for (const L of [0.5, 2, 4.5, -0.5, -2, -4.5]) {
+        const cls = L > 0 ? "ln-a" : "ln-b";
+        // Each level set f = L, drawn parametrically for whichever signs m1 and m2 have.
+        const s1 = Math.sign(m1) * (Math.abs(m1) > 1e-9), s2 = Math.sign(m2) * (Math.abs(m2) > 1e-9);
+        const r1 = Math.sqrt(Math.abs(L / m1)), r2 = Math.sqrt(Math.abs(L / m2));
+        if (s1 === Math.sign(L) && s2 === Math.sign(L)) {            // ellipse
+          curve(Array.from({ length: 145 }, (_, k) => toXY(r1 * Math.cos(k * Math.PI / 72), r2 * Math.sin(k * Math.PI / 72))), cls);
+        } else if (s1 === Math.sign(L) && s2 === -Math.sign(L)) {    // hyperbola opening along u
+          for (const sg of [1, -1]) curve(T.map((t) => toXY(sg * r1 * Math.cosh(t / 3), r2 * Math.sinh(t / 3))), cls);
+        } else if (s2 === Math.sign(L) && s1 === -Math.sign(L)) {    // hyperbola opening along w
+          for (const sg of [1, -1]) curve(T.map((t) => toXY(r1 * Math.sinh(t / 3), sg * r2 * Math.cosh(t / 3))), cls);
+        } else if (s1 === Math.sign(L) && s2 === 0) {                // parallel lines
+          for (const sg of [1, -1]) curve(T.map((t) => toXY(sg * r1, t / 2)), cls);
+        } else if (s2 === Math.sign(L) && s1 === 0) {
+          for (const sg of [1, -1]) curve(T.map((t) => toXY(t / 2, sg * r2)), cls);
+        }
+      }
+      const H = hessian(a, b, c), he = eig2(H[0][0], H[0][1], H[1][1]);
+      he.vectors.forEach((e, k) => {
+        g.arrow(0, 0, 1.25 * e[0], 1.25 * e[1]).text(1.45 * e[0], 1.45 * e[1], `λ = ${fmt(he.values[k])}`, { cls: "strong", anchor: "middle", dy: 4 });
+      });
+      const f = `f = ${(term(a, "x²", true) + term(b, "xy", !a) + term(c, "y²", !a && !b)) || "0"}`;
+      g.text(-1.92, 1.8, f, { cls: "lab" });
+      root.querySelector("[data-graph]").innerHTML = g.svg(`Contours of ${f}. Green curves are where f is positive, orange where it is negative; arrows are the Hessian's eigenvectors.`);
+
+      const r = classify(a, b, c), [name, means] = KIND[r.kind];
+      const ok = (cond) => `<span class="${cond ? "hx-yes" : "hx-no"}">${cond ? "&gt; 0 ✓" : "not &gt; 0 ✗"}</span>`;
+      root.querySelector("[data-read]").innerHTML = `
+        <p class="hx-step"><strong>1. Hessian</strong> (second derivatives, the same everywhere for a quadratic):</p>
+        <table class="num hx-H"><tr><td>${fmt(H[0][0])}</td><td>${fmt(H[0][1])}</td></tr><tr><td>${fmt(H[1][0])}</td><td>${fmt(H[1][1])}</td></tr></table>
+        <p class="hx-step"><strong>2. Sylvester</strong> (leading principal minors):<br>
+          D₁ = ${fmt(r.d1)} ${ok(r.d1 > 1e-9)}<br>
+          D₂ = (${fmt(H[0][0])})(${fmt(H[1][1])}) − (${fmt(H[0][1])})² = ${fmt(r.d2)} ${ok(r.d2 > 1e-9)}</p>
+        <p class="hx-step"><strong>3. Eigenvalues:</strong> ${fmt(he.values[0])} and ${fmt(he.values[1])}</p>
+        <p class="hx-verdict"><strong>${name[0].toUpperCase() + name.slice(1)}:</strong> ${means}.
+          ${r.kind === "pd" ? "Both minors are positive, and so are both eigenvalues." :
+            r.kind === "indefinite" ? "D₂ &lt; 0 means the eigenvalues have opposite signs." :
+            r.kind === "nd" ? "The minors alternate, negative then positive; both eigenvalues are negative." :
+            r.kind === "psd" || r.kind === "nsd" ? "D₂ = 0, so one eigenvalue is 0. Leading minors alone can't settle this case: check every principal minor (here the diagonal entries too)." : ""}</p>`;
+      for (const s of root.querySelectorAll("[data-k]")) s.value = String(v[s.dataset.k]);
+    }
+
+    root.addEventListener("input", (e) => { const k = e.target.dataset?.k; if (k) { v[k] = Number(e.target.value); draw(); } });
+    root.addEventListener("click", (e) => {
+      const p = e.target.closest("[data-p]");
+      if (p) { [v.a, v.b, v.c] = p.dataset.p.split(",").map(Number); draw(); }
+    });
+    draw();
+  }
+</script>
