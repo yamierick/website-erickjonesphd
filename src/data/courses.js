@@ -6,8 +6,11 @@
  *   IE 3301   Classes\IE 3301 - Probability and Stat\2025 Spring\2025-SPRING_2252-IE-3301-005.docx
  * When a syllabus changes, update its entry here; nothing else needs editing.
  *
- * Materials are the R Markdown worked examples in public/resources/. They keep
- * their own URLs so older links still work, and one can belong to two courses.
+ * Materials are the worked examples at /resources/<slug>/. They keep their own
+ * URLs so older links still work, and one can belong to two courses. Since
+ * 2026-10-12 the course ones are Python notebooks (notebooks/<slug>.py, built by
+ * notebooks/build.py); only the city models and Austin land use stay in R, on
+ * Jones's word, because R is what those projects were built in.
  *
  * `examples` (optional) is the one-line summary of the course's worked-examples
  * page, src/pages/teaching/<slug>/examples.astro; the course page links to it.
@@ -21,15 +24,15 @@
 export const materials = {
   "stat-basics":       "Statistic basics and linear regression",
   "simulation-basics": "The basics of simulation",
-  "lp-algorithms":     "Linear programming examples and applications",
+  "lp-algorithms":     "Linear programming, three ways to solve it",
   "markov-chains":     "Basics of Markov chains",
-  "gurobi-examples":   "Gurobi basic LP/MIP examples",
-  "gurobi-examples-2": "Gurobi's R examples 2",
+  "gurobi-examples":   "GurobiPy basics: an LP, the diet model and facility location",
+  "gurobi-examples-2": "GurobiPy beyond LP: quadratic constraints, piecewise-linear functions and multiple objectives",
   "qp-modeling":       "Quadratic programming examples and algorithms",
   "bender-decomp":     "Benders decomposition explained",
   "decomp-algorithms": "Decomposition algorithms broken down and explained",
   "city-modeling":     "Monocentric city modeling",
-  "sci-res-city":      "Sim CCS City",
+  "sci-res-city":      "Light rail in a model city",
   "austin-land-use":   "Austin land use",
   "slsdesign":         "Selective laser sintering: wind-powered tops",
 };

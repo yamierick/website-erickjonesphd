@@ -1,7 +1,7 @@
 ---
 // Port of the Hugo theme's baseof.html. Markup and class names are kept
-// identical so public/css/main.css applies unchanged, and so the 14
-// pass-through R-Markdown pages in public/resources/ (which were rendered by
+// identical so public/css/main.css applies unchanged, and so the few
+// pass-through R pages left in public/resources/ (which were rendered by
 // Hugo against this same stylesheet) stay visually consistent with the site.
 // Markdown pages pass their front matter under `frontmatter`; .astro pages pass
 // props directly. Accept both so one layout serves the whole site.
@@ -35,7 +35,7 @@ const nav = [
   { name: "Research", url: "/research/" },
   // Projects replaced Publications (2026-10-01): papers now sit inside the
   // project they came from. The project and demo pages in public/ carry their
-  // own copy of this nav, as do the 14 R-Markdown pages in public/resources/,
+  // own copy of this nav, as do the R pages left in public/resources/,
   // so a change here must be made there too.
   { name: "Projects", url: "/projects/" },
   { name: "Teaching", url: "/teaching/" },

@@ -1,0 +1,71 @@
+---
+/**
+ * The Python worked examples (Jones, 2026-10-12: "get rid of all the old R code
+ * unless it is a specific project or reason for using it and go with Python").
+ * Each is a lesson in notebooks/<slug>.py, executed by notebooks/build.py into
+ * public/resources/<slug>/<slug>.ipynb, which this page renders and offers as a
+ * download. The addresses are the old R pages' own, so existing links still work.
+ * The R pages that stay (the city models and Austin land use) are static HTML in
+ * public/resources/ and do not come through here.
+ */
+import { Code } from "astro:components";
+import Base from "../../layouts/Base.astro";
+import { courses } from "../../data/courses.js";
+import { blocks, loadNotebook, notebookSlugs } from "../../lib/notebook.js";
+import "katex/dist/katex.min.css";
+
+export function getStaticPaths() {
+  return notebookSlugs().map((slug) => ({ params: { slug } }));
+}
+
+const { slug } = Astro.params;
+const nb = loadNotebook(slug);
+const page = nb.metadata.page;
+const parts = blocks(nb, slug);
+const inCourses = courses.filter((c) => c.materials.includes(slug));
+const [relatedUrl, relatedText] = (page.related ?? "").split("|");
+---
+
+<Base title={page.title} description={page.description}>
+  <p class="nb-crumbs">
+    <a href="/teaching/">Teaching</a>
+    {inCourses.map((c) => <> · <a href={`/teaching/${c.slug}/`}>{c.code} {c.title}</a></>)}
+  </p>
+  <p class="nb-meta">
+    Python, run with the free Gurobi licence where it uses Gurobi.
+    <a href={`/resources/${slug}/${slug}.ipynb`} download>Download the notebook</a> to run it yourself.
+    {page.first && <span> First published {page.first}.</span>}
+  </p>
+
+  <div class="nb">
+    {parts.map((b) => (
+      b.kind === "md" ? <Fragment set:html={b.html} /> :
+      b.kind === "code" ? <Code code={b.code} lang="python" themes={{ light: "github-light", dark: "github-dark" }} /> :
+      b.kind === "img" ? <img class="nb-img" src={b.src} alt={b.alt} loading="lazy" /> :
+      b.kind === "table" ? <div class="nb-table"><Fragment set:html={b.html} /></div> :
+      <pre class="nb-out"><Fragment set:html={b.html} /></pre>
+    ))}
+  </div>
+
+  {relatedUrl && (
+    <p class="nb-meta">Going further: <a href={relatedUrl}>{relatedText}</a>.</p>
+  )}
+</Base>
+
+<style is:global>
+  .nb-crumbs, .nb-meta { font-family: system-ui, sans-serif; font-size: .85rem; color: var(--muted); }
+  .nb .astro-code code { background: transparent; }
+  .nb .astro-code { padding: .7rem .8rem; font-size: .82rem; border-radius: 4px; margin: .8rem 0 .2rem; border: 1px solid var(--rule); }
+  @media (prefers-color-scheme: dark) {
+    .nb .astro-code, .nb .astro-code span { color: var(--shiki-dark) !important; background-color: var(--shiki-dark-bg) !important; }
+  }
+  .nb pre.nb-out { margin: 0 0 1rem; font-size: .78rem; line-height: 1.45; background: var(--bg); border-left: 3px solid var(--rule); padding: .4rem .8rem; }
+  .nb .nb-cut { color: var(--muted); font-style: italic; }
+  .nb .nb-img { display: block; max-width: 100%; height: auto; margin: .4rem 0 1rem; background: #fff; border-radius: 4px; }
+  .nb .nb-table { overflow-x: auto; margin: 0 0 1rem; }
+  .nb .nb-table table { border-collapse: collapse; font-family: ui-monospace, Consolas, monospace; font-size: .78rem; }
+  .nb .nb-table th, .nb .nb-table td { padding: .15rem .6rem; text-align: right; border-bottom: 1px solid var(--rule); }
+  .nb .nb-table tr.nb-cut td { text-align: center; }
+  .nb .katex-display { overflow-x: auto; overflow-y: hidden; position: relative; }
+  .nb .katex { position: relative; }
+</style>

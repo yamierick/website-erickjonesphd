@@ -74,7 +74,7 @@ const { c } = Astro.props;
   {c.materials.length > 0 && (
     <>
       <h2>Code examples</h2>
-      <p class="meta">Free, reproducible R Markdown.</p>
+      <p class="meta">Python notebooks: read them here, or download one and run it. The Gurobi examples fit its free licence.</p>
       <ul>{c.materials.map((s) => <li><a href={`/resources/${s}/`}>{materials[s]}</a></li>)}</ul>
     </>
   )}
