@@ -1,0 +1,66 @@
+---
+/**
+ * The charger decision, live. Sliders set the chance of high demand, the second
+ * charger's daily cost and the cost of a waiting hour; the tree folds back on every
+ * change, and a chart plots both options' expected value against the probability so
+ * the break-even point is visible. Engine: chargerTree() in or.js, which uses the
+ * Markov availability and the M/M/c queue (tested in or.test.mjs).
+ */
+---
+<div class="sx" data-decision>
+  <p class="sx-head"><strong>Try it.</strong> How sure do you have to be that demand will grow before a second charger pays?</p>
+  <div class="sx-sliders">
+    <label>Chance of high demand <output data-o="p"></output><input type="range" min="0" max="1" step="0.01" data-k="p" value="0.4" /></label>
+    <label>Second charger, per day <output data-o="cost"></output><input type="range" min="0" max="400" step="10" data-k="cost" value="150" /></label>
+    <label>Cost of a waiting hour <output data-o="wait"></output><input type="range" min="0" max="30" step="1" data-k="wait" value="10" /></label>
+  </div>
+  <div class="sx-grid">
+    <div class="fig sx-graph" data-tree></div>
+    <div class="fig sx-graph" data-graph></div>
+  </div>
+  <p class="sx-say" data-say aria-live="polite"></p>
+</div>
+
+<script>
+  import { chargerTree } from "../../scripts/teach/or.js";
+  import { plot, canvas } from "../../lib/fig.js";
+  import { bind, fmt, money, pct } from "../../scripts/teach/ui.js";
+
+  for (const root of document.querySelectorAll("[data-decision]")) {
+    const st = { p: 0.4, cost: 150, wait: 10 };
+    const draw = () => {
+      const T = chargerTree({ pHigh: st.p, secondCost: st.cost, waitCost: st.wait }), v = T.v;
+      const dt = canvas(560, 330), two = T.best === 2;
+      dt.add(`<rect class="node-a" x="22" y="143" width="44" height="44" rx="3"/>`).text(44, 206, "decide", "note")
+        .edge(66, 165, 230, 85, { cls: two ? "arr-m" : "flow", label: "keep one charger", ly: -16, lcls: two ? "note" : "accent" })
+        .edge(66, 165, 230, 245, { cls: two ? "flow" : "arr-m", label: `add a second (${money(st.cost, 0)}/day)`, ly: 22, lcls: two ? "accent" : "note" })
+        .circle(250, 85, 20, "", two ? "node" : "node-a").text(250, 120, `EV ${money(T.ev1)}`, two ? "warn" : "accent")
+        .circle(250, 245, 20, "", two ? "node-a" : "node").text(250, 280, `EV ${money(T.ev2)}`, two ? "accent" : "warn");
+      [[85, v.oneLow, v.oneHigh], [245, v.twoLow, v.twoHigh]].forEach(([y, lo, hi]) => {
+        dt.edge(270, y, 400, y - 45, { cls: "arr-m", label: `low, ${fmt(1 - st.p)}`, ly: -10 })
+          .edge(270, y, 400, y + 45, { cls: "arr-m", label: `high, ${fmt(st.p)}`, ly: 20 })
+          .text(410, y - 41, money(lo.value), lo.value < 0 ? "warn" : "nodet", "start")
+          .text(410, y + 49, money(hi.value), hi.value < 0 ? "warn" : "nodet", "start");
+      });
+      root.querySelector("[data-tree]").innerHTML = dt.svg(`Expected value: keep one ${money(T.ev1)}, add a second ${money(T.ev2)}.`);
+
+      const ev = (o, p) => (o === 1 ? (1 - p) * v.oneLow.value + p * v.oneHigh.value : (1 - p) * v.twoLow.value + p * v.twoHigh.value);
+      const all = [v.oneLow, v.oneHigh, v.twoLow, v.twoHigh].map((x) => x.value);
+      const lo = Math.floor(Math.min(...all) / 100) * 100, hi = Math.ceil(Math.max(...all) / 100) * 100;
+      const g = plot({ w: 400, h: 280, x: [0, 1], y: [lo, hi], pad: [14, 12, 38, 54] })
+        .axes({ xt: [0, 0.25, 0.5, 0.75, 1], yt: [lo, 0, hi].filter((x, i, a) => a.indexOf(x) === i), xl: "chance of high demand", yl: "expected $ a day", grid: true, xfmt: (x) => x.toFixed(2), yfmt: (x) => fmt(x, 0) })
+        .line([[0, ev(1, 0)], [1, ev(1, 1)]], "ln-m").line([[0, ev(2, 0)], [1, ev(2, 1)]], "ln-a")
+        .text(0.02, ev(1, 0), "keep one", { dy: -6 }).text(0.02, ev(2, 0), "add a second", { dy: 14, cls: "accent" });
+      const be = T.breakEven;
+      if (be > 0 && be < 1) g.line([[be, lo], [be, hi]], "dash").text(be, hi, `break-even ${pct(be)}`, { dx: 4, dy: 12 });
+      g.dot(st.p, ev(T.best, st.p), "pt", 6);
+      root.querySelector("[data-graph]").innerHTML = g.svg(`Expected value of each option against the chance of high demand; they cross at ${pct(be)}.`);
+
+      root.querySelector("[data-say]").innerHTML =
+        `<strong>${two ? "Add the second charger" : "Keep one charger"}</strong>: expected ${money(Math.max(T.ev1, T.ev2))} a day, against ${money(Math.min(T.ev1, T.ev2))}. ` +
+        (be > 0 && be < 1 ? `The options tie when the chance of high demand is ${pct(be)}. ` : "") +
+        `A perfect forecast would be worth up to <strong>${money(T.evpi)}</strong> a day (EVPI).`;
+    };
+    bind(root, st, draw, { p: (x) => fmt(x), cost: (x) => money(x, 0), wait: (x) => money(x, 0) });
+  }
+</script>

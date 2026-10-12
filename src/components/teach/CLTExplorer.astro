@@ -1,0 +1,54 @@
+---
+/**
+ * Central limit theorem. Choose a lopsided or lumpy population and a sample size n;
+ * the page draws 2,000 samples, averages each, and histograms the averages against
+ * the normal curve the CLT predicts, N(μ, σ²/n). Engine: SOURCES and rng in stats.js.
+ */
+---
+<div class="sx" data-clt>
+  <p class="sx-head"><strong>Try it.</strong> Pick a population that is nothing like a bell curve, then raise the sample size. The averages turn normal anyway.</p>
+  <div class="hx-presets" data-pick></div>
+  <div class="sx-sliders"><label>Sample size n <output data-o="n"></output><input type="range" min="1" max="50" step="1" data-k="n" value="1" /></label></div>
+  <div class="sx-grid">
+    <div class="fig sx-graph" data-graph></div>
+    <div class="sx-side"><div data-read></div><div class="sx-buttons"><button type="button" data-act="again">Draw again</button></div></div>
+  </div>
+</div>
+
+<script>
+  import { SOURCES, rng, normalPdf } from "../../scripts/teach/stats.js";
+  import { plot } from "../../lib/fig.js";
+  import { bind, fmt, readout } from "../../scripts/teach/ui.js";
+
+  for (const root of document.querySelectorAll("[data-clt]")) {
+    const st = { n: 1 };
+    let key = "exponential", seed = 2;
+    root.querySelector("[data-pick]").innerHTML = Object.entries(SOURCES).map(([k, s]) => `<button type="button" data-s="${k}" aria-pressed="${k === key}">${s.name}</button>`).join("");
+    const draw = () => {
+      const S = SOURCES[key], R = rng(seed), M = 2000, means = [];
+      for (let i = 0; i < M; i++) { let s = 0; for (let j = 0; j < st.n; j++) s += S.draw(R); means.push(s / st.n); }
+      const [a, b] = S.range, nb = st.n === 1 && key !== "exponential" ? Math.round(b - a) : 40, w = (b - a) / nb;
+      const bins = Array(nb).fill(0);
+      means.forEach((m) => { const i = Math.floor((m - a) / w); if (i >= 0 && i < nb) bins[i] += 1 / M / w; });
+      const se = S.sd / Math.sqrt(st.n), peak = normalPdf(S.mean, S.mean, se);
+      const ymax = Math.max(...bins, peak) * 1.1;
+      const g = plot({ w: 460, h: 290, x: [a, b], y: [0, ymax], pad: [14, 12, 38, 44] })
+        .axes({ xt: [a, (a + b) / 2, b].map((v) => +v.toFixed(2)), yt: [0], xl: `average of ${st.n} draw${st.n > 1 ? "s" : ""}`, grid: true });
+      bins.forEach((h, i) => g.rect(a + i * w + w * 0.05, 0, a + (i + 1) * w - w * 0.05, h, "bar"));
+      if (st.n > 1) g.fn((x) => normalPdf(x, S.mean, se), a, b, "ln-b");
+      g.line([[S.mean, 0], [S.mean, ymax]], "dash-a");
+      root.querySelector("[data-graph]").innerHTML = g.svg(`Histogram of 2,000 averages of ${st.n} draws from ${S.name}.`);
+      const avg = means.reduce((s, x) => s + x, 0) / M, sd = Math.sqrt(means.reduce((s, x) => s + (x - avg) ** 2, 0) / (M - 1));
+      root.querySelector("[data-read]").innerHTML = readout([
+        ["Population mean μ", fmt(S.mean, 3)], ["Population SD σ", fmt(S.sd, 3)],
+        ["Average of the averages", fmt(avg, 3)], ["SD of the averages", fmt(sd, 3)], ["CLT predicts σ/√n", `<strong>${fmt(se, 3)}</strong>`],
+      ]) + `<p class="sx-say">${st.n === 1 ? "With n = 1 you just see the population itself. Raise n." : "The orange curve is the normal the CLT predicts. The spread shrinks like 1/√n, which is why bigger samples give tighter estimates."}</p>`;
+    };
+    root.addEventListener("click", (e) => {
+      const s = e.target.closest("[data-s]");
+      if (s) { key = s.dataset.s; for (const b of root.querySelectorAll("[data-s]")) b.setAttribute("aria-pressed", String(b === s)); draw(); }
+      if (e.target.closest("[data-act=again]")) { seed++; draw(); }
+    });
+    bind(root, st, draw, { n: String });
+  }
+</script>

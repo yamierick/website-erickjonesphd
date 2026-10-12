@@ -1,0 +1,59 @@
+---
+/**
+ * Errors and power, for the bolt machine's two-sided test of H0: μ = 50 mm. The
+ * page draws the sampling distribution of the sample mean under H0 and under the
+ * true mean the reader picks, shades α (rejecting a true H0) and β (missing a real
+ * shift), and reports the power 1 − β. σ is treated as known (a z test) so the
+ * picture stays exact. Engine: zPower() in stats.js (checked against scipy).
+ */
+---
+<div class="sx" data-power>
+  <p class="sx-head"><strong>Try it.</strong> Move the true mean away from 50 and watch the power grow. Then see what a bigger sample or a looser α does.</p>
+  <div class="sx-sliders">
+    <label>True mean μ <output data-o="mu"></output><input type="range" min="49.4" max="50.6" step="0.02" data-k="mu" value="50.3" /></label>
+    <label>Sample size n <output data-o="n"></output><input type="range" min="2" max="60" step="1" data-k="n" value="10" /></label>
+    <label>σ <output data-o="sigma"></output><input type="range" min="0.1" max="1" step="0.05" data-k="sigma" value="0.4" /></label>
+    <label>α <output data-o="alpha"></output><input type="range" min="0.01" max="0.2" step="0.01" data-k="alpha" value="0.05" /></label>
+  </div>
+  <div class="sx-grid">
+    <div class="fig sx-graph" data-graph></div>
+    <div class="sx-side"><div data-read></div></div>
+  </div>
+</div>
+
+<script>
+  import { zPower, normalPdf } from "../../scripts/teach/stats.js";
+  import { plot } from "../../lib/fig.js";
+  import { bind, fmt, pct, readout } from "../../scripts/teach/ui.js";
+
+  for (const root of document.querySelectorAll("[data-power]")) {
+    const st = { mu: 50.3, n: 10, sigma: 0.4, alpha: 0.05 };
+    const draw = () => {
+      const P = zPower({ mu0: 50, mu: st.mu, sigma: st.sigma, n: st.n, alpha: st.alpha });
+      const a = 49.2, b = 50.8, se = P.se, peak = normalPdf(0, 0, se) * 1.15;
+      const f0 = (x) => normalPdf(x, 50, se), f1 = (x) => normalPdf(x, st.mu, se);
+      const g = plot({ w: 480, h: 290, x: [a, b], y: [0, peak], pad: [14, 12, 38, 30] })
+        .axes({ xt: [49.2, 49.6, 50, 50.4, 50.8], yt: [], xl: "sample mean x̄ (mm)", xfmt: (v) => v.toFixed(1) })
+        .under(f1, Math.max(a, P.lo), Math.min(b, P.hi), "fill-b")              // β: true mean, but we fail to reject
+        .under(f0, a, Math.max(a, P.lo), "fill-w").under(f0, Math.min(b, P.hi), b, "fill-w") // α: H0 true, but we reject
+        .fn(f0, a, b, "ln-m").fn(f1, a, b, "ln-a")
+        .line([[P.lo, 0], [P.lo, peak]], "dash").line([[P.hi, 0], [P.hi, peak]], "dash")
+        // Legend top left; reject labels low, beside the red tails, so nothing collides as μ moves.
+        .line([[49.22, peak * 0.95], [49.3, peak * 0.95]], "ln-m").text(49.32, peak * 0.95, "if H₀ is true (μ = 50)", { dy: 4 })
+        .line([[49.22, peak * 0.86], [49.3, peak * 0.86]], "ln-a").text(49.32, peak * 0.86, `if μ is really ${fmt(st.mu)}`, { dy: 4, cls: "accent" })
+        .text(P.hi, peak * 0.12, `reject above ${fmt(P.hi, 3)}`, { dx: 4, cls: "warn" })
+        .text(P.lo, peak * 0.12, `reject below ${fmt(P.lo, 3)}`, { dx: -4, anchor: "end", cls: "warn" });
+      root.querySelector("[data-graph]").innerHTML = g.svg(`Sampling distributions under H0 and under μ = ${st.mu}; power ${pct(P.power)}.`);
+      const shift = Math.abs(st.mu - 50) < 1e-9;
+      root.querySelector("[data-read]").innerHTML = readout([
+        ["Standard error σ/√n", `${fmt(se, 4)} mm`],
+        ["Critical values 50 ± z<sub>α/2</sub>·SE", `${fmt(P.lo, 3)} and ${fmt(P.hi, 3)}`],
+        ["Type I error α (red)", pct(st.alpha)],
+        ["Type II error β (gold)", shift ? "—" : pct(P.beta)],
+        ["Power 1 − β", shift ? "—" : `<strong>${pct(P.power)}</strong>`],
+      ]) + `<p class="sx-say">${shift ? "The true mean is 50, so H₀ is true: any rejection is a Type I error, and that happens α of the time." :
+        `If the machine really runs at ${fmt(st.mu)} mm, a sample of ${st.n} catches it ${pct(P.power)} of the time and misses it ${pct(P.beta)} of the time.`} Bigger samples shrink both curves, which cuts β without raising α.</p>`;
+    };
+    bind(root, st, draw, { mu: (v) => fmt(v), n: String, sigma: (v) => fmt(v), alpha: (v) => fmt(v) });
+  }
+</script>

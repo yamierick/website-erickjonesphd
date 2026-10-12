@@ -1,0 +1,50 @@
+---
+/**
+ * Local versus global on f(x) = x⁴ − 3x² + t·x. The start slider runs gradient
+ * descent from there and draws its path; the tilt slider changes which valley is
+ * deeper. The global minimum (found by a fine grid, which is what a global solver
+ * proves) is always marked, so the reader sees when the local answer is wrong.
+ * Engine: descend() in or.js (tested on the page's numbers).
+ */
+---
+<div class="sx" data-descent>
+  <p class="sx-head"><strong>Try it.</strong> Pick a starting point. A local method slides downhill and stops in whichever valley it starts in.</p>
+  <div class="sx-sliders">
+    <label>Start x₀ <output data-o="x0"></output><input type="range" min="-2" max="2" step="0.05" data-k="x0" value="1.85" /></label>
+    <label>Tilt t (the x term) <output data-o="t"></output><input type="range" min="-2" max="2" step="0.1" data-k="t" value="1" /></label>
+  </div>
+  <div class="fig sx-graph" data-graph></div>
+  <p class="sx-say" data-say aria-live="polite"></p>
+</div>
+
+<script>
+  import { descend } from "../../scripts/teach/or.js";
+  import { plot } from "../../lib/fig.js";
+  import { bind, fmt } from "../../scripts/teach/ui.js";
+
+  for (const root of document.querySelectorAll("[data-descent]")) {
+    const st = { x0: 1.85, t: 1 };
+    const draw = () => {
+      const f = (x) => x ** 4 - 3 * x ** 2 + st.t * x, df = (x) => 4 * x ** 3 - 6 * x + st.t;
+      const path = descend(df, st.x0), end = path.at(-1);
+      let gx = -2;
+      for (let x = -2; x <= 2; x += 0.0005) if (f(x) < f(gx)) gx = x;
+      const ys = Array.from({ length: 401 }, (_, i) => f(-2 + i / 100));
+      const lo = Math.floor(Math.min(...ys)) - 1, hi = Math.ceil(Math.max(...ys));
+      const g = plot({ w: 560, h: 320, x: [-2, 2], y: [lo, hi], pad: [16, 14, 38, 44] })
+        .axes({ xt: [-2, -1, 0, 1, 2], yt: [lo, 0, hi].filter((v, i, a) => a.indexOf(v) === i), xl: "x", yl: "f(x)", grid: true })
+        .fn(f, -2, 2, "ln-a");
+      const step = Math.max(1, Math.floor(path.length / 25));
+      path.forEach((x, i) => { if (i % step === 0) g.dot(x, f(x), "pt-m", 3); });
+      g.dot(st.x0, f(st.x0), "pt-o", 5).text(st.x0, f(st.x0), "start", { dx: 8, dy: -8 })
+        .dot(gx, f(gx), "pt", 7).text(gx, f(gx), "global minimum", { dy: 18, anchor: "middle", cls: "accent" });
+      const same = Math.abs(end - gx) < 0.02;
+      if (!same) g.dot(end, f(end), "pt-w", 6).text(end, f(end), "local stops here", { dy: 18, anchor: "middle", cls: "warn" });
+      root.querySelector("[data-graph]").innerHTML = g.svg(`f(x) = x⁴ − 3x² + ${fmt(st.t)}x. Starting at ${fmt(st.x0)}, gradient descent stops at ${fmt(end, 3)}; the global minimum is at ${fmt(gx, 3)}.`);
+      root.querySelector("[data-say]").innerHTML = same
+        ? `From x₀ = ${fmt(st.x0)}, the local method reaches x = ${fmt(end, 3)}, <strong>the global minimum</strong> (f = ${fmt(f(end), 3)}). It got lucky with its start.`
+        : `From x₀ = ${fmt(st.x0)}, the local method stops at x = ${fmt(end, 3)} (f = ${fmt(f(end), 3)}). KKT holds there, yet the global minimum is at x = ${fmt(gx, 3)} (f = ${fmt(f(gx), 3)}). <strong>A global solver, given the lifted quadratic, finds that one and proves it.</strong>`;
+    };
+    bind(root, st, draw, { x0: (v) => fmt(v), t: (v) => fmt(v, 1) });
+  }
+</script>

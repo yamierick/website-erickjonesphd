@@ -2,6 +2,9 @@
 import Base from "../../../layouts/Base.astro";
 import { t, d } from "../../../lib/tex.js";
 import { plot, canvas } from "../../../lib/fig.js";
+import DecisionExplorer from "../../../components/teach/DecisionExplorer.astro";
+import QueueExplorer from "../../../components/teach/QueueExplorer.astro";
+import MarkovExplorer from "../../../components/teach/MarkovExplorer.astro";
 import "katex/dist/katex.min.css";
 import "../../../styles/examples.css";
 
@@ -74,22 +77,22 @@ dt.add(`<rect class="node-a" x="22" y="143" width="44" height="44" rx="3"/>`).te
 const dtSvg = dt.svg("Decision tree. Keeping one charger is worth 114.55 dollars a day if demand is low and loses 429.55 if it is high, an expected value of minus 103.09. Adding a second charger is worth 36.41 if low and 158.37 if high, an expected value of 85.20, so the second charger is the better choice.");
 ---
 
-<Base title="IE 5301 Worked Examples" wide={true} description="Advanced Operations Research, worked step by step: a Markov chain, an M/M/1 queue and a decision tree, all about one EV fast charger, plus links to the deterministic examples.">
+<Base title="IE 5301 Worked Examples" wide={true} description="Advanced Operations Research, interactive: a Markov chain, a queue you can watch, and a decision tree, all about one EV fast charger, plus the deterministic core shared with IE 3315.">
 <div class="ex">
   <p class="crumbs"><a href="/teaching/">Teaching</a> · <a href="/teaching/advanced-operations-research/">IE 5301 Advanced Operations Research</a> · Worked examples</p>
 
   <p>
     IE 5301 covers the deterministic core of operations research at graduate depth, then adds the stochastic
-    tools: Markov chains, queues and decision trees. The deterministic examples are shared with IE 3315. The
-    three stochastic ones below tell one story, so each answer feeds the next.
+    tools. Each section has one idea, a short explanation and something to try; the worked example is folded
+    underneath.
   </p>
 
   <h2 class="plain">The deterministic core</h2>
-  <p>Worked on the <a href="/teaching/operations-research/examples/">IE 3315 examples page</a>, with a simplex step-through and a convexity explorer:</p>
+  <p>Interactive on the <a href="/teaching/operations-research/examples/">IE 3315 page</a>:</p>
   <ol class="toc">
-    <li><a href="/teaching/operations-research/examples/#lp">An LP, graphically and by simplex</a></li>
-    <li><a href="/teaching/operations-research/examples/#dual">Duality, shadow prices and KKT</a></li>
-    <li><a href="/teaching/operations-research/examples/#transport">A transportation problem as a network</a></li>
+    <li><a href="/teaching/operations-research/examples/#lp">Simplex, corner to corner</a></li>
+    <li><a href="/teaching/operations-research/examples/#dual">Shadow prices and KKT</a></li>
+    <li><a href="/teaching/operations-research/examples/#transport">A transportation network</a></li>
     <li><a href="/teaching/operations-research/examples/#bnb">Branch and bound</a></li>
     <li><a href="/teaching/operations-research/examples/#convex">Convexity: Hessians and Sylvester</a></li>
     <li><a href="/teaching/operations-research/examples/#qp">Nonconvex problems and global solvers</a></li>
@@ -97,12 +100,12 @@ const dtSvg = dt.svg("Decision tree. Keeping one charger is worth 114.55 dollars
 
   <h2 class="plain">The stochastic three: one fast charger</h2>
   <div class="problem">
-    <p><strong>The setting.</strong> A workplace has one EV fast charger, open 12 hours a day. About 3 cars arrive
-    an hour, at random, and a charge takes 15 minutes on average. Sometimes the charger breaks. Should the site add a second one?</p>
+    <p><strong>The setting.</strong> A workplace has one EV fast charger, open 12 hours a day. About 3 cars arrive an
+    hour, at random, and a charge takes 15 minutes on average. Sometimes it breaks. Should the site add a second one?</p>
     <ol>
       <li><strong>How often is it working?</strong> A Markov chain.</li>
       <li><strong>How long do drivers wait?</strong> A queue.</li>
-      <li><strong>Is a second charger worth $150 a day</strong> when next year's demand is uncertain? A decision tree.</li>
+      <li><strong>Is a second charger worth it</strong> when demand is uncertain? A decision tree.</li>
     </ol>
   </div>
 
@@ -114,30 +117,26 @@ const dtSvg = dt.svg("Decision tree. Keeping one charger is worth 114.55 dollars
       <li>Find n-step probabilities</li>
       <li>Solve for the steady state</li>
     </ul>
-    <dl class="defs">
-      <dt>Markov chain</dt><dd>A system that moves between states, where the next step depends only on the current state.</dd>
-      <dt>Transition matrix <Fragment set:html={t`P`} /></dt><dd>Row <Fragment set:html={t`i`} />, column <Fragment set:html={t`j`} />: the chance of going from <Fragment set:html={t`i`} /> to <Fragment set:html={t`j`} /> in one step. Rows sum to 1.</dd>
-      <dt>Steady state <Fragment set:html={t`\pi`} /></dt><dd>The long-run share of time in each state.</dd>
-    </dl>
-    <div class="problem"><p><strong>Data.</strong> A working charger breaks on 5% of days. A broken one is fixed by the next day half the time.</p></div>
-
-    <h3>The recipe</h3>
-    <ol class="steps">
-      <li><strong>States:</strong> each morning the charger is Up or Down.</li>
-      <li><strong>Transition matrix:</strong>
-        <Fragment set:html={d`P = \begin{array}{c} \text{Up} \\ \text{Down} \end{array}\!\!\begin{bmatrix} 0.95 & 0.05 \\ 0.50 & 0.50 \end{bmatrix}`} /></li>
-      <li><strong>n steps ahead:</strong> multiply by <Fragment set:html={t`P`} /> n times. Broken today, the chance it is up in two days is the Down row of <Fragment set:html={t`P^2`} />:
-        <Fragment set:html={t`(0.5)(0.95) + (0.5)(0.5) = 0.725`} />.</li>
-      <li><strong>Steady state:</strong> solve <Fragment set:html={t`\pi = \pi P`} /> with <Fragment set:html={t`\pi_U + \pi_D = 1`} /> (one of the <Fragment set:html={t`\pi = \pi P`} /> equations is redundant, so drop it):
-        <Fragment set:html={d`\pi_U = 0.95\pi_U + 0.5\pi_D \;\Rightarrow\; 0.05\pi_U = 0.5\pi_D \;\Rightarrow\; \pi_U = \tfrac{10}{11} \approx 0.909,\quad \pi_D = \tfrac{1}{11}`} /></li>
-    </ol>
-    <figure class="fig"><Fragment set:html={mcSvg} /><figcaption>The chain as a diagram: each arrow is one entry of P.</figcaption></figure>
-    <figure class="fig"><Fragment set:html={convSvg} /><figcaption>From a breakdown, the chance of being up settles at the steady state within about a week.</figcaption></figure>
-    <p>
-      <strong>Answer:</strong> the charger is up <span class="answer">90.9%</span> of days. Two chargers that fail
-      independently are both down only <Fragment set:html={t`(1/11)^2 \approx 0.8\%`} /> of days, so at least one works
-      <strong>99.2%</strong> of the time.
+    <p class="demo-lead">
+      The charger is Up or Down each morning, and tomorrow depends only on today. Put the daily chances in a
+      transition matrix <Fragment set:html={t`P`} /> (rows sum to 1). Multiplying by <Fragment set:html={t`P`} /> steps a day ahead, and the
+      steady state solves <Fragment set:html={t`\pi = \pi P`} /> with <Fragment set:html={t`\sum \pi = 1`} /> (drop one redundant equation).
     </p>
+
+    <MarkovExplorer />
+
+    <details class="full">
+      <summary>Worked example: breaks 5% of days, fixed half the time</summary>
+      <ol class="steps">
+        <li><strong>Transition matrix:</strong>
+          <Fragment set:html={d`P = \begin{array}{c} \text{Up} \\ \text{Down} \end{array}\!\!\begin{bmatrix} 0.95 & 0.05 \\ 0.50 & 0.50 \end{bmatrix}`} /></li>
+        <li><strong>Two days after a breakdown:</strong> <Fragment set:html={t`(0.5)(0.95) + (0.5)(0.5) = 0.725`} />.</li>
+        <li><strong>Steady state:</strong> <Fragment set:html={t`\pi_U = 0.95\pi_U + 0.5\pi_D`} />, so <Fragment set:html={t`0.05\pi_U = 0.5\pi_D`} />; with <Fragment set:html={t`\pi_U + \pi_D = 1`} />, <span class="answer"><Fragment set:html={t`\pi_U = 10/11 \approx 0.909`} /></span></li>
+        <li>Two independent chargers are both down only <Fragment set:html={t`(1/11)^2 \approx 0.8\%`} /> of days.</li>
+      </ol>
+      <figure class="fig"><Fragment set:html={mcSvg} /><figcaption>The chain as a diagram: each arrow is one entry of P.</figcaption></figure>
+      <figure class="fig"><Fragment set:html={convSvg} /><figcaption>From a breakdown, the chance of being up settles within about a week.</figcaption></figure>
+    </details>
   </section>
 
   <!-- Queue ---------------------------------------------------------------- -->
@@ -145,31 +144,29 @@ const dtSvg = dt.svg("Decision tree. Keeping one charger is worth 114.55 dollars
     <h2>2. A queue: how long is the wait?</h2>
     <ul class="able">
       <li>Identify the arrival rate λ and service rate μ</li>
-      <li>Find the state probabilities and the average number waiting</li>
+      <li>Find the average number waiting</li>
       <li>Use Little's law to turn numbers into waiting times</li>
     </ul>
-    <dl class="defs">
-      <dt>M/M/1</dt><dd>Random (Poisson) arrivals, random (exponential) service times, one server.</dd>
-      <dt>Utilization</dt><dd><Fragment set:html={t`\rho = \lambda/\mu`} />, the share of time the server is busy. It must be below 1, or the line grows forever.</dd>
-      <dt>Little's law</dt><dd><Fragment set:html={t`L = \lambda W`} />: the average number in line equals the arrival rate times the average time in line.</dd>
-    </dl>
-    <div class="problem"><p><strong>Data.</strong> <Fragment set:html={t`\lambda = 3`} /> cars an hour; a 15-minute charge means <Fragment set:html={t`\mu = 4`} /> an hour.</p></div>
-
-    <h3>The recipe</h3>
-    <ol class="steps">
-      <li><strong>Rates:</strong> <Fragment set:html={t`\lambda = 3`} />, <Fragment set:html={t`\mu = 4`} />, so <Fragment set:html={t`\rho = 0.75`} />.</li>
-      <li><strong>State probabilities.</strong> The queue is a Markov chain too: cars arrive at rate λ and leave at rate μ, so <Fragment set:html={t`p_n = \rho^n p_0`} />. Making them sum to 1 gives <Fragment set:html={t`p_n = (1-\rho)\rho^n`} />: the charger is idle <Fragment set:html={t`p_0 = 25\%`} /> of the time.</li>
-      <li><strong>Average number:</strong> <Fragment set:html={t`L = \rho/(1-\rho) = 3`} /> cars at the charger, <Fragment set:html={t`L_q = \rho^2/(1-\rho) = 2.25`} /> of them waiting.</li>
-      <li><strong>Little's law for the times:</strong> <Fragment set:html={t`W = L/\lambda = 1`} /> hour at the charger, <Fragment set:html={t`W_q = L_q/\lambda = 0.75`} /> hours waiting.</li>
-    </ol>
-    <figure class="fig"><Fragment set:html={bdSvg} /><figcaption>The queue as a chain: each state is a number of cars, moving up at rate λ and down at rate μ.</figcaption></figure>
-    <p><strong>Answer:</strong> drivers wait <span class="answer">45 minutes</span> on average.</p>
-    <h3>Why queues surprise people</h3>
-    <p>
-      The wait grows much faster than the load. At 2 cars an hour it is 15 minutes; at 3, 45 minutes; at 3.5, 105
-      minutes. A second charger (an M/M/2 queue) at 3.5 cars an hour brings it down to about 3.6 minutes.
+    <p class="demo-lead">
+      Cars arrive at random at rate <Fragment set:html={t`\lambda`} /> and charge at rate <Fragment set:html={t`\mu`} />. Utilization <Fragment set:html={t`\rho = \lambda/\mu`} /> must
+      stay below 1. For one charger (M/M/1), <Fragment set:html={t`L_q = \rho^2/(1-\rho)`} /> cars wait on average, and Little's law,
+      <Fragment set:html={t`L = \lambda W`} />, turns that into time: <Fragment set:html={t`W_q = L_q/\lambda`} />.
     </p>
-    <figure class="fig"><Fragment set:html={qpSvg} /><figcaption>Average wait against utilization: the last few points of utilization cost the most.</figcaption></figure>
+
+    <QueueExplorer />
+
+    <details class="full">
+      <summary>Worked example: 3 cars an hour, 15-minute charges</summary>
+      <ol class="steps">
+        <li><strong>Rates:</strong> <Fragment set:html={t`\lambda = 3`} />, <Fragment set:html={t`\mu = 4`} />, <Fragment set:html={t`\rho = 0.75`} />.</li>
+        <li><strong>State probabilities:</strong> the queue is a Markov chain too, so <Fragment set:html={t`p_n = (1-\rho)\rho^n`} />: idle <Fragment set:html={t`p_0 = 25\%`} /> of the time.</li>
+        <li><strong>Average number:</strong> <Fragment set:html={t`L = \rho/(1-\rho) = 3`} />, <Fragment set:html={t`L_q = \rho^2/(1-\rho) = 2.25`} />.</li>
+        <li><strong>Little's law:</strong> <Fragment set:html={t`W = 3/3 = 1`} /> hour, <Fragment set:html={t`W_q = 2.25/3 = 0.75`} /> hours: <span class="answer">45 minutes</span>.</li>
+        <li>At 3.5 cars an hour the wait is 105 minutes; a second charger (M/M/2) cuts it to about 3.6.</li>
+      </ol>
+      <figure class="fig"><Fragment set:html={bdSvg} /><figcaption>The queue as a chain: up at rate λ, down at rate μ.</figcaption></figure>
+      <figure class="fig"><Fragment set:html={qpSvg} /><figcaption>Wait against utilization: the last few points cost the most.</figcaption></figure>
+    </details>
   </section>
 
   <!-- Decision tree -------------------------------------------------------- -->
@@ -180,41 +177,33 @@ const dtSvg = dt.svg("Decision tree. Keeping one charger is worth 114.55 dollars
       <li>Fold back the tree to find the best decision by expected value</li>
       <li>Find the expected value of perfect information</li>
     </ul>
-    <div class="problem">
-      <p><strong>Data.</strong> Next year demand is low, 2 cars an hour (probability 0.6), or high, 3.5 an hour (0.4).
-      Each charge earns $8. Each hour a driver waits costs $10 in goodwill. A second charger costs $150 a day.</p>
-    </div>
-
-    <h3>The recipe</h3>
-    <ol class="steps">
-      <li><strong>Value each ending</strong> with the first two tools: revenue × availability (Markov chain), minus waiting cost (queue), minus the second charger's cost.
-        <div class="scroll"><table class="num">
-          <thead><tr><th>Option, demand</th><th>Revenue</th><th>Waiting cost</th><th>Value a day</th></tr></thead>
-          <tbody>
-            <tr><td>One charger, low</td><td>$174.55</td><td>$60.00</td><td>$114.55</td></tr>
-            <tr><td>One charger, high</td><td>$305.45</td><td>$735.00</td><td>−$429.55</td></tr>
-            <tr><td>Two chargers, low</td><td>$190.41</td><td>$4.00</td><td>$36.41</td></tr>
-            <tr><td>Two chargers, high</td><td>$333.22</td><td>$24.86</td><td>$158.37</td></tr>
-          </tbody>
-        </table></div></li>
-      <li><strong>Fold back: average at each circle.</strong> One charger: <Fragment set:html={t`0.6(114.55) + 0.4(-429.55) = -103.09`} />. Two: <Fragment set:html={t`0.6(36.41) + 0.4(158.37) = 85.20`} />.</li>
-      <li><strong>Pick the best branch at the square:</strong> <span class="answer">add the second charger, EV $85.20 a day</span>.</li>
-      <li><strong>Perfect information.</strong> Knowing demand ahead, you would keep one if low and add one if high: <Fragment set:html={t`0.6(114.55) + 0.4(158.37) = 132.07`} />. EVPI <Fragment set:html={t`= 132.07 - 85.20 = 46.88`} /> dollars a day, the most a perfect forecast is worth.</li>
-    </ol>
-    <figure class="fig"><Fragment set:html={dtSvg} /><figcaption>The tree folded back. The highlighted branch is the decision.</figcaption></figure>
-    <p>
-      The two options tie when the chance of high demand is about 12%. Above that, the second charger pays,
-      because one high-demand day with a single charger costs far more than a quiet day with two.
+    <p class="demo-lead">
+      Value each ending, then fold the tree back: average at each circle (expected value), and take the best branch
+      at each square. Here each ending's value comes from the first two tools: revenue times availability, minus
+      the cost of waiting, minus the second charger's cost.
     </p>
+
+    <DecisionExplorer />
+
     <details class="full">
-      <summary>How the leaf values were computed</summary>
-      <Fragment set:html={d`\text{value} = \underbrace{12\lambda \times \$8 \times A}_{\text{revenue}} \;-\; \underbrace{12\,L_q \times \$10}_{\text{waiting}} \;-\; \text{charger cost}`} />
-      <p>
-        Availability <Fragment set:html={t`A`} /> is 0.909 for one charger and 0.992 for two (from section 1). <Fragment set:html={t`L_q`} /> is 0.5 and
-        6.125 for one charger at low and high demand, and 0.033 and 0.207 for two (section 2, using the M/M/2 formulas).
-        The model is deliberately simple: breakdowns scale revenue, but the queue is computed as if the chargers never
-        break. A simulation would combine the two.
-      </p>
+      <summary>Worked example: a 40% chance of high demand</summary>
+      <p>Low demand is 2 cars an hour (probability 0.6), high is 3.5 (0.4). A charge earns $8, a waiting hour costs $10, a second charger $150 a day.</p>
+      <div class="scroll"><table class="num">
+        <thead><tr><th>Option, demand</th><th>Revenue</th><th>Waiting cost</th><th>Value a day</th></tr></thead>
+        <tbody>
+          <tr><td>One charger, low</td><td>$174.55</td><td>$60.00</td><td>$114.55</td></tr>
+          <tr><td>One charger, high</td><td>$305.45</td><td>$735.00</td><td>−$429.55</td></tr>
+          <tr><td>Two chargers, low</td><td>$190.41</td><td>$4.00</td><td>$36.41</td></tr>
+          <tr><td>Two chargers, high</td><td>$333.22</td><td>$24.86</td><td>$158.37</td></tr>
+        </tbody>
+      </table></div>
+      <ol class="steps">
+        <li><strong>Fold back:</strong> one charger <Fragment set:html={t`0.6(114.55) + 0.4(-429.55) = -103.09`} />; two <Fragment set:html={t`0.6(36.41) + 0.4(158.37) = 85.20`} />.</li>
+        <li><strong>Decide:</strong> <span class="answer">add the second charger, EV $85.20 a day</span></li>
+        <li><strong>EVPI:</strong> <Fragment set:html={t`0.6(114.55) + 0.4(158.37) - 85.20 = 46.88`} /> dollars a day. The options tie at about a 12% chance of high demand.</li>
+      </ol>
+      <figure class="fig"><Fragment set:html={dtSvg} /><figcaption>The tree folded back.</figcaption></figure>
+      <p class="note-box">Revenue is <Fragment set:html={t`12\lambda \times \$8 \times A`} /> with availability <Fragment set:html={t`A`} /> = 0.909 (one) or 0.992 (two); waiting is <Fragment set:html={t`12 L_q \times \$10`} />. Breakdowns scale revenue, but the queue is computed as if the chargers never break; a simulation would combine the two.</p>
     </details>
   </section>
 

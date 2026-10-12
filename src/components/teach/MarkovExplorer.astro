@@ -1,0 +1,63 @@
+---
+/**
+ * The charger's Up/Down chain, live. Sliders set the daily break and repair
+ * chances; the page shows P, the steady state solved in one line, how fast the
+ * chain forgets a breakdown, and a simulated 120 days so the long-run share can be
+ * seen emerging from randomness. Engine: twoState() and rng() in or.js.
+ */
+---
+<div class="sx" data-markov>
+  <p class="sx-head"><strong>Try it.</strong> Change how often the charger breaks and how fast it gets fixed.</p>
+  <div class="sx-sliders">
+    <label>Breaks on a given day <output data-o="a"></output><input type="range" min="0.01" max="0.3" step="0.01" data-k="a" value="0.05" /></label>
+    <label>Fixed by the next day <output data-o="r"></output><input type="range" min="0.1" max="0.95" step="0.05" data-k="r" value="0.5" /></label>
+  </div>
+  <div class="sx-grid">
+    <div class="sx-side"><div data-read></div></div>
+    <div class="fig sx-graph" data-graph></div>
+  </div>
+  <div class="fig sx-graph" data-strip></div>
+  <div class="sx-buttons"><button type="button" data-act="sim">Simulate another 120 days</button></div>
+</div>
+
+<script>
+  import { twoState, rng } from "../../scripts/teach/or.js";
+  import { plot, canvas } from "../../lib/fig.js";
+  import { bind, fmt, pct } from "../../scripts/teach/ui.js";
+
+  for (const root of document.querySelectorAll("[data-markov]")) {
+    const st = { a: 0.05, r: 0.5 };
+    let seed = 3;
+    const draw = () => {
+      const { a, r } = st, m = twoState(a, r);
+      root.querySelector("[data-read]").innerHTML = `
+        <p class="hx-step"><strong>1. Transition matrix</strong> (rows: today, columns: tomorrow)</p>
+        <table class="num hx-H"><tr><th></th><th>Up</th><th>Down</th></tr>
+          <tr><th>Up</th><td>${fmt(1 - a)}</td><td>${fmt(a)}</td></tr><tr><th>Down</th><td>${fmt(r)}</td><td>${fmt(1 - r)}</td></tr></table>
+        <p class="hx-step"><strong>2. Steady state:</strong> π<sub>U</sub> = (${fmt(1 - a)})π<sub>U</sub> + (${fmt(r)})π<sub>D</sub>, so
+          ${fmt(a)}π<sub>U</sub> = ${fmt(r)}π<sub>D</sub>. With π<sub>U</sub> + π<sub>D</sub> = 1:</p>
+        <p class="hx-verdict">Up <strong>${pct(m.up)}</strong> of days (π<sub>U</sub> = ${fmt(r)} / ${fmt(a + r)}).
+          With two chargers, at least one works ${pct(1 - m.down ** 2)} of days.</p>
+        <p class="hx-step">An up spell lasts ${fmt(1 / a, 1)} days on average, a down spell ${fmt(1 / r, 1)}.</p>`;
+      const g = plot({ w: 400, h: 240, x: [0, 14], y: [0, 1], pad: [14, 12, 38, 44] })
+        .axes({ xt: [0, 2, 4, 6, 8, 10, 12, 14], yt: [0, 0.5, 1], xl: "days since it broke", yl: "P(up)", grid: true, yfmt: (v) => v.toFixed(1) })
+        .line([[0, m.up], [14, m.up]], "dash-a")
+        .text(13.8, m.up, `steady state ${pct(m.up)}`, { anchor: "end", dy: m.up > 0.85 ? 16 : -6, cls: "accent" });
+      const pts = Array.from({ length: 15 }, (_, n) => [n, m.fromDown(n)]);
+      g.line(pts, "ln"); pts.forEach(([n, p]) => g.dot(n, p, "pt", 3));
+      root.querySelector("[data-graph]").innerHTML = g.svg(`After a breakdown, the chance the charger is up climbs to the steady state, ${pct(m.up)}.`);
+
+      // 120 simulated days as a strip of squares.
+      const R = rng(seed), days = [];
+      let up = R() < m.up;
+      for (let d = 0; d < 120; d++) { days.push(up); up = up ? R() >= a : R() < r; }
+      const t = canvas(600, 70), w = 600 / 120;
+      days.forEach((u, d) => t.add(`<rect x="${(d * w).toFixed(1)}" y="8" width="${(w - 0.6).toFixed(1)}" height="30" class="${u ? "bar" : "fill-w"}"/>`));
+      const share = days.filter(Boolean).length / days.length;
+      t.text(0, 60, `120 simulated days: up ${pct(share)} of them (green), down the rest (red). The steady state says ${pct(m.up)}.`, "note", "start");
+      root.querySelector("[data-strip]").innerHTML = t.svg(`120 simulated days; the charger was up on ${pct(share)} of them.`);
+    };
+    bind(root, st, draw, { a: (v) => pct(v, 0), r: (v) => pct(v, 0) });
+    root.querySelector("[data-act=sim]").addEventListener("click", () => { seed++; draw(); });
+  }
+</script>

@@ -2,6 +2,10 @@
 import Base from "../../../layouts/Base.astro";
 import { t, d } from "../../../lib/tex.js";
 import { plot, canvas } from "../../../lib/fig.js";
+import DescentExplorer from "../../../components/teach/DescentExplorer.astro";
+import BranchBoundExplorer from "../../../components/teach/BranchBoundExplorer.astro";
+import TransportExplorer from "../../../components/teach/TransportExplorer.astro";
+import ShadowPriceExplorer from "../../../components/teach/ShadowPriceExplorer.astro";
 import HessianExplorer from "../../../components/teach/HessianExplorer.astro";
 import SimplexExplorer from "../../../components/teach/SimplexExplorer.astro";
 import "katex/dist/katex.min.css";
@@ -93,9 +97,9 @@ bb.edge(300, 62, 130, 140, { r1: 0, r2: 0, cls: "arr-m", label: "x₂ ≤ 3", lx
   .box(130, 162, 190, 46, ["1. x = (3, 3), z = 39", "integer: incumbent 39"], "node")
   .box(450, 162, 170, 46, ["2. x = (1.8, 4)", "z = 41 > 39: branch"], "node")
   .box(340, 272, 180, 46, ["3. x = (1, 4.44)", "z = 40.56 > 39: branch"], "node")
-  .box(540, 272, 110, 46, ["4. infeasible", "prune"], "node-m")
-  .box(200, 356, 170, 40, ["5. x = (1, 4), z = 37", "37 < 39: prune"], "node-m")
-  .box(460, 356, 190, 40, ["6. x = (0, 5), z = 40", "integer, best: optimal"], "node-a");
+  .box(540, 272, 110, 46, ["6. infeasible", "prune"], "node-m")
+  .box(200, 356, 170, 40, ["4. x = (1, 4), z = 37", "37 < 39: prune"], "node-m")
+  .box(460, 356, 190, 40, ["5. x = (0, 5), z = 40", "integer, best: optimal"], "node-a");
 const bbSvg = bb.svg("Branch-and-bound tree. The LP relaxation gives 41.25 at (2.25, 3.75). Branching on x2 at most 3 gives the integer point (3,3) worth 39. Branching on x2 at least 4 gives 41, then x1 at most 1 gives 40.56; x1 at least 2 is infeasible. Under x1 at most 1, x2 at most 4 gives 37 and is pruned; x2 at least 5 gives the integer point (0,5) worth 40, the optimum.");
 
 const lat = plot({ w: 380, h: 320, x: [0, 7], y: [0, 6] })
@@ -175,230 +179,148 @@ const pf = plot({ w: 520, h: 340, x: [-2, 2], y: [-5, 6] })
 const polySvg = pf.svg("Plot of f(x) = x⁴ − 3x² + x on [−2, 2]: two valleys. The deeper one, at x ≈ −1.30, is the global minimum; a local method started on the right slides into the shallower one at x ≈ 1.13 and stops.");
 ---
 
-<Base title="IE 3315 Worked Examples" wide={true} description="Operations Research I, worked step by step: an LP solved graphically and by simplex, its dual and shadow prices, KKT, a transportation network, branch and bound, convexity with Hessians, and modern quadratic solvers.">
+<Base title="IE 3315 Worked Examples" wide={true} description="Operations Research I, interactive: step through simplex, move resources and watch shadow prices and KKT, re-solve a transportation network, grow a branch-and-bound tree, test convexity with a Hessian, and watch a local method miss the global minimum.">
 <div class="ex">
   <p class="crumbs"><a href="/teaching/">Teaching</a> · <a href="/teaching/operations-research/">IE 3315 Operations Research I</a> · Worked examples</p>
 
   <p>
-    One small problem for each core idea in the course, broken down the way it is in class: the idea in
-    plain words, the few equations you need, and a worked answer. Where there is a fuller version of the
-    math, it comes after the simple one. Two of the sections have something to click.
+    Each section has one idea, a short explanation, and something to try. The worked example is
+    folded underneath for when you want every step, and the full math after that.
   </p>
   <ol class="toc">
-    <li><a href="#lp">A product-mix LP, graphically and by simplex</a></li>
-    <li><a href="#dual">Duality, shadow prices and KKT</a></li>
-    <li><a href="#transport">A transportation problem as a network</a></li>
+    <li><a href="#lp">Simplex: corner to corner</a></li>
+    <li><a href="#dual">Shadow prices and KKT</a></li>
+    <li><a href="#transport">A transportation network</a></li>
     <li><a href="#bnb">Branch and bound</a></li>
-    <li><a href="#convex">Convexity: Hessians and Sylvester's criterion</a></li>
-    <li><a href="#qp">Nonconvex problems and modern solvers</a></li>
+    <li><a href="#convex">Convexity: Hessians and Sylvester</a></li>
+    <li><a href="#qp">Nonconvex problems and global solvers</a></li>
   </ol>
 
   <!-- 1 ------------------------------------------------------------------ -->
   <section id="lp">
-    <h2>1. A product-mix LP, graphically and by simplex</h2>
+    <h2>1. Simplex: corner to corner</h2>
     <ul class="able">
       <li>Turn a word problem into variables, an objective and constraints</li>
-      <li>Graph the constraints and find the corner points</li>
-      <li>Explain how simplex moves from corner to corner</li>
-      <li>Report the answer as <Fragment set:html={t`z`} /> and <Fragment set:html={t`x`} /></li>
+      <li>Find the corner points of the feasible region</li>
+      <li>Explain how simplex moves from corner to corner, and report z and x</li>
     </ul>
     <div class="problem">
       <p><strong>Problem.</strong> A shop makes chairs ($40 profit each) and tables ($50). A chair takes 1 hour of
-      labor and 4 units of wood; a table takes 2 hours and 3 units. Each week there are 40 hours of labor and
-      120 units of wood. What should the shop make?</p>
+      labor and 4 units of wood; a table takes 2 hours and 3 units. There are 40 hours and 120 units a week.</p>
+      <Fragment set:html={d`\max\ z = 40x_1 + 50x_2 \quad\text{s.t.}\quad x_1 + 2x_2 \le 40 \ \text{(labor)},\quad 4x_1 + 3x_2 \le 120 \ \text{(wood)},\quad x_1, x_2 \ge 0`} />
     </div>
-
-    <h3>Formulate</h3>
-    <dl class="defs">
-      <dt>Decision variables</dt><dd>What you choose: <Fragment set:html={t`x_1`} /> chairs and <Fragment set:html={t`x_2`} /> tables.</dd>
-      <dt>Objective</dt><dd>What you maximize: profit <Fragment set:html={t`z`} />.</dd>
-      <dt>Constraints</dt><dd>One per limited resource, plus no negative production.</dd>
-    </dl>
-    <Fragment set:html={d`\begin{aligned}
-      \max\; z = {} & 40x_1 + 50x_2 \\
-      \text{s.t.}\; & x_1 + 2x_2 \le 40 && \text{(labor)}\\
-      & 4x_1 + 3x_2 \le 120 && \text{(wood)}\\
-      & x_1,\ x_2 \ge 0
-    \end{aligned}`} />
-
-    <h3>Solve graphically</h3>
-    <p>The best answer is always at a corner of the feasible region, so only the corners need checking.</p>
-    <ol class="steps">
-      <li><strong>Draw each constraint</strong> from its two intercepts. Labor: <Fragment set:html={t`(40, 0)`} /> and <Fragment set:html={t`(0, 20)`} />. Wood: <Fragment set:html={t`(30, 0)`} /> and <Fragment set:html={t`(0, 40)`} />.</li>
-      <li><strong>Shade the feasible side</strong> (the origin passes both, so it is the origin's side).</li>
-      <li><strong>Find the corners.</strong> Where the two lines cross, solve them together: <Fragment set:html={t`x_1 = 24`} />, <Fragment set:html={t`x_2 = 8`} />.</li>
-      <li><strong>Check <Fragment set:html={t`z`} /> at every corner:</strong> A <Fragment set:html={t`(0,0)`} /> 0; B <Fragment set:html={t`(30,0)`} /> 1,200; C <Fragment set:html={t`(0,20)`} /> 1,000; D <Fragment set:html={t`(24,8)`} /> 1,360.</li>
-      <li><strong>Answer:</strong> <span class="answer"><Fragment set:html={t`x = (24, 8),\ z = 1{,}360`} /></span>: 24 chairs and 8 tables, $1,360 a week.</li>
-    </ol>
-    <figure class="fig"><Fragment set:html={lp} />
-      <figcaption>The feasible region (shaded) and its corners. The arrows are the path simplex takes, A → C → D. The dashed green line is the profit line z = 1,360, touching the region only at D.</figcaption></figure>
-
-    <h3>The same answer by simplex</h3>
-    <p>Simplex is the graphical method done with algebra, so it works with more than two variables:</p>
-    <ol class="steps">
-      <li><strong>Only look at corner points.</strong></li>
-      <li><strong>Start at a feasible corner</strong>, here the origin: make nothing.</li>
-      <li><strong>Check: is a neighbouring corner better?</strong> In the table, a negative number in the z row says yes.</li>
-      <li><strong>Move to the better corner</strong> (pivot), and repeat until no neighbour is better.</li>
-    </ol>
-    <p>
-      In the table, each <em>basis</em> (the set of variables allowed to be nonzero) is one corner. Adding slack
-      variables <Fragment set:html={t`s_1`} /> (spare labor) and <Fragment set:html={t`s_2`} /> (spare wood) turns the constraints into equations,
-      and starting with only the slacks in the basis puts you at the origin. Click through it:
+    <p class="demo-lead">
+      The best answer is always at a corner. Simplex starts at one corner (make nothing), checks whether a
+      neighbouring corner is better (a negative number in the z row says yes), moves there, and repeats.
+      Each basis in the table is one corner on the graph.
     </p>
 
     <SimplexExplorer />
 
     <details class="full">
-      <summary>The pivots, worked by hand</summary>
+      <summary>Worked example: the graphical method</summary>
       <ol class="steps">
-        <li><strong>Corner A.</strong> Basis <Fragment set:html={t`\{s_1, s_2\}`} />: <Fragment set:html={t`s_1 = 40,\ s_2 = 120,\ z = 0`} />. The z row is <Fragment set:html={t`z - 40x_1 - 50x_2 = 0`} />.</li>
-        <li><strong>Entering variable:</strong> the most negative z-row number is <Fragment set:html={t`-50`} />, so <Fragment set:html={t`x_2`} /> enters.</li>
-        <li><strong>Ratio test (who leaves):</strong> labor <Fragment set:html={t`40/2 = 20`} />, wood <Fragment set:html={t`120/3 = 40`} />. Labor runs out first, so <Fragment set:html={t`s_1`} /> leaves. Pivot to corner C <Fragment set:html={t`(0, 20)`} />, <Fragment set:html={t`z = 1{,}000`} />.</li>
-        <li><strong>Again:</strong> the z row is now <Fragment set:html={t`z - 15x_1 + 25s_1 = 1{,}000`} />, so <Fragment set:html={t`x_1`} /> enters. Ratios <Fragment set:html={t`20/0.5 = 40`} /> and <Fragment set:html={t`60/2.5 = 24`} />: wood leaves. Pivot to corner D <Fragment set:html={t`(24, 8)`} />.</li>
-        <li><strong>Stop:</strong> the z row is <Fragment set:html={t`z + 16s_1 + 6s_2 = 1{,}360`} />, with nothing negative left. The 16 and 6 are the shadow prices of labor and wood (next section).</li>
+        <li><strong>Draw each constraint</strong> from its intercepts. Labor: <Fragment set:html={t`(40, 0)`} /> and <Fragment set:html={t`(0, 20)`} />. Wood: <Fragment set:html={t`(30, 0)`} /> and <Fragment set:html={t`(0, 40)`} />.</li>
+        <li><strong>Shade the feasible side</strong> (the origin passes both).</li>
+        <li><strong>Find the corners.</strong> Where the lines cross, solve them together: <Fragment set:html={t`x_1 = 24`} />, <Fragment set:html={t`x_2 = 8`} />.</li>
+        <li><strong>Check z at every corner:</strong> A <Fragment set:html={t`(0,0)`} /> 0; B <Fragment set:html={t`(30,0)`} /> 1,200; C <Fragment set:html={t`(0,20)`} /> 1,000; D <Fragment set:html={t`(24,8)`} /> 1,360.</li>
+        <li><strong>Answer:</strong> <span class="answer"><Fragment set:html={t`x = (24, 8),\ z = 1{,}360`} /></span></li>
+      </ol>
+      <figure class="fig"><Fragment set:html={lp} /><figcaption>The feasible region, its corners, and the simplex path A → C → D.</figcaption></figure>
+    </details>
+    <details class="full">
+      <summary>Worked example: the pivots by hand</summary>
+      <ol class="steps">
+        <li><strong>Corner A.</strong> Slacks <Fragment set:html={t`s_1`} /> (spare labor) and <Fragment set:html={t`s_2`} /> (spare wood) are the basis: <Fragment set:html={t`s_1 = 40,\ s_2 = 120,\ z = 0`} />. The z row is <Fragment set:html={t`z - 40x_1 - 50x_2 = 0`} />.</li>
+        <li><strong>Entering variable:</strong> the most negative z-row number, <Fragment set:html={t`-50`} />: <Fragment set:html={t`x_2`} /> enters.</li>
+        <li><strong>Ratio test:</strong> labor <Fragment set:html={t`40/2 = 20`} />, wood <Fragment set:html={t`120/3 = 40`} />. Labor runs out first, so <Fragment set:html={t`s_1`} /> leaves: corner C <Fragment set:html={t`(0, 20)`} />, <Fragment set:html={t`z = 1{,}000`} />.</li>
+        <li><strong>Again:</strong> z row <Fragment set:html={t`z - 15x_1 + 25s_1 = 1{,}000`} />, so <Fragment set:html={t`x_1`} /> enters; ratios <Fragment set:html={t`20/0.5 = 40`} /> and <Fragment set:html={t`60/2.5 = 24`} />, so wood leaves: corner D.</li>
+        <li><strong>Stop:</strong> z row <Fragment set:html={t`z + 16s_1 + 6s_2 = 1{,}360`} />, nothing negative. The 16 and 6 are the shadow prices.</li>
       </ol>
     </details>
   </section>
 
   <!-- 2 ------------------------------------------------------------------ -->
   <section id="dual">
-    <h2>2. Duality, shadow prices and KKT</h2>
+    <h2>2. Shadow prices and KKT</h2>
     <ul class="able">
-      <li>Write the dual of an LP</li>
-      <li>Read shadow prices and reduced costs</li>
+      <li>Write the dual of an LP and read its shadow prices</li>
+      <li>Explain a reduced cost</li>
       <li>Use the KKT conditions to confirm a primal and a dual solution are optimal</li>
     </ul>
-
-    <h3>The dual, in four pairings</h3>
-    <p>Every LP (the <em>primal</em>) has a twin LP (the <em>dual</em>) that prices its resources. They are linked in pairs:</p>
-    <ul>
-      <li>Each primal constraint goes with one dual variable, its shadow price <Fragment set:html={t`y_i`} />.</li>
-      <li>The primal right-hand side <Fragment set:html={t`b`} /> becomes the dual's costs, and the primal costs <Fragment set:html={t`c`} /> become the dual's right-hand side.</li>
-      <li>A max primal gives a min dual.</li>
-      <li>The primal's constraint slacks are the dual's reduced costs, and the other way round.</li>
-    </ul>
-    <p>For the shop, price labor at <Fragment set:html={t`y_1`} /> an hour and wood at <Fragment set:html={t`y_2`} /> a unit:</p>
-    <Fragment set:html={d`\begin{aligned}
-      \min\; w = {} & 40y_1 + 120y_2 \\
-      \text{s.t.}\; & y_1 + 4y_2 \ge 40 && \text{(a chair's resources are worth at least \$40)}\\
-      & 2y_1 + 3y_2 \ge 50 && \text{(a table's are worth at least \$50)}\\
-      & y_1,\ y_2 \ge 0
-    \end{aligned}`} />
-    <ul>
-      <li><strong>Weak duality:</strong> any feasible primal is at most any feasible dual, <Fragment set:html={t`cx \le by`} />.</li>
-      <li><strong>Strong duality:</strong> at the optimum they are equal, <Fragment set:html={t`cx = by`} />. So when the two match, you can stop.</li>
-    </ul>
-    <p>
-      Both products are made, so both dual constraints are tight: <Fragment set:html={t`y_1 + 4y_2 = 40`} /> and <Fragment set:html={t`2y_1 + 3y_2 = 50`} />,
-      giving <span class="answer"><Fragment set:html={t`y = (16, 6),\ w = 1{,}360`} /></span>, the same as <Fragment set:html={t`z`} />.
+    <p class="demo-lead">
+      Every LP has a dual that prices its resources: one price <Fragment set:html={t`y_i`} /> per constraint. A
+      <strong>shadow price</strong> is how much z improves per extra unit of a resource. <strong>KKT</strong> checks a plan
+      and a set of prices with three tests: the plan is feasible, the prices are feasible, and complementary
+      slackness holds (slack means a zero price). As four lines:
     </p>
+    <Fragment set:html={d`Ax \le b,\ x \ge 0 \qquad A^\top y \ge c,\ y \ge 0 \qquad y\,(b - Ax) = 0 \qquad x\,(c - A^\top y) = 0`} />
 
-    <h3>Shadow prices and reduced costs</h3>
-    <dl class="defs">
-      <dt>Shadow price</dt><dd>How much the objective improves if a resource's right-hand side <Fragment set:html={t`b`} /> goes up by one. Labor is worth $16 an hour and wood $6 a unit, while the same corner stays optimal (labor 30 to 80 hours, wood 60 to 160 units).</dd>
-      <dt>Reduced cost</dt><dd>How much a variable's profit <Fragment set:html={t`c`} /> must improve before it enters the plan. Variables already in the plan have reduced cost 0.</dd>
-    </dl>
-    <p>
-      <strong>Example.</strong> A bench earns $30 and uses 1 hour of labor and 3 units of wood. At the shadow prices its
-      resources are worth <Fragment set:html={t`16(1) + 6(3) = 34`} />, so its reduced cost is <Fragment set:html={t`30 - 34 = -4`} />: making one loses $4. It enters
-      the plan only if its profit passes $34.
-    </p>
-
-    <h3>KKT: how you know you are done</h3>
-    <p>The KKT conditions are a test for optimality. For an LP they boil down to three tests:</p>
-    <ol class="steps">
-      <li><strong>Primal feasibility.</strong> The answer has to obey the constraints. If it isn't feasible, it can't be optimal.</li>
-      <li><strong>Dual feasibility.</strong> Same idea for the dual: the prices have to obey the dual's constraints.</li>
-      <li><strong>Complementary slackness.</strong> If a constraint has slack, its dual variable is zero. If a dual variable is nonzero, its constraint is binding. The same holds the other way, between variables and reduced costs.</li>
-    </ol>
-    <p>As equations, that is four lines:</p>
-    <Fragment set:html={d`\begin{aligned}
-      &Ax \le b,\ \ x \ge 0 && \text{(primal feasibility)}\\
-      &A^\top y \ge c,\ \ y \ge 0 && \text{(dual feasibility)}\\
-      &y\,(b - Ax) = 0 && \text{(complementary slackness)}\\
-      &x\,(c - A^\top y) = 0 && \text{(complementary slackness)}
-    \end{aligned}`} />
-    <p>Plug in <Fragment set:html={t`x = (24, 8)`} /> and <Fragment set:html={t`y = (16, 6)`} />:</p>
-    <div class="scroll"><table class="num left">
-      <thead><tr><th>Equation</th><th>Plug in</th><th>Holds?</th></tr></thead>
-      <tbody>
-        <tr><td><Fragment set:html={t`Ax \le b`} /></td><td>labor <Fragment set:html={t`24 + 2(8) = 40 \le 40`} />; wood <Fragment set:html={t`4(24) + 3(8) = 120 \le 120`} /></td><td>yes</td></tr>
-        <tr><td><Fragment set:html={t`A^\top y \ge c`} /></td><td>chair <Fragment set:html={t`16 + 4(6) = 40 \ge 40`} />; table <Fragment set:html={t`2(16) + 3(6) = 50 \ge 50`} /></td><td>yes</td></tr>
-        <tr><td><Fragment set:html={t`y(b - Ax) = 0`} /></td><td><Fragment set:html={t`16(40 - 40) + 6(120 - 120) = 0`} /></td><td>yes</td></tr>
-        <tr><td><Fragment set:html={t`x(c - A^\top y) = 0`} /></td><td><Fragment set:html={t`24(40 - 40) + 8(50 - 50) = 0`} /></td><td>yes</td></tr>
-      </tbody>
-    </table></div>
-    <p>All four hold, so both answers are optimal: <span class="answer"><Fragment set:html={t`z = w = 1{,}360`} /></span>.</p>
-    <p><strong>When is KKT enough?</strong></p>
-    <ul>
-      <li>The conditions are always <em>necessary</em>: if they fail, the answer is not optimal.</li>
-      <li>For convex problems, including every LP, they are also <em>sufficient</em>: if they hold, the answer is optimal.</li>
-      <li>For nonconvex problems they are only necessary: an answer can pass and still not be the best (section 6).</li>
-    </ul>
+    <ShadowPriceExplorer />
 
     <details class="full">
+      <summary>Worked example: the dual, shadow prices and the KKT check</summary>
+      <p>The primal and dual come in pairs: each primal constraint goes with a dual variable; the primal's <Fragment set:html={t`b`} /> is the dual's costs and its <Fragment set:html={t`c`} /> the dual's right-hand side; max becomes min; primal slacks are dual reduced costs.</p>
+      <Fragment set:html={d`\min\ w = 40y_1 + 120y_2 \quad\text{s.t.}\quad y_1 + 4y_2 \ge 40,\quad 2y_1 + 3y_2 \ge 50,\quad y \ge 0`} />
+      <ul>
+        <li><strong>Weak duality:</strong> any feasible pair has <Fragment set:html={t`cx \le by`} />. <strong>Strong duality:</strong> at the optimum <Fragment set:html={t`cx = by`} />, so when they match you can stop.</li>
+        <li>Both products are made, so both dual constraints are tight: <span class="answer"><Fragment set:html={t`y = (16, 6),\ w = 1{,}360`} /></span>.</li>
+        <li><strong>Shadow prices:</strong> labor is worth $16 an hour and wood $6 a unit, while labor stays between 30 and 80 hours and wood between 60 and 160.</li>
+        <li><strong>Reduced cost:</strong> a bench earning $30, using 1 hour and 3 units, uses resources worth <Fragment set:html={t`16 + 3(6) = 34`} />. Reduced cost <Fragment set:html={t`30 - 34 = -4`} />: it stays out unless its profit passes $34.</li>
+      </ul>
+      <div class="scroll"><table class="num left">
+        <thead><tr><th>KKT line</th><th>Plug in x = (24, 8), y = (16, 6)</th><th>Holds?</th></tr></thead>
+        <tbody>
+          <tr><td><Fragment set:html={t`Ax \le b`} /></td><td>labor <Fragment set:html={t`24 + 2(8) = 40 \le 40`} />; wood <Fragment set:html={t`4(24) + 3(8) = 120 \le 120`} /></td><td>yes</td></tr>
+          <tr><td><Fragment set:html={t`A^\top y \ge c`} /></td><td>chair <Fragment set:html={t`16 + 4(6) = 40 \ge 40`} />; table <Fragment set:html={t`2(16) + 3(6) = 50 \ge 50`} /></td><td>yes</td></tr>
+          <tr><td><Fragment set:html={t`y(b - Ax) = 0`} /></td><td><Fragment set:html={t`16(0) + 6(0) = 0`} /></td><td>yes</td></tr>
+          <tr><td><Fragment set:html={t`x(c - A^\top y) = 0`} /></td><td><Fragment set:html={t`24(0) + 8(0) = 0`} /></td><td>yes</td></tr>
+        </tbody>
+      </table></div>
+      <p>All four hold: <span class="answer"><Fragment set:html={t`z = w = 1{,}360`} /></span>, both optimal. KKT is always necessary; it is also sufficient for convex problems (every LP), and only necessary for nonconvex ones.</p>
+    </details>
+    <details class="full">
       <summary>The full KKT conditions, for nonlinear problems</summary>
-      <p>For <Fragment set:html={t`\max f(x)`} /> subject to <Fragment set:html={t`g_i(x) \le b_i`} />, the dual variables become multipliers <Fragment set:html={t`\lambda_i`} />, and dual feasibility becomes <em>stationarity</em>:</p>
+      <p>For <Fragment set:html={t`\max f(x)`} /> subject to <Fragment set:html={t`g_i(x) \le b_i`} />, dual feasibility becomes <em>stationarity</em>:</p>
       <Fragment set:html={d`\begin{aligned}
         &\text{stationarity:} && \nabla f(x^*) = \textstyle\sum_i \lambda_i \nabla g_i(x^*)\\
         &\text{primal feasibility:} && g_i(x^*) \le b_i\\
         &\text{dual feasibility:} && \lambda_i \ge 0\\
         &\text{complementary slackness:} && \lambda_i\,\big(b_i - g_i(x^*)\big) = 0
       \end{aligned}`} />
-      <p>
-        For the shop, stationarity reads <Fragment set:html={t`(40, 50) = 16\,(1, 2) + 6\,(4, 3)`} />: the objective's direction is a
-        positive mix of the binding constraints' directions, so no feasible move improves it.
-      </p>
-      <figure class="fig"><Fragment set:html={kkt} />
-        <figcaption>Stationarity at the optimal corner: the objective direction c lies inside the cone (shaded) of the two binding constraints' normals.</figcaption></figure>
-      <p>
-        A nonlinear example: <Fragment set:html={t`\min (x-3)^2 + (y-2)^2`} /> subject to <Fragment set:html={t`x + y \le 4`} />. Stationarity gives
-        <Fragment set:html={t`2(x-3) + \lambda = 0`} /> and <Fragment set:html={t`2(y-2) + \lambda = 0`} />. With the constraint binding,
-        <Fragment set:html={t`x^* = (2.5,\ 1.5)`} /> and <Fragment set:html={t`\lambda = 1 \ge 0`} />. The objective is convex, so this is the global minimum.
-      </p>
+      <p>For the shop, <Fragment set:html={t`(40, 50) = 16\,(1, 2) + 6\,(4, 3)`} />: the objective's direction is a positive mix of the binding constraints' directions.</p>
+      <figure class="fig"><Fragment set:html={kkt} /><figcaption>Stationarity: c lies inside the cone of the binding constraints' normals.</figcaption></figure>
+      <p>Nonlinear example: <Fragment set:html={t`\min (x-3)^2 + (y-2)^2`} /> subject to <Fragment set:html={t`x + y \le 4`} /> gives <Fragment set:html={t`x^* = (2.5, 1.5)`} />, <Fragment set:html={t`\lambda = 1`} />; the objective is convex, so it is the global minimum.</p>
     </details>
   </section>
 
   <!-- 3 ------------------------------------------------------------------ -->
   <section id="transport">
-    <h2>3. A transportation problem as a network</h2>
+    <h2>3. A transportation network</h2>
     <ul class="able">
       <li>Write the standard transportation formulation</li>
       <li>Draw it as a network of supply and demand nodes</li>
       <li>Solve it and check it is optimal</li>
     </ul>
-    <div class="problem">
-      <p><strong>Problem.</strong> Three plants supply 50, 60 and 40 units; two stores need 70 and 80. Ship everything at least cost.</p>
-      <div class="scroll"><table class="num">
-        <thead><tr><th></th><th>Store A</th><th>Store B</th><th>Supply</th></tr></thead>
-        <tbody>
-          <tr><td>Plant 1</td><td>$4</td><td>$6</td><td>50</td></tr>
-          <tr><td>Plant 2</td><td>$5</td><td>$3</td><td>60</td></tr>
-          <tr><td>Plant 3</td><td>$3</td><td>$7</td><td>40</td></tr>
-          <tr><td>Demand</td><td>70</td><td>80</td><td>150 = 150</td></tr>
-        </tbody>
-      </table></div>
-    </div>
-
-    <h3>Formulate</h3>
-    <p>Every transportation problem has the same form: ship <Fragment set:html={t`x_{ij}`} /> from supplier <Fragment set:html={t`i`} /> to customer <Fragment set:html={t`j`} />, at cost <Fragment set:html={t`c_{ij}`} /> each.</p>
-    <Fragment set:html={d`\min \sum_{i,j} c_{ij}x_{ij} \quad\text{s.t.}\quad \sum_j x_{ij} = \text{supply}_i,\quad \sum_i x_{ij} = \text{demand}_j,\quad x_{ij} \ge 0`} />
-    <p>
-      Here supply equals demand (150 = 150), so every constraint is an equation. As a network, each plant and
-      store is a node and each <Fragment set:html={t`x_{ij}`} /> is an arc. Whole-number supplies and demands give a whole-number answer,
-      with no integer constraints needed.
+    <p class="demo-lead">
+      Ship <Fragment set:html={t`x_{ij}`} /> from each supplier <Fragment set:html={t`i`} /> to each customer <Fragment set:html={t`j`} /> at cost <Fragment set:html={t`c_{ij}`} />: every
+      supply is shipped and every demand is met. Each plant and store is a node, each route an arc, and whole-number
+      supplies give a whole-number answer.
     </p>
+    <Fragment set:html={d`\min \sum_{i,j} c_{ij}x_{ij} \quad\text{s.t.}\quad \sum_j x_{ij} = \text{supply}_i,\quad \sum_i x_{ij} = \text{demand}_j,\quad x_{ij} \ge 0`} />
 
-    <h3>Solve</h3>
-    <ol class="steps">
-      <li><strong>Cheapest arcs first.</strong> Plant 2 to B costs $3: send 60. Plant 3 to A costs $3: send 40.</li>
-      <li><strong>Fill what is left.</strong> A needs 30 more and B 20 more; only Plant 1 has supply left. Send 30 to A and 20 to B.</li>
-      <li><strong>Cost:</strong> <span class="answer"><Fragment set:html={t`60(3) + 40(3) + 30(4) + 20(6) = 540`} /></span>.</li>
-      <li><strong>Check it is optimal.</strong> Give each plant a price <Fragment set:html={t`u_i`} /> and each store <Fragment set:html={t`v_j`} /> with <Fragment set:html={t`u_i + v_j = c_{ij}`} /> on the used arcs (<Fragment set:html={t`u_1 = 0`} />, so <Fragment set:html={t`v_A = 4,\ v_B = 6,\ u_2 = -3,\ u_3 = -1`} />). The unused arcs' reduced costs <Fragment set:html={t`c_{ij} - u_i - v_j`} /> are 4 (Plant 2 to A) and 2 (Plant 3 to B). Both positive, so no reroute saves money.</li>
-    </ol>
-    <figure class="fig"><Fragment set:html={netSvg} />
-      <figcaption>The optimal plan as a network: four arcs carry flow, for a total cost of $540.</figcaption></figure>
+    <TransportExplorer />
+
+    <details class="full">
+      <summary>Worked example: three plants, two stores</summary>
+      <ol class="steps">
+        <li><strong>Cheapest arcs first.</strong> Plant 2 to B costs $3: send 60. Plant 3 to A costs $3: send 40.</li>
+        <li><strong>Fill what is left.</strong> A needs 30 more and B 20 more, from Plant 1.</li>
+        <li><strong>Cost:</strong> <span class="answer"><Fragment set:html={t`60(3) + 40(3) + 30(4) + 20(6) = 540`} /></span></li>
+        <li><strong>Check.</strong> Prices with <Fragment set:html={t`u_i + v_j = c_{ij}`} /> on used arcs (<Fragment set:html={t`u_1 = 0`} />): <Fragment set:html={t`v_A = 4,\ v_B = 6,\ u_2 = -3,\ u_3 = -1`} />. Unused arcs' reduced costs <Fragment set:html={t`c_{ij} - u_i - v_j`} /> are 4 and 2, both positive: optimal.</li>
+      </ol>
+      <figure class="fig"><Fragment set:html={netSvg} /><figcaption>The optimal plan: four arcs carry flow, $540.</figcaption></figure>
+    </details>
   </section>
 
   <!-- 4 ------------------------------------------------------------------ -->
@@ -409,114 +331,87 @@ const polySvg = pf.svg("Plot of f(x) = x⁴ − 3x² + x on [−2, 2]: two valle
       <li>Branch on a fractional variable</li>
       <li>Prune branches, and know when you are done</li>
     </ul>
-    <div class="problem">
-      <p><strong>Problem.</strong> Maximize <Fragment set:html={t`z = 5x_1 + 8x_2`} /> subject to <Fragment set:html={t`x_1 + x_2 \le 6`} /> and <Fragment set:html={t`5x_1 + 9x_2 \le 45`} />, with <Fragment set:html={t`x_1, x_2`} /> whole numbers.</p>
-    </div>
-    <h3>The recipe</h3>
-    <ol class="steps">
-      <li><strong>Relax:</strong> drop "whole number" and solve the LP. Its <Fragment set:html={t`z`} /> is a bound: no integer answer can beat it.</li>
-      <li><strong>Branch:</strong> if a variable is fractional, say <Fragment set:html={t`x_2 = 3.75`} />, split into <Fragment set:html={t`x_2 \le 3`} /> and <Fragment set:html={t`x_2 \ge 4`} />.</li>
-      <li><strong>Prune</strong> a branch if it is infeasible, if its answer is already whole numbers (keep the best one, the <em>incumbent</em>), or if its bound is no better than the incumbent.</li>
-      <li><strong>Stop</strong> when no branches are left. The incumbent is optimal.</li>
-    </ol>
-    <h3>Why not just round?</h3>
-    <p>
-      The LP answer is <Fragment set:html={t`(2.25, 3.75)`} />, <Fragment set:html={t`z = 41.25`} />. Rounding to <Fragment set:html={t`(2, 4)`} /> breaks the second
-      constraint (<Fragment set:html={t`46 > 45`} />); rounding down to <Fragment set:html={t`(2, 3)`} /> earns only 34. The real answer is elsewhere.
+    <div class="problem"><p><strong>Problem.</strong> Maximize <Fragment set:html={t`5x_1 + 8x_2`} /> subject to <Fragment set:html={t`x_1 + x_2 \le 6`} /> and <Fragment set:html={t`5x_1 + 9x_2 \le 45`} />, whole numbers only.</p></div>
+    <p class="demo-lead">
+      <strong>Relax</strong> (drop "whole numbers" and solve the LP: its z is a bound), <strong>branch</strong> on a
+      fractional variable (<Fragment set:html={t`x_2 \le 3`} /> or <Fragment set:html={t`x_2 \ge 4`} />), <strong>prune</strong> a branch that is infeasible,
+      already whole, or no better than the best so far, and <strong>stop</strong> when nothing is left to branch.
     </p>
-    <figure class="fig"><Fragment set:html={latSvg} />
-      <figcaption>The LP region and its whole-number points. The best whole-number point, (0, 5), is not near the LP optimum.</figcaption></figure>
-    <h3>The tree</h3>
-    <ol class="steps">
-      <li>Node 0: <Fragment set:html={t`(2.25, 3.75)`} />, 41.25. Branch on <Fragment set:html={t`x_2`} />.</li>
-      <li>Node 1 (<Fragment set:html={t`x_2 \le 3`} />): <Fragment set:html={t`(3, 3)`} />, 39. Whole numbers: incumbent 39.</li>
-      <li>Node 2 (<Fragment set:html={t`x_2 \ge 4`} />): <Fragment set:html={t`(1.8, 4)`} />, 41. Beats 39: branch on <Fragment set:html={t`x_1`} />.</li>
-      <li>Node 3 (<Fragment set:html={t`x_1 \le 1`} />): <Fragment set:html={t`(1, 4.44)`} />, 40.56. Branch again. Node 4 (<Fragment set:html={t`x_1 \ge 2`} />): infeasible, prune.</li>
-      <li>Node 5 (<Fragment set:html={t`x_2 \le 4`} />): <Fragment set:html={t`(1, 4)`} />, 37 &lt; 39, prune. Node 6 (<Fragment set:html={t`x_2 \ge 5`} />): <Fragment set:html={t`(0, 5)`} />, 40, whole numbers and better than 39.</li>
-      <li>Nothing left to branch: <span class="answer"><Fragment set:html={t`x = (0, 5),\ z = 40`} /></span>.</li>
-    </ol>
-    <figure class="fig"><Fragment set:html={bbSvg} />
-      <figcaption>The branch-and-bound tree: seven LPs prove the answer without listing every whole-number point.</figcaption></figure>
+
+    <BranchBoundExplorer />
+
+    <details class="full">
+      <summary>Worked example: why rounding fails, and the whole tree</summary>
+      <p>The LP answer is <Fragment set:html={t`(2.25, 3.75)`} />, z = 41.25. Rounding to <Fragment set:html={t`(2, 4)`} /> breaks the second constraint (46 &gt; 45); rounding down to <Fragment set:html={t`(2, 3)`} /> earns only 34.</p>
+      <figure class="fig"><Fragment set:html={latSvg} /><figcaption>The best whole-number point, (0, 5), is not near the LP optimum.</figcaption></figure>
+      <figure class="fig"><Fragment set:html={bbSvg} /><figcaption>Seven LPs prove <span class="answer">x = (0, 5), z = 40</span>.</figcaption></figure>
+    </details>
   </section>
 
   <!-- 5 ------------------------------------------------------------------ -->
   <section id="convex">
-    <h2>5. Convexity: Hessians and Sylvester's criterion</h2>
+    <h2>5. Convexity: Hessians and Sylvester</h2>
     <ul class="able">
-      <li>Tell when a problem is nonlinear</li>
       <li>Build the Hessian of a function</li>
       <li>Find the leading principal minors and apply Sylvester's criterion</li>
       <li>Decide whether the objective and every constraint are convex</li>
     </ul>
-    <dl class="defs">
-      <dt>Convex</dt><dd>Shaped like a bowl: a line between any two points on the graph stays on or above it.</dd>
-      <dt>Why it matters</dt><dd>In a convex problem (convex objective to minimize, convex constraints), any local minimum is the global minimum.</dd>
-      <dt>Hessian</dt><dd>The matrix of second derivatives, <Fragment set:html={t`H_{ij} = \partial^2 f / \partial x_i \partial x_j`} />.</dd>
-    </dl>
-    <h3>The recipe</h3>
-    <ol class="steps">
-      <li><strong>Build the Hessian.</strong></li>
-      <li><strong>Take the leading principal minors:</strong> <Fragment set:html={t`D_1 = H_{11}`} />, then <Fragment set:html={t`D_2 = H_{11}H_{22} - H_{12}^2`} />, and so on.</li>
-      <li><strong>Apply Sylvester's criterion:</strong>
-        <ul>
-          <li>all <Fragment set:html={t`D_k > 0`} />: positive definite, convex (a bowl);</li>
-          <li>signs alternate, starting negative: negative definite, concave (a dome);</li>
-          <li>anything else: check every principal minor, not just the leading ones. All of them at least 0 still means convex (positive semidefinite); otherwise it is not convex, and mixed signs mean a saddle.</li>
-        </ul></li>
-    </ol>
-    <h3>Two examples</h3>
-    <Fragment set:html={d`\text{A: } f = 2x^2 + 2xy + 2y^2,\ \ H = \begin{bmatrix} 4 & 2 \\ 2 & 4 \end{bmatrix} \qquad \text{B: } f = x^2 + 4xy + y^2,\ \ H = \begin{bmatrix} 2 & 4 \\ 4 & 2 \end{bmatrix}`} />
-    <ul>
-      <li><strong>A:</strong> <Fragment set:html={t`D_1 = 4 > 0`} />, <Fragment set:html={t`D_2 = 16 - 4 = 12 > 0`} />. <span class="answer">Convex</span></li>
-      <li><strong>B:</strong> <Fragment set:html={t`D_1 = 2 > 0`} /> but <Fragment set:html={t`D_2 = 4 - 16 = -12 < 0`} />. <span class="answer">Not convex: a saddle</span></li>
-    </ul>
-    <p>
-      The eigenvalues say the same thing: A has 6 and 2 (both positive), B has 6 and −2 (mixed). In the picture,
-      the eigenvectors are the axes of the contours.
+    <p class="demo-lead">
+      A convex problem has one valley, so any local minimum is the global one. To check a function: build the
+      Hessian (second derivatives), take the leading principal minors <Fragment set:html={t`D_1 = H_{11}`} />, <Fragment set:html={t`D_2 = H_{11}H_{22} - H_{12}^2`} />,
+      and apply Sylvester: all positive means convex (a bowl); alternating, starting negative, means concave (a dome);
+      a negative <Fragment set:html={t`D_2`} /> means a saddle.
     </p>
-    <figure class="fig pair">
-      <Fragment set:html={convSvg} />
-      <Fragment set:html={sadSvg} />
-      <figcaption>Left: A's contours are ellipses (a bowl). Right: B's are hyperbolas (a saddle). The arrows are the Hessian's eigenvectors.</figcaption>
-    </figure>
 
     <HessianExplorer />
+
+    <details class="full">
+      <summary>Worked examples: a bowl and a saddle</summary>
+      <Fragment set:html={d`\text{A: } f = 2x^2 + 2xy + 2y^2,\ H = \begin{bmatrix} 4 & 2 \\ 2 & 4 \end{bmatrix} \qquad \text{B: } f = x^2 + 4xy + y^2,\ H = \begin{bmatrix} 2 & 4 \\ 4 & 2 \end{bmatrix}`} />
+      <ul>
+        <li><strong>A:</strong> <Fragment set:html={t`D_1 = 4 > 0`} />, <Fragment set:html={t`D_2 = 16 - 4 = 12 > 0`} />: <span class="answer">convex</span>. Eigenvalues 6 and 2.</li>
+        <li><strong>B:</strong> <Fragment set:html={t`D_1 = 2 > 0`} />, <Fragment set:html={t`D_2 = 4 - 16 = -12 < 0`} />: <span class="answer">a saddle</span>. Eigenvalues 6 and −2.</li>
+        <li>If a leading minor is 0, check every principal minor: all at least 0 still means convex (semidefinite).</li>
+      </ul>
+      <figure class="fig pair"><Fragment set:html={convSvg} /><Fragment set:html={sadSvg} />
+        <figcaption>Ellipses mean a bowl, hyperbolas a saddle. The arrows are the Hessian's eigenvectors.</figcaption></figure>
+    </details>
   </section>
 
   <!-- 6 ------------------------------------------------------------------ -->
   <section id="qp">
-    <h2>6. Nonconvex problems and modern solvers</h2>
+    <h2>6. Nonconvex problems and global solvers</h2>
     <ul class="able">
       <li>Spot a nonconvex objective or constraint</li>
       <li>Lift a polynomial into a quadratic by adding variables</li>
       <li>Approximate other nonlinear terms with a Taylor series or pieces</li>
     </ul>
-    <p>
-      If a problem is not convex, a local solver can stop in the wrong valley. Two tricks turn it into something a
-      modern solver (Gurobi, SCIP, BARON) can solve to a <strong>proven global optimum</strong>:
+    <p class="demo-lead">
+      With more than one valley, a local method stops in whichever one it starts in. Lift polynomials into
+      quadratics (for <Fragment set:html={t`x^4`} />, let <Fragment set:html={t`w = x^2`} />, so <Fragment set:html={t`x^4 = w^2`} />) and approximate other functions
+      with a Taylor series or straight-line pieces; then a global solver such as Gurobi, SCIP or BARON finds the best
+      valley and proves it.
     </p>
-    <ul>
-      <li><strong>Lift polynomials into quadratics.</strong> Give each product its own variable. For <Fragment set:html={t`x^4`} />, let <Fragment set:html={t`w = x^2`} />, then <Fragment set:html={t`x^4 = w^2`} />. Every term is now at most quadratic, which these solvers handle exactly.</li>
-      <li><strong>Approximate the rest.</strong> Functions like <Fragment set:html={t`e^x`} /> or <Fragment set:html={t`\log x`} /> can be replaced by a Taylor series near the answer, or by straight-line pieces.</li>
-    </ul>
-    <h3>Example</h3>
-    <Fragment set:html={d`\min_{-2 \le x \le 2}\; f(x) = x^4 - 3x^2 + x`} />
-    <ol class="steps">
-      <li><strong>Is it convex?</strong> <Fragment set:html={t`f''(x) = 12x^2 - 6`} /> is negative near 0. No.</li>
-      <li><strong>Two valleys:</strong> <Fragment set:html={t`x \approx -1.30`} /> (<Fragment set:html={t`f \approx -3.51`} />) and <Fragment set:html={t`x \approx 1.13`} /> (<Fragment set:html={t`f \approx -1.07`} />). A local method started on the right stops at the shallow one, and KKT holds there too.</li>
-      <li><strong>Lift:</strong> <Fragment set:html={t`\min\ w^2 - 3w + x`} /> subject to <Fragment set:html={t`w = x^2`} />, <Fragment set:html={t`-2 \le x \le 2`} />.</li>
-      <li><strong>Solve globally</strong> (Gurobi, <code>NonConvex=2</code>): <span class="answer"><Fragment set:html={t`x^* = -1.3008,\ f^* = -3.5139`} /></span>, with a proof that nothing is lower.</li>
-    </ol>
-    <figure class="fig"><Fragment set:html={polySvg} />
-      <figcaption>Two valleys. A local method finds the one it starts in; a global solver finds the deeper one and proves it.</figcaption></figure>
+
+    <DescentExplorer />
+
+    <details class="full">
+      <summary>Worked example: x⁴ − 3x² + x</summary>
+      <ol class="steps">
+        <li><strong>Convex?</strong> <Fragment set:html={t`f''(x) = 12x^2 - 6`} /> is negative near 0. No.</li>
+        <li><strong>Two valleys:</strong> <Fragment set:html={t`x \approx -1.30`} /> (<Fragment set:html={t`f \approx -3.51`} />) and <Fragment set:html={t`x \approx 1.13`} /> (<Fragment set:html={t`f \approx -1.07`} />).</li>
+        <li><strong>Lift:</strong> <Fragment set:html={t`\min\ w^2 - 3w + x`} /> subject to <Fragment set:html={t`w = x^2`} />, <Fragment set:html={t`-2 \le x \le 2`} />.</li>
+        <li><strong>Solve globally</strong> (Gurobi, <code>NonConvex=2</code>): <span class="answer"><Fragment set:html={t`x^* = -1.3008,\ f^* = -3.5139`} /></span></li>
+      </ol>
+      <figure class="fig"><Fragment set:html={polySvg} /><figcaption>Two valleys: a global solver finds the deeper one and proves it.</figcaption></figure>
+    </details>
     <details class="full">
       <summary>How the global solvers do it</summary>
       <p>
-        They use spatial branch and bound: the same tree as section 4, but branching on ranges of a continuous
-        variable. Each product such as <Fragment set:html={t`xy`} /> is bounded by a convex relaxation (McCormick envelopes), which gives the
-        bounds that let branches be pruned. Tight bounds on every variable make this much faster. Gurobi has solved
-        nonconvex quadratic problems this way since version 9, and recent versions also take functions such as
-        <Fragment set:html={t`e^x`} /> directly.
+        Spatial branch and bound: the tree from section 4, but branching on ranges of continuous variables. Each
+        product such as <Fragment set:html={t`xy`} /> is bounded by a convex relaxation (McCormick envelopes), which gives the bounds
+        that prune branches. Tight variable bounds make it much faster. Gurobi has solved nonconvex quadratic
+        problems this way since version 9, and recent versions take functions such as <Fragment set:html={t`e^x`} /> directly.
       </p>
     </details>
   </section>

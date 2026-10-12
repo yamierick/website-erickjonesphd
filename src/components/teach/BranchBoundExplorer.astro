@@ -1,0 +1,107 @@
+---
+/**
+ * Branch and bound, one LP at a time. Each step solves one node; the graph shades
+ * that node's piece of the region (the LP region cut by the branch bounds), and the
+ * tree grows beside it. Nodes come from branchAndBound() in or.js, which reproduces
+ * the page's seven LPs (tested in or.test.mjs).
+ */
+---
+<div class="sx" data-bnb>
+  <p class="sx-head"><strong>Try it.</strong> Press Next to solve one LP at a time. Watch the region get cut and the tree grow.</p>
+  <div class="sx-grid">
+    <div class="fig sx-graph" data-graph></div>
+    <div class="fig sx-graph" data-tree></div>
+  </div>
+  <p class="sx-say" data-say aria-live="polite"></p>
+  <div class="sx-buttons">
+    <button type="button" data-act="next">Next</button>
+    <button type="button" data-act="all">Show all</button>
+    <button type="button" data-act="reset">Start over</button>
+  </div>
+</div>
+
+<script>
+  import { branchAndBound } from "../../scripts/teach/or.js";
+  import { plot, canvas } from "../../lib/fig.js";
+  import { fmt } from "../../scripts/teach/ui.js";
+
+  const c = [5, 8], A = [[1, 1], [5, 9]], b = [6, 45];
+  const { nodes, best } = branchAndBound(c, A, b);
+
+  // Tree layout: depth gives y; leaves are spaced evenly and parents sit over their children.
+  const kids = nodes.map((n) => nodes.filter((m) => m.parent === n.id).map((m) => m.id));
+  const depth = nodes.map((n) => 0);
+  nodes.forEach((n) => { if (n.parent !== null) depth[n.id] = depth[n.parent] + 1; });
+  const pos = [];
+  let leaf = 0;
+  (function place(id) {
+    if (!kids[id].length) { pos[id] = leaf++; return; }
+    kids[id].forEach(place);
+    pos[id] = kids[id].reduce((s, k) => s + pos[k], 0) / kids[id].length;
+  })(0);
+  const maxD = Math.max(...depth);
+
+  const region = (lo, hi) => {
+    // Vertices of the LP region cut by the node's bounds (enumerate line pairs).
+    const L = [[1, 1, 6], [5, 9, 45], [-1, 0, -lo[0]], [0, -1, -lo[1]]];
+    if (hi[0] < Infinity) L.push([1, 0, hi[0]]);
+    if (hi[1] < Infinity) L.push([0, 1, hi[1]]);
+    const pts = [];
+    for (let i = 0; i < L.length; i++) for (let j = i + 1; j < L.length; j++) {
+      const [a1, b1, c1] = L[i], [a2, b2, c2] = L[j], det = a1 * b2 - a2 * b1;
+      if (Math.abs(det) < 1e-12) continue;
+      const p = [(c1 * b2 - c2 * b1) / det, (a1 * c2 - a2 * c1) / det];
+      if (L.every(([p1, q1, r1]) => p1 * p[0] + q1 * p[1] <= r1 + 1e-7) && !pts.some((q) => Math.hypot(q[0] - p[0], q[1] - p[1]) < 1e-7)) pts.push(p);
+    }
+    if (pts.length < 3) return pts;
+    const cx = pts.reduce((s, p) => s + p[0], 0) / pts.length, cy = pts.reduce((s, p) => s + p[1], 0) / pts.length;
+    return pts.sort((p, q) => Math.atan2(p[1] - cy, p[0] - cx) - Math.atan2(q[1] - cy, q[0] - cx));
+  };
+  const word = { infeasible: "infeasible: prune", pruned: "no better than the incumbent: prune", integer: "whole numbers", branched: "fractional: branch" };
+
+  for (const root of document.querySelectorAll("[data-bnb]")) {
+    let k = 0;
+    const draw = () => {
+      const n = nodes[k];
+      const incumbent = nodes.slice(0, k + 1).filter((m) => m.status === "integer").reduce((a, m) => (!a || m.z > a.z ? m : a), null);
+      const g = plot({ w: 380, h: 330, x: [0, 7], y: [0, 6], pad: [14, 12, 38, 38] })
+        .axes({ xt: [0, 1, 2, 3, 4, 5, 6, 7], yt: [0, 1, 2, 3, 4, 5, 6], xl: "x₁", yl: "x₂", grid: true })
+        .area(region([0, 0], [Infinity, Infinity]), "fill");
+      const piece = region(n.lo, n.hi);
+      if (piece.length >= 3) g.area(piece, "fill-b");
+      else if (piece.length === 2) g.line(piece, "ln-b");
+      for (let a = 0; a <= 6; a++) for (let bb = 0; bb <= 5; bb++) if (a + bb <= 6 && 5 * a + 9 * bb <= 45) g.dot(a, bb, "pt-m", 2.5);
+      g.line([[0, 6], [6, 0]], "ln").line([[0, 5], [7, 10 / 9]], "ln");
+      if (incumbent) g.dot(...incumbent.x, "pt", 7).text(...incumbent.x, `best so far z = ${fmt(incumbent.z)}`, { dx: 10, dy: -8, cls: "accent" });
+      if (n.x) g.dot(...n.x, "pt-o", 5).text(...n.x, `node ${n.id}: (${fmt(n.x[0])}, ${fmt(n.x[1])})`, { dx: 8, dy: 16, cls: "strong" });
+      root.querySelector("[data-graph]").innerHTML = g.svg(`Node ${n.id}'s piece of the region is shaded. ${n.x ? `Its LP solution is (${fmt(n.x[0])}, ${fmt(n.x[1])}).` : "It is infeasible."}`);
+
+      const W = 380, H = 330, X = (p) => 40 + (p / Math.max(1, leaf - 1)) * (W - 80), Y = (d) => 30 + (d / maxD) * (H - 60);
+      const t = canvas(W, H);
+      for (const m of nodes.slice(0, k + 1)) if (m.parent !== null) t.edge(X(pos[m.parent]), Y(depth[m.parent]) + 16, X(pos[m.id]), Y(depth[m.id]) - 16, { cls: "arr-m", arrow: false, label: m.label, at: 0.5, ly: -3 });
+      for (const m of nodes.slice(0, k + 1)) {
+        const cls = m.status === "integer" ? (best && m.id === best.id && k === nodes.length - 1 ? "node-a" : "node") : m.status === "branched" ? "node" : "node-m";
+        t.box(X(pos[m.id]), Y(depth[m.id]), 86, 32, [`${m.id}: ${m.z === null || m.z === undefined ? "—" : `z = ${fmt(m.z)}`}`, m.status], cls);
+      }
+      root.querySelector("[data-tree]").innerHTML = t.svg(`The branch-and-bound tree after ${k + 1} of ${nodes.length} LPs.`);
+
+      const done = k === nodes.length - 1;
+      root.querySelector("[data-say]").innerHTML =
+        `<strong>Node ${n.id}${n.parent !== null ? ` (${n.label})` : " (the LP relaxation)"}:</strong> ` +
+        (n.x ? `LP answer (${fmt(n.x[0])}, ${fmt(n.x[1])}), z = ${fmt(n.z)}, ` : "") + `${word[n.status]}` +
+        (n.status === "branched" ? ` on x${n.on + 1} = ${fmt(n.at)}.` : n.status === "pruned" ? ` (best so far ${fmt(n.bestThen)}).` : ".") +
+        (done ? ` <strong>Nothing left to branch: the answer is (${best.x.join(", ")}), z = ${fmt(best.z)}.</strong>` : "");
+      root.querySelector("[data-act=next]").disabled = done;
+      root.querySelector("[data-act=all]").disabled = done;
+    };
+    root.addEventListener("click", (e) => {
+      const a = e.target.closest("button")?.dataset.act;
+      if (a === "next" && k < nodes.length - 1) k++;
+      else if (a === "all") k = nodes.length - 1;
+      else if (a === "reset") k = 0;
+      else return;
+      draw();
+    });
+    draw();
+  }
+</script>

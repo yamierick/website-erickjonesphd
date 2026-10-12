@@ -113,7 +113,7 @@ export const courses = [
   },
   {
     slug: "operations-research",
-    examples: "An LP solved graphically and by simplex, its dual and shadow prices, KKT, a transportation network, branch and bound, convexity with Hessians, and global solvers for nonconvex quadratics.",
+    examples: "Interactive: step through simplex corner to corner, move resources and watch shadow prices and KKT, re-solve a transportation network, grow a branch-and-bound tree, test convexity with a Hessian, and watch a local method miss the global minimum.",
     code: "IE 3315",
     title: "Operations Research I",
     since: "2023–",
@@ -161,7 +161,7 @@ export const courses = [
   },
   {
     slug: "advanced-operations-research",
-    examples: "A Markov chain, a queue and a decision tree, all about one EV fast charger, plus the deterministic core shared with IE 3315.",
+    examples: "Interactive: a Markov chain, a queue you can watch fill up, and a decision tree, all about one EV fast charger, plus the deterministic core shared with IE 3315.",
     code: "IE 5301",
     title: "Advanced Operations Research",
     since: "2023–",
@@ -209,7 +209,7 @@ export const courses = [
   },
   {
     slug: "engineering-probability",
-    examples: "Means and variances of common distributions, covariance and correlation, normal and t, a hypothesis test, regression and a first designed experiment.",
+    examples: "Interactive: explore distributions, watch the central limit theorem, build a correlation, see Type I and II errors and power, fit a regression by clicking, and run a 2×2 experiment.",
     code: "IE 3301",
     title: "Engineering Probability",
     since: "2021–",

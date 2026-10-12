@@ -1,0 +1,73 @@
+---
+/**
+ * Correlation builder. Six sliders weight the cells of a 2×3 joint table (overtime
+ * yes/no × defects 0/1/2); the weights are scaled to sum to 1, and the page shows the
+ * table, its marginals, covariance, correlation and an independence check, with the
+ * bubble chart. Presets: the page's example, an independent table, a negative one.
+ * Engine: joint() in stats.js (checked against the page in stats.test.mjs).
+ */
+const cells = [[0, 0], [0, 1], [0, 2], [1, 0], [1, 1], [1, 2]];
+---
+<div class="sx" data-joint>
+  <p class="sx-head"><strong>Try it.</strong> Move probability around the table and watch the covariance and correlation respond. Can you make them independent?</p>
+  <div class="hx-presets">
+    <button type="button" data-p="30,15,5,10,20,20">The page's example</button>
+    <button type="button" data-p="20,20,10,20,20,10">Independent</button>
+    <button type="button" data-p="5,15,30,30,15,5">Negative</button>
+    <button type="button" data-p="40,10,0,0,10,40">Strongly positive</button>
+  </div>
+  <div class="sx-grid">
+    <div class="sx-side">
+      <div class="scroll"><table class="num sx-jt">
+        <thead><tr><th></th><th>Y = 0</th><th>Y = 1</th><th>Y = 2</th><th>total</th></tr></thead>
+        <tbody>
+          {[0, 1].map((x) => (
+            <tr><th>{x ? "X = 1 overtime" : "X = 0 no overtime"}</th>
+              {[0, 1, 2].map((y) => <td><output data-cell={`${x}${y}`}></output><input type="range" min="0" max="50" step="1" data-k={`w${x}${y}`} value="10" aria-label={`weight for X=${x}, Y=${y}`} /></td>)}
+              <td data-row={x}></td></tr>
+          ))}
+          <tr><th>total</th>{[0, 1, 2].map((y) => <td data-col={y}></td>)}<td>1</td></tr>
+        </tbody>
+      </table></div>
+      <div data-read></div>
+    </div>
+    <div class="fig sx-graph" data-graph></div>
+  </div>
+</div>
+
+<script>
+  import { joint } from "../../scripts/teach/stats.js";
+  import { plot } from "../../lib/fig.js";
+  import { bind, fmt, readout } from "../../scripts/teach/ui.js";
+
+  for (const root of document.querySelectorAll("[data-joint]")) {
+    const st = { w00: 30, w01: 15, w02: 5, w10: 10, w11: 20, w12: 20 };
+    const draw = () => {
+      const W = [[st.w00, st.w01, st.w02], [st.w10, st.w11, st.w12]], tot = W.flat().reduce((a, b) => a + b, 0) || 1;
+      const p = W.map((r) => r.map((v) => v / tot)), J = joint(p, [0, 1], [0, 1, 2]);
+      p.forEach((r, x) => r.forEach((v, y) => (root.querySelector(`[data-cell="${x}${y}"]`).textContent = fmt(v))));
+      J.px.forEach((v, x) => (root.querySelector(`[data-row="${x}"]`).textContent = fmt(v)));
+      J.py.forEach((v, y) => (root.querySelector(`[data-col="${y}"]`).textContent = fmt(v)));
+      root.querySelector("[data-read]").innerHTML = readout([
+        ["E[X], E[Y]", `${fmt(J.EX, 3)}, ${fmt(J.EY, 3)}`],
+        ["E[XY]", fmt(J.EXY, 3)],
+        ["Cov = E[XY] − E[X]E[Y]", `<strong>${fmt(J.cov, 4)}</strong>`],
+        ["Correlation ρ", `<strong>${fmt(J.corr, 3)}</strong>`],
+        ["Independent?", J.independent ? "yes: every cell = row total × column total" : "no"],
+      ]) + `<p class="sx-say">${Math.abs(J.corr) < 0.05 ? "Close to no linear association." : J.corr > 0 ? "Positive: overtime shifts tend to have more defects." : "Negative: overtime shifts tend to have fewer defects."}${!J.independent && Math.abs(J.cov) < 1e-9 ? " Zero covariance, yet not independent: correlation only measures straight-line association." : ""}</p>`;
+      const g = plot({ w: 380, h: 300, x: [-0.6, 1.6], y: [-0.6, 2.6], pad: [16, 12, 40, 44] })
+        .axes({ xt: [0, 1], yt: [0, 1, 2], xl: "X overtime", yl: "Y defects" });
+      p.forEach((r, x) => r.forEach((v, y) => { if (v > 0) g.dot(x, y, "bar", 50 * Math.sqrt(v)); g.text(x, y, fmt(v), { anchor: "middle", dy: 4, cls: "strong" }); }));
+      g.line([[J.EX, -0.6], [J.EX, 2.6]], "dash").line([[-0.6, J.EY], [1.6, J.EY]], "dash");
+      root.querySelector("[data-graph]").innerHTML = g.svg(`Joint distribution as bubbles; covariance ${fmt(J.cov, 3)}, correlation ${fmt(J.corr, 3)}.`);
+    };
+    const set = bind(root, st, draw, Object.fromEntries(Object.keys(st).map((k) => [k, () => ""])));
+    root.addEventListener("click", (e) => {
+      const b = e.target.closest("[data-p]");
+      if (!b) return;
+      const v = b.dataset.p.split(",").map(Number);
+      ["w00", "w01", "w02", "w10", "w11", "w12"].forEach((k, i) => set(k, v[i]));
+      draw();
+    });
+  }
+</script>

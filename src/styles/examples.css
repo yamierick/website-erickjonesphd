@@ -93,7 +93,7 @@
 .ex .sx-sliders { display: flex; flex-wrap: wrap; gap: .4rem 1.6rem; font-family: system-ui, sans-serif; font-size: .85rem; margin-bottom: .4rem; }
 .ex .sx-sliders label { display: flex; align-items: center; gap: .5rem; }
 .ex .sx-sliders output { min-width: 2.6rem; font-weight: 700; color: var(--accent); }
-.ex .sx-grid { display: grid; gap: 1rem; grid-template-columns: 1fr; align-items: start; }
+.ex .sx-grid { display: grid; gap: 1rem; grid-template-columns: minmax(0, 1fr); align-items: start; } /* minmax(0, …): a wide table scrolls instead of widening the page */
 @media (min-width: 52rem) { .ex .sx-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
 .ex .sx-graph svg { display: block; width: 100%; height: auto; }
 .ex .sx-table { margin: 0; }
@@ -138,3 +138,18 @@
 .ex .answer { display: inline-block; border: 2px solid var(--accent); border-radius: 4px; padding: .05rem .45rem; font-weight: 700; }
 .ex details.full { border: 1px solid var(--rule); border-radius: 6px; padding: .4rem .9rem; margin: 1rem 0; }
 .ex details.full > summary { cursor: pointer; font-family: system-ui, sans-serif; font-weight: 600; color: var(--accent); }
+
+/* Shared bits of the other interactives (src/components/teach/*Explorer.astro). */
+.ex .sx-sub { font-family: system-ui, sans-serif; font-size: .9rem; margin: 1rem 0 .3rem; }
+.ex .sx-small { font: inherit; font-family: system-ui, sans-serif; font-size: .8rem; cursor: pointer; border: 1px solid var(--accent); color: var(--accent); background: var(--bg); border-radius: 6px; padding: .2rem .6rem; }
+.ex .sx-stats { margin: .2rem 0 .4rem; }
+.ex .sx-stats th { font-weight: 500; text-align: left; }
+.ex .sx-kkt td:nth-child(2) { font-variant-numeric: tabular-nums; }
+.ex .sx-click svg { cursor: crosshair; }
+.ex .sx-costs input { width: 3.4rem; font: inherit; padding: .1rem .2rem; }
+.ex .sx-jt td { text-align: center; }
+.ex .sx-jt input { display: block; width: 5.5rem; margin: .2rem auto 0; }
+.ex .sx-jt output { font-weight: 700; }
+.ex .hx-presets button[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); font-weight: 700; }
+.ex .sx-sliders input[type="range"] { max-width: 11rem; }
+.ex .demo-lead { font-family: system-ui, sans-serif; font-size: .95rem; }

@@ -1,0 +1,120 @@
+---
+/**
+ * Distribution explorer. Pick a distribution, move its parameters, and see the
+ * pmf or pdf with its mean and one-SD band, P(X ≤ x) shaded as an area, and a
+ * histogram of random draws whose average settles on the mean. Engine: DISTS in
+ * src/scripts/teach/stats.js (each one's mean and variance are checked numerically
+ * in stats.test.mjs). Sliders are rebuilt per distribution, so they are wired here
+ * rather than with ui.bind.
+ */
+---
+<div class="sx" data-dist>
+  <p class="sx-head"><strong>Try it.</strong> Pick a distribution and move its parameters. Shade a probability, or draw random samples and watch their average settle on the mean.</p>
+  <div class="hx-presets" data-pick></div>
+  <div class="sx-sliders" data-params></div>
+  <div class="sx-sliders"><label>Shade P(X ≤ x) up to x <output data-o="q"></output><input type="range" data-q /></label></div>
+  <div class="sx-grid">
+    <div class="fig sx-graph" data-graph></div>
+    <div class="sx-side"><div data-read></div>
+      <div class="sx-buttons"><button type="button" data-act="draw">Draw 1,000 samples</button><button type="button" data-act="clear">Clear samples</button></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  import { DISTS, rng } from "../../scripts/teach/stats.js";
+  import { plot } from "../../lib/fig.js";
+  import { fmt, readout } from "../../scripts/teach/ui.js";
+
+  for (const root of document.querySelectorAll("[data-dist]")) {
+    let key = "binomial", prm = {}, q = 0, samples = [], seed = 1;
+    const $ = (s) => root.querySelector(s);
+    $("[data-pick]").innerHTML = Object.entries(DISTS).map(([k, D]) => `<button type="button" data-d="${k}" aria-pressed="${k === key}">${D.name}</button>`).join("");
+
+    function choose(k) {
+      key = k; samples = [];
+      const D = DISTS[k];
+      prm = Object.fromEntries(D.params.map(([p, , , , , v]) => [p, v]));
+      $("[data-params]").innerHTML = D.params.map(([p, label, lo, hi, step]) =>
+        `<label>${label} <output data-po="${p}">${fmt(prm[p])}</output><input type="range" min="${lo}" max="${hi}" step="${step}" value="${prm[p]}" data-p="${p}" /></label>`).join("");
+      for (const b of root.querySelectorAll("[data-d]")) b.setAttribute("aria-pressed", String(b.dataset.d === k));
+      setQ(true);
+      draw();
+    }
+    function setQ(reset) {
+      const D = DISTS[key], [a, b] = D.range(prm), inp = $("[data-q]");
+      inp.min = String(a); inp.max = String(b); inp.step = D.discrete ? "1" : String((b - a) / 100);
+      if (reset || q < a || q > b) q = D.discrete ? Math.round(D.mean(prm)) : D.mean(prm);
+      if (!Number.isFinite(q)) q = (a + b) / 2;
+      inp.value = String(q);
+    }
+    function draw() {
+      const D = DISTS[key], [a, b] = D.range(prm), mu = D.mean(prm), sd = Math.sqrt(D.var(prm));
+      $("[data-o=q]").textContent = fmt(q);
+      let ymax = 0, area = 0;
+      const xs = [];
+      if (D.discrete) { for (let k = Math.ceil(a); k <= b; k++) { const p = D.f(k, prm); xs.push([k, p]); ymax = Math.max(ymax, p); if (k <= q) area += p; } }
+      else {
+        const n = 300;
+        for (let i = 0; i <= n; i++) { const x = a + ((b - a) * i) / n; const p = D.f(x, prm); xs.push([x, p]); ymax = Math.max(ymax, Number.isFinite(p) ? p : 0); }
+        if (key === "t") {
+          // The t is symmetric about 0 and its tails reach far past the plotted ±5 at low df,
+          // so integrate from 0 and add the half that lies below it.
+          const N = 4000, h = Math.abs(q) / N;
+          let half = 0;
+          for (let i = 0; i < N; i++) half += D.f((i + 0.5) * h, prm) * h;
+          area = 0.5 + Math.sign(q) * half;
+        } else {
+          const N = 2000, h = (q - a) / N;
+          for (let i = 0; i < N; i++) area += D.f(a + (i + 0.5) * h, prm) * h;
+        }
+      }
+      // Histogram of samples, scaled to the same height units as the pmf/pdf.
+      let bins = [];
+      if (samples.length) {
+        if (D.discrete) { const cnt = {}; samples.forEach((s) => (cnt[s] = (cnt[s] || 0) + 1)); bins = Object.entries(cnt).map(([k, c]) => [Number(k) - 0.5, Number(k) + 0.5, c / samples.length]); }
+        else { const nb = 30, w = (b - a) / nb; bins = Array.from({ length: nb }, (_, i) => [a + i * w, a + (i + 1) * w, 0]); samples.forEach((s) => { const i = Math.floor((s - a) / w); if (i >= 0 && i < nb) bins[i][2] += 1 / samples.length / w; }); }
+        ymax = Math.max(ymax, ...bins.map((x) => x[2]));
+      }
+      ymax *= 1.15;
+      const g = plot({ w: 460, h: 300, x: [D.discrete ? a - 0.7 : a, D.discrete ? b + 0.7 : b], y: [0, ymax], pad: [14, 12, 38, 48] })
+        .axes({ xt: ticks(a, b, D.discrete), yt: [0, ymax / 2, ymax].map((v) => +v.toPrecision(2)), xl: D.discrete ? "k" : "x", yl: D.discrete ? "P(X = k)" : "f(x)", grid: true, yfmt: (v) => fmt(v, 3) });
+      if (Number.isFinite(sd)) g.rect(mu - sd, 0, mu + sd, ymax, "fill-b");
+      bins.forEach(([l, r, h]) => g.rect(l + (D.discrete ? 0.08 : 0), 0, r - (D.discrete ? 0.08 : 0), h, "fill-w"));
+      if (D.discrete) xs.forEach(([k, p]) => g.rect(k - 0.3, 0, k + 0.3, p, k <= q ? "bar" : "fill"));
+      else { g.under((x) => D.f(x, prm), a, Math.min(q, b), "fill"); g.line(xs.filter(([, p]) => Number.isFinite(p)), "ln-a"); }
+      if (Number.isFinite(mu)) g.line([[mu, 0], [mu, ymax]], "dash-a").text(mu, ymax, `mean ${fmt(mu)}`, { dx: 4, dy: 12, cls: "accent" });
+      $("[data-graph]").innerHTML = g.svg(`${D.name} distribution: mean ${fmt(mu)}, standard deviation ${fmt(sd)}. P(X ≤ ${fmt(q)}) = ${fmt(area, 3)}.`);
+      const sm = samples.length ? samples.reduce((s, x) => s + x, 0) / samples.length : null;
+      $("[data-read]").innerHTML = `<p class="sx-say"><strong>${D.name}.</strong> ${D.formula}; ${D.mv}.</p>` + readout([
+        ["Mean", fmt(mu, 3)], ["Variance", fmt(D.var(prm), 3)], ["Standard deviation", fmt(sd, 3)],
+        [`P(X ≤ ${fmt(q)})`, `<strong>${fmt(area, 4)}</strong>`],
+        ...(sm !== null ? [[`Average of ${samples.length.toLocaleString()} samples`, `<strong>${fmt(sm, 3)}</strong>`]] : []),
+      ]);
+    }
+    function ticks(a, b, discrete) {
+      const span = b - a, step = [0.5, 1, 2, 5, 10, 20].find((s) => span / s <= 8) || 50;
+      const out = []; for (let v = Math.ceil(a / step) * step; v <= b + 1e-9; v += step) out.push(+v.toFixed(3));
+      return discrete ? out.filter((v) => Number.isInteger(v)) : out;
+    }
+
+    root.addEventListener("click", (e) => {
+      const d = e.target.closest("[data-d]");
+      if (d) return choose(d.dataset.d);
+      const a = e.target.closest("button")?.dataset.act;
+      if (a === "draw") { const R = rng(seed++), D = DISTS[key]; for (let i = 0; i < 1000; i++) samples.push(D.sample(R, prm)); draw(); }
+      if (a === "clear") { samples = []; draw(); }
+    });
+    root.addEventListener("input", (e) => {
+      const p = e.target.dataset?.p;
+      if (p) {
+        prm[p] = Number(e.target.value);
+        // Keep the uniform's range the right way round.
+        if (key === "uniform" && prm.b <= prm.a) { prm.b = prm.a + 0.5; const s = root.querySelector('[data-p="b"]'); s.value = String(prm.b); root.querySelector('[data-po="b"]').textContent = fmt(prm.b); }
+        root.querySelector(`[data-po="${p}"]`).textContent = fmt(prm[p]); samples = []; setQ(false); draw();
+      }
+      else if (e.target.dataset && "q" in e.target.dataset) { q = Number(e.target.value); draw(); }
+    });
+    choose("binomial");
+  }
+</script>

@@ -1,0 +1,107 @@
+---
+/**
+ * The charger queue, live. Sliders set the arrival rate, the charging rate and the
+ * number of chargers; the formulas (M/M/c, which is M/M/1 when c = 1) give L, Lq, W
+ * and Wq, and a chart shows how the wait explodes as utilization nears 1. Play runs
+ * a simulated 12-hour day as an animation, so the formula's average can be watched
+ * emerging from random arrivals. Engine: mmc() and simulate() in or.js; a long
+ * simulation is checked against the formula in or.test.mjs. Nothing moves until the
+ * reader presses Play.
+ */
+---
+<div class="sx" data-queue>
+  <p class="sx-head"><strong>Try it.</strong> Push the arrival rate toward the charging rate and watch the wait explode. Press Play to watch a simulated day.</p>
+  <div class="sx-sliders">
+    <label>Cars arriving per hour λ <output data-o="lam"></output><input type="range" min="0.5" max="7.5" step="0.1" data-k="lam" value="3" /></label>
+    <label>Charges per hour per charger μ <output data-o="mu"></output><input type="range" min="2" max="8" step="0.5" data-k="mu" value="4" /></label>
+    <label>Chargers <output data-o="c"></output><input type="range" min="1" max="3" step="1" data-k="c" value="1" /></label>
+  </div>
+  <div class="sx-grid">
+    <div class="sx-side"><div data-read></div></div>
+    <div class="fig sx-graph" data-graph></div>
+  </div>
+  <div class="fig sx-graph" data-anim></div>
+  <div class="sx-buttons">
+    <button type="button" data-act="play">Play a day</button>
+    <button type="button" data-act="new">New random day</button>
+  </div>
+</div>
+
+<script>
+  import { mmc, simulate } from "../../scripts/teach/or.js";
+  import { plot, canvas } from "../../lib/fig.js";
+  import { bind, fmt, readout } from "../../scripts/teach/ui.js";
+
+  const HOURS = 12;
+  for (const root of document.querySelectorAll("[data-queue]")) {
+    const st = { lam: 3, mu: 4, c: 1 };
+    let seed = 5, cars = [], clock = 0, playing = false, last = 0;
+
+    const frame = (t) => {
+      const W = 600, H = 150, t2 = canvas(W, H);
+      const waiting = cars.filter((x) => x.arrive <= t && x.start > t);
+      const serving = cars.filter((x) => x.start <= t && x.end > t);
+      const done = cars.filter((x) => x.end <= t);
+      for (let k = 0; k < st.c; k++) {
+        const y = 30 + k * 36, busy = serving.find((x) => x.server === k);
+        t2.add(`<rect class="${busy ? "node-a" : "node"}" x="${W - 120}" y="${y - 14}" width="96" height="28" rx="5"/>`)
+          .text(W - 72, y + 4, busy ? "charging" : "free", busy ? "accent" : "note");
+      }
+      waiting.slice(0, 40).forEach((x, i) => t2.circle(W - 145 - i * 13, 48, 5, "", "pt-w"));
+      if (waiting.length > 40) t2.text(W - 145 - 40 * 13 - 18, 52, `+${waiting.length - 40}`, "warn");
+      const seen = done.length ? done.reduce((s, x) => s + (x.start - x.arrive), 0) / done.length : 0;
+      const h = Math.floor(t), mnt = Math.floor((t - h) * 60);
+      t2.text(10, 22, `hour ${h}:${String(mnt).padStart(2, "0")} of ${HOURS}`, "strong", "start")
+        .text(10, 128, `in line now: ${waiting.length} · charged so far: ${done.length} · their average wait: ${fmt(seen * 60, 0)} min`, "note", "start");
+      root.querySelector("[data-anim]").innerHTML = t2.svg(`Simulated hour ${h}: ${waiting.length} cars waiting, ${serving.length} charging.`);
+    };
+
+    const draw = () => {
+      const q = mmc(st.lam, st.mu, st.c), cap = st.c * st.mu;
+      root.querySelector("[data-read]").innerHTML = q ? readout([
+        ["Utilization ρ = λ/(cμ)", fmt(q.rho)],
+        ["Cars waiting, L<sub>q</sub>", fmt(q.Lq)],
+        ["Cars at the chargers, L", fmt(q.L)],
+        ["Wait in line, W<sub>q</sub> = L<sub>q</sub>/λ", `<strong>${fmt(q.Wq * 60, 1)} min</strong>`],
+        ["Time there, W = L/λ", `${fmt(q.W * 60, 1)} min`],
+        ["Chance a driver has to wait", fmt(q.pWait)],
+      ]) + `<p class="sx-say">Little's law ties them together: L = λW, so ${fmt(q.L)} = ${fmt(st.lam, 1)} × ${fmt(q.W, 3)} h.</p>`
+        : `<p class="sx-say"><strong>No steady state.</strong> Cars arrive at ${fmt(st.lam, 1)} an hour but the chargers can handle only ${fmt(cap, 1)}. The line grows without limit.</p>`;
+      const xs = [], top = 180;
+      for (let l = 0.05; l < cap; l += cap / 200) { const r = mmc(l, st.mu, st.c); if (r && r.Wq * 60 <= top) xs.push([l, r.Wq * 60]); }
+      const g = plot({ w: 400, h: 250, x: [0, 8], y: [0, top], pad: [14, 12, 38, 44] })
+        .axes({ xt: [0, 2, 4, 6, 8], yt: [0, 60, 120, 180], xl: "arrivals per hour λ", yl: "wait in line (min)", grid: true })
+        .line([[cap, 0], [cap, top]], "dash").text(cap, top - 8, "capacity", { dx: -4, anchor: "end" })
+        .line(xs, "ln-a");
+      if (q && q.Wq * 60 <= top) g.dot(st.lam, q.Wq * 60, "pt", 6).text(st.lam, q.Wq * 60, `${fmt(q.Wq * 60, 0)} min`, { dx: -8, dy: -8, anchor: "end", cls: "strong" });
+      root.querySelector("[data-graph]").innerHTML = g.svg(`Wait in line against arrival rate, for ${st.c} charger(s) at ${st.mu} an hour each.`);
+      cars = simulate(st.lam, st.mu, st.c, HOURS, seed);
+      if (!playing) { clock = HOURS; frame(clock); }
+    };
+
+    // A timer rather than requestAnimationFrame: it keeps time by the wall clock, so a
+    // day takes about 20 s even if frames are dropped or the tab is in the background.
+    let timer = null;
+    const stop = () => { playing = false; clearInterval(timer); timer = null; root.querySelector("[data-act=play]").textContent = "Play a day"; };
+    const tick = () => {
+      const now = performance.now();
+      clock = Math.min(HOURS, clock + ((now - last) / 1000) * 0.6);
+      last = now;
+      frame(clock);
+      if (clock >= HOURS) stop();
+    };
+    root.addEventListener("click", (e) => {
+      const a = e.target.closest("button")?.dataset.act;
+      if (a === "play") {
+        if (playing) return stop();
+        playing = true;
+        e.target.textContent = "Pause";
+        if (clock >= HOURS) clock = 0;
+        last = performance.now();
+        timer = setInterval(tick, 50);
+      } else if (a === "new") { seed++; stop(); draw(); }
+    });
+    bind(root, st, () => { stop(); draw(); },
+      { lam: (v) => fmt(v, 1), mu: (v) => fmt(v, 1), c: String });
+  }
+</script>

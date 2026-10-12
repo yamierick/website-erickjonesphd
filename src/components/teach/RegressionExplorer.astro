@@ -1,0 +1,72 @@
+---
+/**
+ * Regression playground. Click the chart to add points (or start from the reactor
+ * data); the least-squares line, its residuals, b0, b1 and R² update. A slope slider
+ * lets the reader try their own line through the means and compare its sum of
+ * squared errors with least squares, which can never be beaten.
+ * Engine: regress() in stats.js (checked against the page in stats.test.mjs).
+ */
+---
+<div class="sx" data-regress>
+  <p class="sx-head"><strong>Try it.</strong> Click the chart to add points. Then try to beat least squares with your own slope.</p>
+  <div class="sx-sliders"><label>Your slope (through the means) <output data-o="m"></output><input type="range" min="-0.6" max="0.6" step="0.005" data-k="m" value="0.15" /></label></div>
+  <div class="sx-grid">
+    <div class="fig sx-graph sx-click" data-graph></div>
+    <div class="sx-side"><div data-read></div>
+      <div class="sx-buttons">
+        <button type="button" data-act="data">Reactor data</button>
+        <button type="button" data-act="undo">Remove last point</button>
+        <button type="button" data-act="clear">Clear</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  import { regress } from "../../scripts/teach/stats.js";
+  import { plot } from "../../lib/fig.js";
+  import { bind, fmt, readout } from "../../scripts/teach/ui.js";
+
+  const REACTOR = [[150, 62.1], [160, 64.8], [170, 66.0], [180, 69.3], [190, 70.1], [200, 73.4], [210, 74.0], [220, 77.2]];
+  const X0 = 140, X1 = 230, Y0 = 55, Y1 = 85, W = 460, H = 330, PAD = [14, 12, 40, 46];
+
+  for (const root of document.querySelectorAll("[data-regress]")) {
+    const st = { m: 0.15 };
+    let pts = REACTOR.slice();
+    const draw = () => {
+      const r = regress(pts);
+      const g = plot({ w: W, h: H, x: [X0, X1], y: [Y0, Y1], pad: PAD })
+        .axes({ xt: [140, 160, 180, 200, 220], yt: [55, 65, 75, 85], xl: "temperature (°C)", yl: "yield (%)", grid: true });
+      let mine = null;
+      if (r) {
+        const yhat = (x) => r.b0 + r.b1 * x;
+        pts.forEach(([x, y]) => g.line([[x, y], [x, yhat(x)]], "ln-b"));
+        g.line([[X0, yhat(X0)], [X1, yhat(X1)]], "ln-a");
+        const my = (x) => r.yb + st.m * (x - r.xb);
+        g.line([[X0, my(X0)], [X1, my(X1)]], "dash");
+        mine = pts.reduce((s, [x, y]) => s + (y - my(x)) ** 2, 0);
+      }
+      pts.forEach(([x, y]) => g.dot(x, y, "pt-o", 4.5));
+      root.querySelector("[data-graph]").innerHTML = g.svg(r ? `${pts.length} points; least-squares line y-hat = ${fmt(r.b0)} + ${fmt(r.b1, 4)} x, R² ${fmt(r.r2, 3)}.` : "Click to add points.");
+      root.querySelector("[data-read]").innerHTML = r ? readout([
+        ["Points n", r.n], ["Slope b₁ = S<sub>xy</sub>/S<sub>xx</sub>", `<strong>${fmt(r.b1, 4)}</strong>`], ["Intercept b₀ = ȳ − b₁x̄", fmt(r.b0, 2)],
+        ["R² = 1 − SSE/SST", `<strong>${fmt(r.r2, 3)}</strong>`], ["SSE, least squares", fmt(r.SSE, 2)], ["SSE, your slope (dashed)", fmt(mine, 2)],
+      ]) + `<p class="sx-say">${mine <= r.SSE + 1e-6 ? "Your line matches least squares." : `Your line's squared errors are ${fmt(mine / Math.max(r.SSE, 1e-9), 1)} times the least-squares total. No line through the data does better than the green one.`}</p>`
+        : `<p class="sx-say">Add at least two points with different temperatures.</p>`;
+    };
+    root.querySelector("[data-graph]").addEventListener("click", (e) => {
+      const svg = root.querySelector("[data-graph] svg"), box = svg.getBoundingClientRect();
+      const vx = ((e.clientX - box.left) / box.width) * W, vy = ((e.clientY - box.top) / box.height) * H;
+      const x = X0 + ((vx - PAD[3]) / (W - PAD[3] - PAD[1])) * (X1 - X0), y = Y0 + ((H - PAD[2] - vy) / (H - PAD[0] - PAD[2])) * (Y1 - Y0);
+      if (x < X0 || x > X1 || y < Y0 || y > Y1) return;
+      pts.push([Math.round(x * 10) / 10, Math.round(y * 10) / 10]);
+      draw();
+    });
+    root.addEventListener("click", (e) => {
+      const a = e.target.closest("button")?.dataset.act;
+      if (a === "data") pts = REACTOR.slice(); else if (a === "undo") pts.pop(); else if (a === "clear") pts = []; else return;
+      draw();
+    });
+    bind(root, st, draw, { m: (v) => fmt(v, 3) });
+  }
+</script>
