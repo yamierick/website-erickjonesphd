@@ -16,6 +16,13 @@ const { c } = Astro.props;
 
   <p>{c.description}</p>
 
+  {c.examples && (
+    <p class="examples-link">
+      <a href={`/teaching/${c.slug}/examples/`}><strong>Worked examples, step by step →</strong></a><br />
+      <span class="meta">{c.examples}</span>
+    </p>
+  )}
+
   {c.modules && (
     <>
       <h2>Modules</h2>
@@ -66,7 +73,7 @@ const { c } = Astro.props;
 
   {c.materials.length > 0 && (
     <>
-      <h2>Worked examples</h2>
+      <h2>Code examples</h2>
       <p class="meta">Free, reproducible R Markdown.</p>
       <ul>{c.materials.map((s) => <li><a href={`/resources/${s}/`}>{materials[s]}</a></li>)}</ul>
     </>
@@ -103,6 +110,10 @@ const { c } = Astro.props;
   .tag {
     font-family: system-ui, sans-serif; font-size: .75rem; margin-left: .5rem;
     padding: .05rem .45rem; border: 1px solid var(--rule); border-radius: 999px; color: var(--muted);
+  }
+  .examples-link {
+    border-left: 3px solid var(--accent); background: var(--code-bg);
+    padding: .6rem .9rem; font-family: system-ui, sans-serif;
   }
   .back { margin-top: 2rem; font-family: system-ui, sans-serif; font-size: .9rem; }
 </style>

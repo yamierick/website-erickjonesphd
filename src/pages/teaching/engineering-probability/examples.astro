@@ -1,0 +1,365 @@
+---
+import Base from "../../../layouts/Base.astro";
+import { t, d } from "../../../lib/tex.js";
+import { plot, normalPdf, tPdf, binomPmf, poissonPmf } from "../../../lib/fig.js";
+import "katex/dist/katex.min.css";
+import "../../../styles/examples.css";
+
+/**
+ * IE 3301 worked examples (Jones, 2026-10-12): distributions and their means
+ * and variances, covariance and correlation of a custom joint distribution,
+ * normal and t, a hypothesis test, regression, and a first 2x2 design of
+ * experiments. The data sets are made up for teaching and say so on the page.
+ * Every number was checked in Python (scipy.stats) before it was written down.
+ */
+
+// ---- Discrete --------------------------------------------------------------
+const dx = [0, 1, 2, 3], dp = [0.5, 0.3, 0.15, 0.05], dm = 0.75, dsd = Math.sqrt(0.7875);
+const disc = plot({ w: 420, h: 280, x: [-0.6, 3.6], y: [0, 0.6] })
+  .axes({ xt: [0, 1, 2, 3], yt: [0, 0.2, 0.4, 0.6], xl: "defective parts in a box, x", yl: "P(X = x)", grid: true, yfmt: (v) => v.toFixed(1) })
+  .rect(dm - dsd, 0, dm + dsd, 0.6, "fill-b");
+dx.forEach((x, i) => disc.rect(x - 0.28, 0, x + 0.28, dp[i], "bar").text(x, dp[i], dp[i].toFixed(2), { anchor: "middle", dy: -5 }));
+disc.line([[dm, 0], [dm, 0.6]], "dash-a").text(dm, 0.57, "mean 0.75", { cls: "accent", dx: 4 })
+  .text(dm + dsd, 0.5, "±1 SD", { dx: 4 });
+const discSvg = disc.svg("Bar chart of a custom distribution: P(X=0)=0.5, P(X=1)=0.3, P(X=2)=0.15, P(X=3)=0.05. The mean, 0.75, is marked, with a band one standard deviation (0.89) either side.");
+
+function pmfPlot(vals, title, mean, sd, xl) {
+  const ymax = Math.ceil(Math.max(...vals) * 10 + 0.5) / 10;
+  const pl = plot({ w: 320, h: 240, x: [-0.7, vals.length - 0.3], y: [0, ymax], pad: [26, 10, 38, 42] })
+    .axes({ xt: vals.map((_, k) => k).filter((k) => k % 2 === 0), yt: [0, ymax / 2, ymax], xl, yfmt: (v) => v.toFixed(2) })
+    .rect(mean - sd, 0, mean + sd, ymax, "fill-b");
+  vals.forEach((p, k) => pl.rect(k - 0.35, 0, k + 0.35, p, "bar"));
+  pl.line([[mean, 0], [mean, ymax]], "dash-a").text(-0.5, ymax * 0.95, title, { cls: "lab" });
+  return pl.svg(`${title}: mean ${mean}, standard deviation ${sd.toFixed(2)}.`);
+}
+const binSvg = pmfPlot(Array.from({ length: 11 }, (_, k) => binomPmf(k, 10, 0.3)), "Binomial(n = 10, p = 0.3)", 3, Math.sqrt(2.1), "successes in 10 trials");
+const poiSvg = pmfPlot(Array.from({ length: 13 }, (_, k) => poissonPmf(k, 4)), "Poisson(λ = 4)", 4, 2, "arrivals in an hour");
+
+// ---- Continuous --------------------------------------------------------------
+const cont = plot({ w: 320, h: 240, x: [0, 1], y: [0, 3], pad: [26, 10, 38, 36] })
+  .axes({ xt: [0, 0.25, 0.5, 0.75, 1], yt: [0, 1, 2, 3], xl: "x", xfmt: (v) => String(v) })
+  .under((x) => 3 * x * x, 0, 0.5, "fill")
+  .fn((x) => 3 * x * x, 0, 1, "ln-a")
+  .line([[0.75, 0], [0.75, 3]], "dash-a").text(0.73, 2.75, "mean 0.75", { cls: "accent", anchor: "end" })
+  .text(0.2, 0.55, "P(X ≤ 0.5) = 0.125").text(0.04, 2.75, "f(x) = 3x²", { cls: "lab" });
+const contSvg = cont.svg("The density f(x) = 3x² on [0, 1], rising to 3 at x = 1. The area to the left of 0.5 is shaded: 0.125. The mean, 0.75, is marked.");
+
+const ex = plot({ w: 320, h: 240, x: [0, 800], y: [0, 0.005], pad: [26, 10, 38, 50] })
+  .axes({ xt: [0, 200, 400, 600, 800], yt: [0, 0.0025, 0.005], xl: "hours to failure, t", yfmt: (v) => v.toFixed(4) })
+  .under((x) => Math.exp(-x / 200) / 200, 300, 800, "fill")
+  .fn((x) => Math.exp(-x / 200) / 200, 0, 800, "ln-a")
+  .line([[200, 0], [200, 0.005]], "dash-a").text(205, 0.0046, "mean 200", { cls: "accent" })
+  .text(380, 0.0012, "P(T > 300) = 0.223").text(330, 0.0042, "exponential, mean 200 h", { cls: "lab" });
+const exSvg = ex.svg("Exponential density with mean 200 hours, decaying from 0.005 at zero. The area beyond 300 hours is shaded: 0.223.");
+
+// ---- Joint -----------------------------------------------------------------
+const J = [[0.30, 0.15, 0.05], [0.10, 0.20, 0.20]];
+const jt = plot({ w: 420, h: 300, x: [-0.6, 1.6], y: [-0.6, 2.6], pad: [24, 16, 42, 50] })
+  .axes({ xt: [0, 1], yt: [0, 1, 2], xl: "X: overtime shift (0 = no, 1 = yes)", yl: "Y: defects found" });
+J.forEach((row, x) => row.forEach((p, y) => jt.dot(x, y, "bar", 55 * Math.sqrt(p)).text(x, y, p.toFixed(2), { anchor: "middle", dy: 4, cls: "strong" })));
+jt.line([[0.5, -0.6], [0.5, 2.6]], "dash").line([[-0.6, 0.85], [1.6, 0.85]], "dash")
+  .text(0.52, 2.45, "E[X] = 0.5").text(1.58, 0.92, "E[Y] = 0.85", { anchor: "end" });
+const jtSvg = jt.svg("Bubble chart of the joint distribution: circle areas proportional to probability. Without overtime the mass sits at low defect counts (0.30, 0.15, 0.05); with overtime it shifts up (0.10, 0.20, 0.20). Dashed lines mark the means 0.5 and 0.85.");
+
+// ---- Normal vs t -----------------------------------------------------------
+const nt = plot({ w: 520, h: 280, x: [-4, 4], y: [0, 0.42] })
+  .axes({ xt: [-4, -3, -2, -1, 0, 1, 2, 3, 4], yt: [0, 0.1, 0.2, 0.3, 0.4], xl: "z or t", yfmt: (v) => v.toFixed(1), grid: true })
+  .fn((x) => tPdf(x, 2), -4, 4, "ln-b")
+  .fn((x) => tPdf(x, 9), -4, 4, "ln-m")
+  .fn((x) => normalPdf(x), -4, 4, "ln-a")
+  // Legend, top left, where all three curves are near zero.
+  .line([[-3.9, 0.385], [-3.4, 0.385]], "ln-a").text(-3.3, 0.379, "standard normal", { cls: "lab" })
+  .line([[-3.9, 0.345], [-3.4, 0.345]], "ln-m").text(-3.3, 0.339, "t, 9 degrees of freedom", { cls: "lab" })
+  .line([[-3.9, 0.305], [-3.4, 0.305]], "ln-b").text(-3.3, 0.299, "t, 2 degrees of freedom: heavier tails", { cls: "lab" });
+const ntSvg = nt.svg("The standard normal density and the t density with 9 and 2 degrees of freedom. The t curves are lower in the middle and higher in the tails; with more degrees of freedom they approach the normal.");
+
+// ---- Hypothesis test -------------------------------------------------------
+const tc = 2.2622, tobs = 3.5375;
+const ht = plot({ w: 520, h: 280, x: [-4.5, 4.5], y: [0, 0.42] })
+  .axes({ xt: [-4, -2.262, 0, 2.262, 4], yt: [0, 0.2, 0.4], xl: "t statistic (9 degrees of freedom)", xfmt: (v) => (Math.abs(v) === 2.262 ? (v > 0 ? "2.262" : "−2.262") : String(v)), yfmt: (v) => v.toFixed(1) })
+  .under((x) => tPdf(x, 9), -4.5, -tc, "fill-w").under((x) => tPdf(x, 9), tc, 4.5, "fill-w")
+  .fn((x) => tPdf(x, 9), -4.5, 4.5, "ln-a")
+  .text(-3.3, 0.06, "reject H₀: 2.5% in each tail", { cls: "warn", anchor: "middle" })
+  .text(0, 0.2, "fail to reject", { anchor: "middle" })
+  .line([[tobs, 0], [tobs, 0.3]], "ln").dot(tobs, 0, "pt", 5)
+  .text(tobs, 0.32, "observed t = 3.54", { cls: "strong", anchor: "middle" });
+const htSvg = ht.svg("The t distribution with 9 degrees of freedom. Both tails beyond plus or minus 2.262 are shaded as the rejection region, 2.5% each. The observed statistic, 3.54, falls in the right-hand rejection region.");
+
+// ---- Regression -------------------------------------------------------------
+const rx = [150, 160, 170, 180, 190, 200, 210, 220], ry = [62.1, 64.8, 66.0, 69.3, 70.1, 73.4, 74.0, 77.2];
+const b1 = 873.5 / 4200, b0 = 69.6125 - b1 * 185;
+const rg = plot({ w: 520, h: 320, x: [145, 225], y: [60, 80] })
+  .axes({ xt: [150, 170, 190, 210], yt: [60, 65, 70, 75, 80], xl: "temperature (°C)", yl: "yield (%)", grid: true })
+  .line([[145, b0 + b1 * 145], [225, b0 + b1 * 225]], "ln-a");
+rx.forEach((x, i) => rg.line([[x, ry[i]], [x, b0 + b1 * x]], "ln-b").dot(x, ry[i], "pt-o", 4));
+rg.text(150, 78.6, "ŷ = 31.14 + 0.208 x,  R² = 0.987", { cls: "strong" })
+  .text(222, 71.5, "residuals (orange) are what", { anchor: "end" })
+  .text(222, 70.4, "least squares makes small", { anchor: "end" });
+const rgSvg = rg.svg("Scatter plot of yield against temperature for eight runs, with the fitted line y-hat = 31.14 + 0.208x. Short vertical segments from each point to the line are the residuals.");
+
+// ---- DOE ------------------------------------------------------------------
+const dy = { lo: [60, 72], hi: [64, 84] };
+const dp2 = plot({ w: 420, h: 280, x: [-1.4, 1.4], y: [55, 90], pad: [24, 16, 40, 50] })
+  .axes({ xt: [-1, 1], yt: [60, 70, 80, 90], xl: "temperature (coded: −1 = 150 °C, +1 = 200 °C)", yl: "average yield (%)", xfmt: (v) => (v < 0 ? "−1" : "+1") })
+  .line([[-1, dy.lo[0]], [1, dy.lo[1]]], "ln-m").line([[-1, dy.hi[0]], [1, dy.hi[1]]], "ln-a")
+  .dot(-1, 60, "pt-m").dot(1, 72, "pt-m").dot(-1, 64, "pt").dot(1, 84, "pt")
+  .text(-1, 60, "60", { dx: -10, dy: 4, anchor: "end" }).text(1, 72, "72", { dx: 10, dy: 4 })
+  .text(-1, 64, "64", { dx: -10, dy: 4, anchor: "end" }).text(1, 84, "84", { dx: 10, dy: 4 })
+  .text(0.95, 86.5, "time long (+1)", { cls: "accent", anchor: "end" })
+  .text(-0.25, 61.2, "time short (−1)");
+const doeSvg = dp2.svg("Interaction plot for the 2 by 2 experiment. With a short time, yield rises from 60 to 72 as temperature goes from low to high; with a long time it rises from 64 to 84. The lines are not parallel, which is the interaction.");
+---
+
+<Base title="IE 3301 Worked Examples" wide={true} description="Engineering Probability, worked step by step: means and variances of common distributions, covariance and correlation, normal and t distributions, a hypothesis test, linear regression and a first designed experiment.">
+<div class="ex">
+  <p class="crumbs"><a href="/teaching/">Teaching</a> · <a href="/teaching/engineering-probability/">IE 3301 Engineering Probability</a> · Worked examples</p>
+
+  <p>
+    One small example for each core idea in the course, each worked step by step and drawn. The data sets
+    are small and made up for teaching, so every number can be checked by hand or in a spreadsheet.
+  </p>
+  <ol class="toc">
+    <li><a href="#discrete">Discrete distributions: mean and variance</a></li>
+    <li><a href="#continuous">Continuous distributions: probability is area</a></li>
+    <li><a href="#table">The common distributions at a glance</a></li>
+    <li><a href="#joint">Two variables: covariance and correlation</a></li>
+    <li><a href="#normal">The normal and t distributions</a></li>
+    <li><a href="#test">A hypothesis test, step by step</a></li>
+    <li><a href="#regression">Linear regression</a></li>
+    <li><a href="#doe">From regression to a designed experiment</a></li>
+  </ol>
+
+  <!-- 1 ------------------------------------------------------------------ -->
+  <section id="discrete">
+    <h2>1. Discrete distributions: mean and variance</h2>
+    <dl class="defs">
+      <dt>Random variable</dt><dd>A number that depends on chance. Discrete if it counts (defects, arrivals), continuous if it measures (length, time).</dd>
+      <dt>Probability mass function (pmf)</dt><dd><Fragment set:html={t`p(x) = P(X = x)`} />. Every value is between 0 and 1, and they sum to 1.</dd>
+      <dt>Expected value</dt><dd>The long-run average: <Fragment set:html={t`E[X] = \sum_x x\,p(x)`} />.</dd>
+      <dt>Variance and standard deviation</dt><dd>The spread around the mean: <Fragment set:html={t`\operatorname{Var}(X) = E[X^2] - (E[X])^2`} />, and <Fragment set:html={t`\sigma = \sqrt{\operatorname{Var}(X)}`} /> is in the same units as <Fragment set:html={t`X`} />.</dd>
+    </dl>
+    <div class="problem"><p><strong>Problem.</strong> The number of defective parts in a box, <Fragment set:html={t`X`} />, is 0, 1, 2 or 3 with probabilities 0.50, 0.30, 0.15 and 0.05. Find its mean and standard deviation.</p></div>
+    <ol class="steps">
+      <li>Check it is a pmf: <Fragment set:html={t`0.50 + 0.30 + 0.15 + 0.05 = 1`} />.</li>
+      <li>Mean: <Fragment set:html={t`E[X] = 0(0.50) + 1(0.30) + 2(0.15) + 3(0.05) = 0.75`} /> defective parts per box.</li>
+      <li>Second moment: <Fragment set:html={t`E[X^2] = 0(0.50) + 1(0.30) + 4(0.15) + 9(0.05) = 1.35`} />.</li>
+      <li>Variance: <Fragment set:html={t`1.35 - 0.75^2 = 0.7875`} />, so <Fragment set:html={t`\sigma = \sqrt{0.7875} \approx 0.887`} />.</li>
+    </ol>
+    <figure class="fig"><Fragment set:html={discSvg} /><figcaption>The mean is the balance point of the bars; the shaded band is one standard deviation either side.</figcaption></figure>
+
+    <h3>Two named distributions</h3>
+    <p>
+      Many counts follow a named distribution, and then the mean and variance come from a formula instead of a sum.
+    </p>
+    <ul>
+      <li><strong>Binomial:</strong> the number of successes in <Fragment set:html={t`n`} /> independent trials, each with probability <Fragment set:html={t`p`} />. If 30% of calls need a callback, the number among 10 calls has mean <Fragment set:html={t`np = 3`} /> and variance <Fragment set:html={t`np(1-p) = 2.1`} />. <Fragment set:html={t`P(X = 3) = \binom{10}{3}0.3^3\,0.7^7 \approx 0.267`} />.</li>
+      <li><strong>Poisson:</strong> the number of events in a fixed interval when they happen independently at a steady rate. At 4 arrivals an hour, the mean and the variance are both 4, and <Fragment set:html={t`P(X = 0) = e^{-4} \approx 0.018`} />.</li>
+    </ul>
+    <figure class="fig pair">
+      <Fragment set:html={binSvg} />
+      <Fragment set:html={poiSvg} />
+      <figcaption>The binomial and Poisson pmfs, with each mean (dashed) and a one-standard-deviation band. The Poisson spreads more, because its variance equals its mean.</figcaption>
+    </figure>
+  </section>
+
+  <!-- 2 ------------------------------------------------------------------ -->
+  <section id="continuous">
+    <h2>2. Continuous distributions: probability is area</h2>
+    <dl class="defs">
+      <dt>Probability density function (pdf)</dt><dd><Fragment set:html={t`f(x) \ge 0`} /> with total area 1. Probability is area under it: <Fragment set:html={t`P(a \le X \le b) = \int_a^b f(x)\,dx`} />. Any single point has probability 0.</dd>
+      <dt>Mean and variance</dt><dd>Sums become integrals: <Fragment set:html={t`E[X] = \int x f(x)\,dx`} /> and <Fragment set:html={t`E[X^2] = \int x^2 f(x)\,dx`} />.</dd>
+    </dl>
+    <div class="problem"><p><strong>Problem A.</strong> The share of a batch that passes inspection, <Fragment set:html={t`X`} />, has density <Fragment set:html={t`f(x) = 3x^2`} /> on <Fragment set:html={t`[0, 1]`} />. Find its mean, variance and <Fragment set:html={t`P(X \le 0.5)`} />.</p></div>
+    <ol class="steps">
+      <li>Check the area: <Fragment set:html={t`\int_0^1 3x^2\,dx = x^3\big|_0^1 = 1`} />.</li>
+      <li>Mean: <Fragment set:html={t`\int_0^1 x \cdot 3x^2\,dx = \tfrac34 = 0.75`} />.</li>
+      <li><Fragment set:html={t`E[X^2] = \int_0^1 3x^4\,dx = \tfrac35`} />, so <Fragment set:html={t`\operatorname{Var}(X) = 0.6 - 0.5625 = 0.0375`} /> and <Fragment set:html={t`\sigma \approx 0.194`} />.</li>
+      <li><Fragment set:html={t`P(X \le 0.5) = 0.5^3 = 0.125`} />: only one batch in eight has half or fewer pass.</li>
+    </ol>
+    <div class="problem"><p><strong>Problem B.</strong> A pump's time to failure is exponential with mean 200 hours. What is the chance it lasts more than 300 hours?</p></div>
+    <ol class="steps">
+      <li>The rate is <Fragment set:html={t`\lambda = 1/200`} /> per hour, and <Fragment set:html={t`P(T > t) = e^{-\lambda t}`} />.</li>
+      <li><Fragment set:html={t`P(T > 300) = e^{-1.5} \approx 0.223`} />. The median is only <Fragment set:html={t`200 \ln 2 \approx 139`} /> hours: most pumps fail before the mean, because a few last very long.</li>
+      <li>The exponential is <em>memoryless</em>: a pump that has run 300 hours has the same chance of lasting another 300 as a new one. That fits random shocks, not wear-out.</li>
+    </ol>
+    <figure class="fig pair">
+      <Fragment set:html={contSvg} />
+      <Fragment set:html={exSvg} />
+      <figcaption>Probability is area: the shaded regions are the answers to problems A and B.</figcaption>
+    </figure>
+  </section>
+
+  <!-- 3 ------------------------------------------------------------------ -->
+  <section id="table">
+    <h2>3. The common distributions at a glance</h2>
+    <div class="scroll"><table class="num left">
+      <thead><tr><th>Distribution</th><th>Models</th><th>pmf or pdf</th><th>Mean</th><th>Variance</th></tr></thead>
+      <tbody>
+        <tr><td>Bernoulli(<Fragment set:html={t`p`} />)</td><td>one yes/no trial</td><td><Fragment set:html={t`p^x(1-p)^{1-x},\ x \in \{0,1\}`} /></td><td><Fragment set:html={t`p`} /></td><td><Fragment set:html={t`p(1-p)`} /></td></tr>
+        <tr><td>Binomial(<Fragment set:html={t`n, p`} />)</td><td>successes in <Fragment set:html={t`n`} /> trials</td><td><Fragment set:html={t`\binom{n}{x}p^x(1-p)^{n-x}`} /></td><td><Fragment set:html={t`np`} /></td><td><Fragment set:html={t`np(1-p)`} /></td></tr>
+        <tr><td>Geometric(<Fragment set:html={t`p`} />)</td><td>trials until the first success</td><td><Fragment set:html={t`(1-p)^{x-1}p,\ x \ge 1`} /></td><td><Fragment set:html={t`1/p`} /></td><td><Fragment set:html={t`(1-p)/p^2`} /></td></tr>
+        <tr><td>Poisson(<Fragment set:html={t`\lambda`} />)</td><td>events in an interval</td><td><Fragment set:html={t`e^{-\lambda}\lambda^x/x!`} /></td><td><Fragment set:html={t`\lambda`} /></td><td><Fragment set:html={t`\lambda`} /></td></tr>
+        <tr><td>Uniform(<Fragment set:html={t`a, b`} />)</td><td>equally likely anywhere in a range</td><td><Fragment set:html={t`1/(b-a)`} /></td><td><Fragment set:html={t`(a+b)/2`} /></td><td><Fragment set:html={t`(b-a)^2/12`} /></td></tr>
+        <tr><td>Exponential(<Fragment set:html={t`\lambda`} />)</td><td>time between random events</td><td><Fragment set:html={t`\lambda e^{-\lambda x},\ x \ge 0`} /></td><td><Fragment set:html={t`1/\lambda`} /></td><td><Fragment set:html={t`1/\lambda^2`} /></td></tr>
+        <tr><td>Normal(<Fragment set:html={t`\mu, \sigma^2`} />)</td><td>sums and averages of many small effects</td><td><Fragment set:html={t`\frac{1}{\sigma\sqrt{2\pi}}e^{-(x-\mu)^2/2\sigma^2}`} /></td><td><Fragment set:html={t`\mu`} /></td><td><Fragment set:html={t`\sigma^2`} /></td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <!-- 4 ------------------------------------------------------------------ -->
+  <section id="joint">
+    <h2>4. Two variables: covariance and correlation</h2>
+    <dl class="defs">
+      <dt>Joint distribution</dt><dd><Fragment set:html={t`p(x, y) = P(X = x, Y = y)`} /> for every pair of values.</dd>
+      <dt>Marginal distribution</dt><dd>One variable on its own, found by summing over the other: <Fragment set:html={t`p_X(x) = \sum_y p(x, y)`} />.</dd>
+      <dt>Independence</dt><dd><Fragment set:html={t`p(x, y) = p_X(x)\,p_Y(y)`} /> for every pair. Knowing one tells you nothing about the other.</dd>
+      <dt>Covariance</dt><dd><Fragment set:html={t`\operatorname{Cov}(X, Y) = E[XY] - E[X]E[Y]`} />. Positive when the two tend to be high together.</dd>
+      <dt>Correlation</dt><dd><Fragment set:html={t`\rho = \operatorname{Cov}(X,Y)/(\sigma_X\sigma_Y)`} />, between −1 and 1, free of units. It measures <em>linear</em> association only.</dd>
+    </dl>
+    <div class="problem">
+      <p><strong>Problem.</strong> On a production line, <Fragment set:html={t`X = 1`} /> if a shift ran overtime and 0 if not, and <Fragment set:html={t`Y`} /> is the number of defects found in the shift's inspected batch. Their joint distribution:</p>
+      <div class="scroll"><table class="num">
+        <thead><tr><th></th><th>Y = 0</th><th>Y = 1</th><th>Y = 2</th><th>Row total</th></tr></thead>
+        <tbody>
+          <tr><td>X = 0 (no overtime)</td><td>0.30</td><td>0.15</td><td>0.05</td><td>0.50</td></tr>
+          <tr><td>X = 1 (overtime)</td><td>0.10</td><td>0.20</td><td>0.20</td><td>0.50</td></tr>
+          <tr><td>Column total</td><td>0.40</td><td>0.35</td><td>0.25</td><td>1.00</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+    <ol class="steps">
+      <li><strong>Marginals.</strong> Row totals give <Fragment set:html={t`X`} />: 0.5 and 0.5. Column totals give <Fragment set:html={t`Y`} />: 0.40, 0.35 and 0.25.</li>
+      <li><strong>Means.</strong> <Fragment set:html={t`E[X] = 0.5`} />; <Fragment set:html={t`E[Y] = 0(0.40) + 1(0.35) + 2(0.25) = 0.85`} />.</li>
+      <li><strong>Variances.</strong> <Fragment set:html={t`\operatorname{Var}(X) = 0.5 - 0.25 = 0.25`} />; <Fragment set:html={t`E[Y^2] = 0.35 + 4(0.25) = 1.35`} />, so <Fragment set:html={t`\operatorname{Var}(Y) = 1.35 - 0.85^2 = 0.6275`} />.</li>
+      <li><strong>The cross moment.</strong> Only cells where both are nonzero count: <Fragment set:html={t`E[XY] = (1)(1)(0.20) + (1)(2)(0.20) = 0.60`} />.</li>
+      <li><strong>Covariance.</strong> <Fragment set:html={t`0.60 - (0.5)(0.85) = 0.175`} />. Positive: overtime shifts tend to have more defects.</li>
+      <li><strong>Correlation.</strong> <Fragment set:html={t`\rho = 0.175 / \sqrt{0.25 \times 0.6275} \approx 0.44`} />: a moderate positive association.</li>
+      <li><strong>Not independent.</strong> <Fragment set:html={t`p(0,0) = 0.30`} /> but <Fragment set:html={t`p_X(0)\,p_Y(0) = 0.5 \times 0.4 = 0.20`} />. Conditionally, <Fragment set:html={t`P(Y \ge 1 \mid X = 1) = 0.40/0.50 = 0.8`} />, against 0.4 without overtime.</li>
+    </ol>
+    <figure class="fig"><Fragment set:html={jtSvg} />
+      <figcaption>The joint distribution as bubbles. Mass sits low-left and high-right of the two means, which is what a positive covariance looks like.</figcaption></figure>
+    <p class="key"><strong>Careful.</strong> Correlation is not causation. Overtime might cause defects, or a third thing (a rush order) might cause both. A designed experiment (section 8) is how to tell.</p>
+  </section>
+
+  <!-- 5 ------------------------------------------------------------------ -->
+  <section id="normal">
+    <h2>5. The normal and t distributions</h2>
+    <dl class="defs">
+      <dt>Standardizing</dt><dd><Fragment set:html={t`Z = (X - \mu)/\sigma`} /> turns any normal variable into the standard normal, mean 0 and SD 1, so one table serves them all.</dd>
+      <dt>Central limit theorem</dt><dd>The average of many independent observations is approximately normal, whatever their own distribution. This is why the normal is everywhere.</dd>
+      <dt>t distribution</dt><dd>What <Fragment set:html={t`(\bar X - \mu)/(s/\sqrt{n})`} /> follows when <Fragment set:html={t`\sigma`} /> is unknown and estimated by the sample's <Fragment set:html={t`s`} />. It has <Fragment set:html={t`n - 1`} /> degrees of freedom and heavier tails than the normal.</dd>
+    </dl>
+    <div class="problem"><p><strong>Problem.</strong> Bolt lengths are normal with mean 50 mm and SD 0.4 mm. What share are longer than 50.8 mm?</p></div>
+    <ol class="steps">
+      <li>Standardize: <Fragment set:html={t`z = (50.8 - 50)/0.4 = 2`} />.</li>
+      <li><Fragment set:html={t`P(Z > 2) \approx 0.0228`} />: about 2.3% of bolts.</li>
+    </ol>
+    <h3>Why t, not z, for small samples</h3>
+    <p>
+      Estimating <Fragment set:html={t`\sigma`} /> from the data adds uncertainty, and the t distribution's heavier tails account for it.
+      The 95% two-sided critical value shows how much: 4.30 with 2 degrees of freedom, 2.78 with 4, 2.26 with 9,
+      2.04 with 30, and 1.96 for the normal.
+    </p>
+    <figure class="fig"><Fragment set:html={ntSvg} /><figcaption>The t family approaches the normal as the sample grows.</figcaption></figure>
+  </section>
+
+  <!-- 6 ------------------------------------------------------------------ -->
+  <section id="test">
+    <h2>6. A hypothesis test, step by step</h2>
+    <dl class="defs">
+      <dt>Null and alternative hypotheses</dt><dd><Fragment set:html={t`H_0`} /> is the claim we test (no change, on target); <Fragment set:html={t`H_1`} /> is what we conclude if the data contradict it.</dd>
+      <dt>Significance level α</dt><dd>The risk of a Type I error we accept: rejecting <Fragment set:html={t`H_0`} /> when it is true. Usually 0.05.</dd>
+      <dt>p-value</dt><dd>If <Fragment set:html={t`H_0`} /> were true, the probability of a result at least as extreme as ours. Reject when <Fragment set:html={t`p < \alpha`} />.</dd>
+      <dt>Type II error and power</dt><dd>Failing to reject a false <Fragment set:html={t`H_0`} /> (probability β); power is <Fragment set:html={t`1 - \beta`} />. Larger samples raise power.</dd>
+    </dl>
+    <div class="problem">
+      <p><strong>Problem.</strong> The bolt machine should average 50 mm. A sample of ten bolts measures (mm):</p>
+      <p>50.3, 49.8, 50.6, 50.9, 50.2, 50.7, 49.9, 50.5, 50.8, 50.4</p>
+      <p>At α = 0.05, is the machine off target?</p>
+    </div>
+    <ol class="steps">
+      <li><strong>Hypotheses.</strong> <Fragment set:html={t`H_0: \mu = 50`} /> against <Fragment set:html={t`H_1: \mu \ne 50`} /> (two-sided: off in either direction matters).</li>
+      <li><strong>Summaries.</strong> <Fragment set:html={t`\bar x = 504.1/10 = 50.41`} /> mm and <Fragment set:html={t`s = 0.3665`} /> mm.</li>
+      <li><strong>Test statistic.</strong> <Fragment set:html={t`\sigma`} /> is unknown and <Fragment set:html={t`n`} /> is small, so use t:
+        <Fragment set:html={d`t = \frac{\bar x - \mu_0}{s/\sqrt n} = \frac{50.41 - 50}{0.3665/\sqrt{10}} = \frac{0.41}{0.1159} \approx 3.54`} /></li>
+      <li><strong>Critical value.</strong> With 9 degrees of freedom and 2.5% in each tail, <Fragment set:html={t`t_{0.025,\,9} = 2.262`} />.</li>
+      <li><strong>Decide.</strong> <Fragment set:html={t`3.54 > 2.262`} />, so reject <Fragment set:html={t`H_0`} />. The p-value is about 0.006: if the machine were on target, a sample this far off would happen less than 1% of the time.</li>
+      <li><strong>Confidence interval.</strong> <Fragment set:html={t`50.41 \pm 2.262(0.1159) = (50.15,\ 50.67)`} /> mm. It does not contain 50, which is the same conclusion: the machine runs about 0.4 mm long.</li>
+    </ol>
+    <figure class="fig"><Fragment set:html={htSvg} /><figcaption>The rejection region (shaded) holds 5% of the t distribution when H₀ is true. The observed t lands well inside it.</figcaption></figure>
+    <p class="key"><strong>Statistically significant is not the same as important.</strong> Whether 0.4 mm matters depends on the tolerance, not on the p-value.</p>
+  </section>
+
+  <!-- 7 ------------------------------------------------------------------ -->
+  <section id="regression">
+    <h2>7. Linear regression</h2>
+    <dl class="defs">
+      <dt>Simple linear regression</dt><dd><Fragment set:html={t`Y = \beta_0 + \beta_1 x + \varepsilon`} />: a straight-line trend plus random error.</dd>
+      <dt>Least squares</dt><dd>Choose the line that makes the sum of squared residuals, <Fragment set:html={t`\sum (y_i - \hat y_i)^2`} />, as small as possible.</dd>
+      <dt>R²</dt><dd>The share of the variation in <Fragment set:html={t`y`} /> that the line explains: <Fragment set:html={t`1 - \text{SSE}/\text{SST}`} />.</dd>
+    </dl>
+    <div class="problem">
+      <p><strong>Problem.</strong> A reactor was run at eight temperatures (illustrative data):</p>
+      <div class="scroll"><table class="num">
+        <thead><tr><th>Temperature (°C)</th><td>150</td><td>160</td><td>170</td><td>180</td><td>190</td><td>200</td><td>210</td><td>220</td></tr></thead>
+        <tbody><tr><th>Yield (%)</th><td>62.1</td><td>64.8</td><td>66.0</td><td>69.3</td><td>70.1</td><td>73.4</td><td>74.0</td><td>77.2</td></tr></tbody>
+      </table></div>
+      <p>Fit a line, and test whether temperature matters.</p>
+    </div>
+    <ol class="steps">
+      <li><strong>Means.</strong> <Fragment set:html={t`\bar x = 185`} />, <Fragment set:html={t`\bar y = 69.6125`} />.</li>
+      <li><strong>Sums of squares.</strong> <Fragment set:html={t`S_{xx} = \sum (x_i - \bar x)^2 = 4200`} /> and <Fragment set:html={t`S_{xy} = \sum (x_i - \bar x)(y_i - \bar y) = 873.5`} />.</li>
+      <li><strong>Slope and intercept.</strong> <Fragment set:html={t`b_1 = S_{xy}/S_{xx} = 0.2080`} />; <Fragment set:html={t`b_0 = \bar y - b_1 \bar x = 31.14`} />. Each extra degree adds about 0.21 percentage points of yield.</li>
+      <li><strong>Fit.</strong> <Fragment set:html={t`\text{SSE} = 2.48`} /> and <Fragment set:html={t`\text{SST} = 184.15`} />, so <Fragment set:html={t`R^2 = 0.987`} />.</li>
+      <li><strong>Test the slope.</strong> <Fragment set:html={t`s = \sqrt{\text{SSE}/(n-2)} = 0.643`} /> and <Fragment set:html={t`\operatorname{se}(b_1) = s/\sqrt{S_{xx}} = 0.00992`} />, so <Fragment set:html={t`t = 0.2080/0.00992 \approx 21.0`} />, far beyond <Fragment set:html={t`t_{0.025,\,6} = 2.447`} />. Temperature clearly matters.</li>
+      <li><strong>Check the residuals.</strong> They should look like random noise with no pattern. Here they alternate in sign around zero, with none larger than 0.82.</li>
+    </ol>
+    <figure class="fig"><Fragment set:html={rgSvg} /><figcaption>The least-squares line and its residuals.</figcaption></figure>
+    <p class="key"><strong>Only inside the data.</strong> The line describes 150 to 220 °C. Extrapolating to 300 °C assumes the trend continues, and chemistry rarely cooperates.</p>
+  </section>
+
+  <!-- 8 ------------------------------------------------------------------ -->
+  <section id="doe">
+    <h2>8. From regression to a designed experiment</h2>
+    <p>
+      Regression on data that happened to be collected can show association. A designed experiment
+      <em>sets</em> the factors, so it can show cause, and it does so with very few runs.
+    </p>
+    <dl class="defs">
+      <dt>Factor and level</dt><dd>A variable we set on purpose (temperature, time), and the values we set it to (low, high).</dd>
+      <dt>2² factorial design</dt><dd>Every combination of two factors at two levels: four runs. Coding the levels −1 and +1 makes the arithmetic symmetric.</dd>
+      <dt>Main effect</dt><dd>The average change in the response when a factor moves from low to high.</dd>
+      <dt>Interaction</dt><dd>When one factor's effect depends on the level of the other.</dd>
+    </dl>
+    <div class="problem">
+      <p><strong>Problem.</strong> Average yields (%) at each combination of temperature (A) and reaction time (B), illustrative data:</p>
+      <div class="scroll"><table class="num">
+        <thead><tr><th>Run</th><th>A: temperature</th><th>B: time</th><th>AB</th><th>Yield</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>−1</td><td>−1</td><td>+1</td><td>60</td></tr>
+          <tr><td>2</td><td>+1</td><td>−1</td><td>−1</td><td>72</td></tr>
+          <tr><td>3</td><td>−1</td><td>+1</td><td>−1</td><td>64</td></tr>
+          <tr><td>4</td><td>+1</td><td>+1</td><td>+1</td><td>84</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+    <ol class="steps">
+      <li><strong>Effect of A.</strong> Average at high minus average at low: <Fragment set:html={t`(72 + 84)/2 - (60 + 64)/2 = 78 - 62 = 16`} />.</li>
+      <li><strong>Effect of B.</strong> <Fragment set:html={t`(64 + 84)/2 - (60 + 72)/2 = 74 - 66 = 8`} />.</li>
+      <li><strong>Interaction AB.</strong> Use the AB column's signs: <Fragment set:html={t`(60 + 84)/2 - (72 + 64)/2 = 72 - 68 = 4`} />. Temperature helps more when the time is long (by 20 rather than 12).</li>
+      <li><strong>The same thing as a regression.</strong> Fit <Fragment set:html={t`y = \beta_0 + \beta_1 x_1 + \beta_2 x_2 + \beta_{12} x_1 x_2`} /> to the coded table, and least squares gives
+        <Fragment set:html={d`\hat y = 70 + 8x_1 + 4x_2 + 2x_1x_2.`} />
+        Each coefficient is half the effect, because the coded variable moves 2 units from −1 to +1. The intercept is the grand mean.</li>
+      <li><strong>Every run is used for every effect.</strong> Each estimate averages all four runs. Changing one factor at a time would need more runs and could never see the interaction.</li>
+    </ol>
+    <figure class="fig"><Fragment set:html={doeSvg} /><figcaption>An interaction plot. Parallel lines would mean no interaction; these spread apart.</figcaption></figure>
+    <p class="key"><strong>Next steps in a real study:</strong> replicate the runs to estimate the noise, then test which effects are larger than it. That is the analysis of variance, and it is where the course goes next.</p>
+  </section>
+
+  <p class="meta">
+    More worked material: <a href="/resources/stat-basics/">statistics basics and linear regression</a> and
+    <a href="/resources/simulation-basics/">the basics of simulation</a>, in R.
+  </p>
+  <p class="back"><a href="/teaching/engineering-probability/">← IE 3301 Engineering Probability</a></p>
+</div>
+</Base>
