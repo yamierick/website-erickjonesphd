@@ -1,0 +1,78 @@
+---
+/**
+ * Module 3, the three-bus Texas grid from M3_PowerFlow_Companion: wind in West
+ * Texas, gas in Houston, demand in Dallas, equal reactances, a limit on the West
+ * Texas–Dallas line. Sliders move the limit, Dallas demand and gas's cost; a toggle
+ * swaps in the transport (pipeline) model, where flows are chosen rather than set by
+ * physics. Flows, prices at each bus and the congestion rent update together.
+ * Engine: triangle() in esm.js, which reproduces the notebook's 70/50/20 MW flows,
+ * $0/$40/$80 prices and $8,400/h rent (esm.test.mjs).
+ */
+---
+<div class="sx" data-triangle>
+  <p class="sx-head"><strong>Try it.</strong> Before you touch anything: wind is free and there is 150 MW of it for 120 MW of demand. Why isn't Dallas's price $0? Then tighten and loosen the line.</p>
+  <div class="sx-sliders">
+    <label>West Texas–Dallas line limit (MW) <output data-o="limit"></output><input type="range" min="40" max="150" step="1" data-k="limit" value="70" /></label>
+    <label>Dallas demand (MW) <output data-o="dal"></output><input type="range" min="40" max="200" step="1" data-k="dal" value="120" /></label>
+    <label>Gas cost ($/MWh) <output data-o="gc"></output><input type="range" min="10" max="80" step="1" data-k="gc" value="40" /></label>
+  </div>
+  <div class="hx-presets">
+    <button type="button" data-phys="1" aria-pressed="true">Power lines (physics sets the flows)</button>
+    <button type="button" data-phys="0" aria-pressed="false">Pipelines (you choose the flows)</button>
+  </div>
+  <div class="sx-grid">
+    <div class="fig sx-graph" data-graph></div>
+    <div class="sx-side"><div data-read></div></div>
+  </div>
+</div>
+
+<script>
+  import { triangle } from "../../scripts/teach/esm.js";
+  import { canvas } from "../../lib/fig.js";
+  import { bind, fmt, money, readout } from "../../scripts/teach/ui.js";
+
+  const P = { W: [90, 170], D: [400, 60], H: [400, 280] };
+  for (const root of document.querySelectorAll("[data-triangle]")) {
+    const st = { limit: 70, dal: 120, gc: 40 };
+    let physics = true;
+    const draw = () => {
+      const r = triangle({ limit: st.limit, load: { W: 0, H: 0, D: st.dal }, gasCost: st.gc, physics });
+      const c = canvas(500, 340);
+      if (!r) {
+        root.querySelector("[data-graph]").innerHTML = c.text(250, 170, "No feasible dispatch: demand cannot be delivered.", "warn").svg("Infeasible.");
+        root.querySelector("[data-read]").innerHTML = `<p class="sx-say">Not enough deliverable supply for ${st.dal} MW. What would you build, and where?</p>`;
+        return;
+      }
+      const arc = (a, b, f, lim) => {
+        const [x1, y1] = P[a], [x2, y2] = P[b], fwd = f >= 0, at = lim !== null && Math.abs(Math.abs(f) - lim) < 1e-6;
+        const [p, q] = fwd ? [[x1, y1], [x2, y2]] : [[x2, y2], [x1, y1]];
+        c.edge(p[0], p[1], q[0], q[1], { r1: 34, r2: 34, cls: at ? "flow" : "arr", tag: true, at: 0.5, label: `${fmt(Math.abs(f), 1)} MW${at ? " (full)" : ""}`, lcls: at ? "warn" : "accent" });
+      };
+      arc("W", "D", r.flow.WD, st.limit);
+      arc("H", "D", r.flow.HD, null);
+      arc("W", "H", r.flow.WH, null);
+      const box = (k, title, line2) => c.box(P[k][0], P[k][1], 128, 54, [title, line2, `price $${fmt(r.price[k])}/MWh`], k === "D" ? "node-a" : "node");
+      box("W", "West Texas", `wind ${fmt(r.w, 1)} of 150 MW`);
+      box("H", "Houston", `gas ${fmt(r.g, 1)} MW at $${st.gc}`);
+      box("D", "Dallas", `demand ${st.dal} MW`);
+      root.querySelector("[data-graph]").innerHTML = c.svg(`Flows: West Texas to Dallas ${fmt(r.flow.WD, 1)} MW, Houston to Dallas ${fmt(r.flow.HD, 1)}, West Texas to Houston ${fmt(r.flow.WH, 1)}. Prices: West Texas ${fmt(r.price.W)}, Houston ${fmt(r.price.H)}, Dallas ${fmt(r.price.D)}.`);
+      root.querySelector("[data-read]").innerHTML = readout([
+        ["Wind runs", `${fmt(r.w, 1)} MW`], ["Gas runs", `${fmt(r.g, 1)} MW`],
+        ["Cost of the hour", money(r.cost)],
+        ["Prices W / H / D", `$${fmt(r.price.W)} / $${fmt(r.price.H)} / <strong>$${fmt(r.price.D)}</strong>`],
+        ["Congestion rent", `${money(r.rent)}/h`],
+      ]) + `<p class="sx-say">${physics
+        ? (r.price.D > st.gc + 1e-6 ? `Dallas pays $${fmt(r.price.D)}, more than any generator costs. Where can a price above every generator's cost come from? Follow what happens to wind and gas if Dallas needs one more MW.` :
+          "No line is full, so every bus pays the same price. What has to happen for prices to split?")
+        : "With pipelines you choose every route, so wind takes the long way through Houston when the direct line fills. What does that model get wrong about wires?"}</p>`;
+    };
+    root.addEventListener("click", (e) => {
+      const b = e.target.closest("[data-phys]");
+      if (!b) return;
+      physics = b.dataset.phys === "1";
+      for (const x of root.querySelectorAll("[data-phys]")) x.setAttribute("aria-pressed", String(x === b));
+      draw();
+    });
+    bind(root, st, draw, { limit: String, dal: String, gc: (v) => `$${v}` });
+  }
+</script>

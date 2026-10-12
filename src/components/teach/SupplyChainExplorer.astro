@@ -1,0 +1,93 @@
+---
+/**
+ * Module 4, walking a supply chain. A build plan (GW of wind, solar and gas, GWh of
+ * storage) becomes tonnes of metal and then tonnes of rock, with the coefficients of
+ * "What a Grid Is Made Of" (/materials/), so the two pages cannot disagree. Then pick
+ * a metal and walk upstream: where it is mined, how concentrated that is, and where
+ * it is refined, from the lab's Commodities 2026 tables (the mineral supply chains
+ * demo's data, loaded at run time from /demos/mineral-supply-chains/data.js).
+ * Engine: materials() in esm.js.
+ */
+---
+<div class="sx" data-supply>
+  <p class="sx-head"><strong>Try it.</strong> Build a grid, then follow one metal back to the ground. Which step of the chain is the narrowest?</p>
+  <div class="sx-sliders">
+    <label>Wind (GW) <output data-o="wind"></output><input type="range" min="0" max="50" step="1" data-k="wind" value="10" /></label>
+    <label>Solar (GW) <output data-o="solar"></output><input type="range" min="0" max="50" step="1" data-k="solar" value="10" /></label>
+    <label>Gas (GW) <output data-o="gas"></output><input type="range" min="0" max="50" step="1" data-k="gas" value="5" /></label>
+    <label>Storage (GWh) <output data-o="gwh"></output><input type="range" min="0" max="100" step="5" data-k="gwh" value="20" /></label>
+    <label>LFP share of storage <output data-o="lfp"></output><input type="range" min="0" max="1" step="0.05" data-k="lfp" value="0.6" /></label>
+  </div>
+  <div class="sx-grid">
+    <div class="fig sx-graph" data-graph></div>
+    <div class="sx-side"><div data-read></div></div>
+  </div>
+  <h4 class="sx-sub">Walk one metal upstream</h4>
+  <div class="hx-presets" data-metals></div>
+  <div class="sx-grid">
+    <div class="fig sx-graph" data-mines></div>
+    <div class="sx-side"><div data-walk></div></div>
+  </div>
+</div>
+
+<script>
+  import { materials } from "../../scripts/teach/esm.js";
+  import { plot } from "../../lib/fig.js";
+  import { bind, fmt, pct, readout } from "../../scripts/teach/ui.js";
+
+  const NAMES = { copper: "Copper", aluminum: "Aluminum", steel: "Steel", lithium: "Lithium", nickel: "Nickel" };
+  const DEMO_KEY = { lithium: "li", nickel: "ni", copper: "cu", aluminum: "al", cobalt: "co" };
+  const big = (t) => (t >= 1e6 ? `${fmt(t / 1e6, 1)} Mt` : t >= 1e3 ? `${fmt(t / 1e3, 1)} kt` : `${fmt(t, 0)} t`);
+
+  for (const root of document.querySelectorAll("[data-supply]")) {
+    const st = { wind: 10, solar: 10, gas: 5, gwh: 20, lfp: 0.6 };
+    let pick = "lithium", DATA = null;
+    const draw = () => {
+      const m = materials({ wind: st.wind, solar: st.solar, gas: st.gas }, st.gwh, st.lfp);
+      const keys = Object.keys(NAMES), maxOre = Math.max(1, ...keys.map((k) => m.ore[k]));
+      const g = plot({ w: 460, h: 290, x: [0, 1], y: [-0.5, keys.length - 0.5], pad: [14, 12, 36, 84] })
+        .axes({ xt: [0, 0.5, 1], yt: keys.map((_, i) => i), xl: "rock moved (share of the largest)", yfmt: (i) => NAMES[keys[keys.length - 1 - i]] });
+      keys.slice().reverse().forEach((k, i) => {
+        g.rect(0, i - 0.32, m.ore[k] / maxOre, i + 0.32, k === pick ? "fill-w" : "bar")
+          .text(m.ore[k] / maxOre, i, `${big(m.metal[k])} metal → ${big(m.ore[k])} rock`, { dx: m.ore[k] / maxOre > 0.55 ? -6 : 6, dy: 4, anchor: m.ore[k] / maxOre > 0.55 ? "end" : "start", cls: "strong" });
+      });
+      root.querySelector("[data-graph]").innerHTML = g.svg(`Rock moved for each metal: ${keys.map((k) => `${NAMES[k]} ${big(m.ore[k])}`).join(", ")}.`);
+      const totalMetal = keys.reduce((s, k) => s + m.metal[k], 0), totalOre = keys.reduce((s, k) => s + m.ore[k], 0);
+      root.querySelector("[data-read]").innerHTML = readout([
+        ["All metal", big(totalMetal)], ["All rock moved", `<strong>${big(totalOre)}</strong>`],
+        ["Steel's share of the metal", pct(m.metal.steel / totalMetal, 0)], ["Copper's share of the rock", pct(m.ore.copper / totalOre, 0)],
+      ]) + `<p class="sx-say">Same coefficients as <a href="/materials/">What a Grid Is Made Of</a>. Metal is weighed in tonnes, mines in rock: why do the two rankings disagree?</p>`;
+      walk();
+    };
+    function walk() {
+      root.querySelector("[data-metals]").innerHTML = ["lithium", "nickel", "copper", "aluminum", "cobalt"].map((k) => `<button type="button" data-metal="${k}" aria-pressed="${k === pick}">${k[0].toUpperCase() + k.slice(1)}</button>`).join("");
+      if (!DATA) { root.querySelector("[data-walk]").innerHTML = `<p class="sx-say">Loading the lab's supply-chain tables…</p>`; return; }
+      const M = DATA.METALS[DEMO_KEY[pick]];
+      if (!M) { root.querySelector("[data-walk]").innerHTML = ""; return; }
+      const cs = M.countries.slice().sort((a, b) => b.total - a.total).slice(0, 6);
+      const g = plot({ w: 420, h: 250, x: [0, 1], y: [-0.5, cs.length - 0.5], pad: [14, 12, 36, 86] })
+        .axes({ xt: [0, 0.5, 1], yt: cs.map((_, i) => i), xl: "share of world mine output", xfmt: (v) => pct(v, 0), yfmt: (i) => cs[cs.length - 1 - i].name });
+      cs.slice().reverse().forEach((c, i) => g.rect(0, i - 0.32, c.total / M.world, i + 0.32, "bar").text(c.total / M.world, i, pct(c.total / M.world, 0), { dx: 6, dy: 4, cls: "strong" }));
+      root.querySelector("[data-mines]").innerHTML = g.svg(`${M.name}: the largest mining countries' shares of world output.`);
+      // Where the paper's printed HHI was corrected, show the corrected value, as the demo does.
+      const hhi = M.hhiCorrected ?? M.hhi, band = DATA.HHI_BANDS.find((b) => hhi <= b.max);
+      root.querySelector("[data-walk]").innerHTML = readout([
+        ["World mine output (2024)", `${fmt(M.world, 0)} ${M.unit}`],
+        ["Top country", `${cs[0].name}, ${pct(cs[0].total / M.world, 0)}`],
+        ["Concentration (HHI)", `${fmt(hhi, 0)}: ${band ? band.label.toLowerCase() : ""}${M.hhiCorrected ? ` (corrected; printed ${fmt(M.hhi, 0)})` : ""}`],
+      ]) + `<p class="sx-say"><strong>Refining:</strong> ${M.hub}</p><p class="meta">Source: Akhter, Palli, Walanjuwani and Jones (2026), <em>Commodities</em> 5(1), ${M.tables}.
+        More in the <a href="/demos/mineral-supply-chains/">mineral supply chains demo</a>.</p>`;
+    }
+    root.addEventListener("click", (e) => {
+      const b = e.target.closest("[data-metal]");
+      if (!b) return;
+      pick = b.dataset.metal; draw();
+    });
+    bind(root, st, draw, { wind: String, solar: String, gas: String, gwh: String, lfp: (v) => pct(v, 0) });
+    // The demo's data file is served as-is from public/, so it is loaded at run time, not bundled.
+    const url = "/demos/mineral-supply-chains/data.js";
+    import(/* @vite-ignore */ url).then((mod) => { DATA = mod; walk(); }).catch(() => {
+      root.querySelector("[data-walk]").innerHTML = `<p class="sx-say">The supply-chain tables did not load; see the <a href="/demos/mineral-supply-chains/">mineral supply chains demo</a>.</p>`;
+    });
+  }
+</script>

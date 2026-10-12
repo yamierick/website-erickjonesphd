@@ -46,12 +46,17 @@ export const courses = [
       + "This course shows how to construct such models, with particular emphasis on models that combine engineering, economics, the natural sciences and policy, "
       + "using optimization, simulation, machine learning, decision analysis, stochastic processes and dynamical systems. Students learn to build "
       + "mathematical models of complex, real-world energy problems.",
+    // Numbered 0-5 as the course runs them (Jones, 2026-10-12); modulesStart sets the list's first number.
+    modulesStart: 0,
     modules: [
+      ["Introduction", "what a model is, its boundary, and a first linear program"],
       ["Demand", "residential, commercial, industrial and transportation"],
       ["Generation", "the electricity system, fossil fuels and other sources"],
       ["Networks", "transmission, distribution and pipelines"],
       ["Storage and supply chains", "batteries, oil and gas, other storage, and material flows"],
+      ["Facility decision", "one site at two sizes: should it build its own generation?"],
     ],
+    examples: "Interactive, one per module: a toy dispatch model, a day of demand with EVs, the merit order and LCOE, power flow on a three-bus Texas grid, storage and mineral supply chains, and one facility at two sizes.",
     topics: [
       "Energy accounting, units, conversions and Sankey diagrams",
       "Demand modeling, load profiles and representative days",

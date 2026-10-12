@@ -1,0 +1,54 @@
+---
+/**
+ * Module 2, the merit order. An ERCOT-flavored fleet (illustrative capacities and
+ * heat rates) is stacked cheapest first; demand cuts it, and the last unit needed
+ * sets the price. Fuel-price sliders reorder coal and gas; wind and solar sliders
+ * change how much free energy sits at the bottom. Engine: fleet() and dispatch().
+ */
+---
+<div class="sx" data-merit>
+  <p class="sx-head"><strong>Try it.</strong> Move demand through the stack, then change the gas price. When does coal run ahead of gas, and what happens to the price?</p>
+  <div class="sx-sliders">
+    <label>Demand (GW) <output data-o="d"></output><input type="range" min="10" max="90" step="1" data-k="d" value="55" /></label>
+    <label>Gas price ($/MMBtu) <output data-o="gas"></output><input type="range" min="1.5" max="8" step="0.1" data-k="gas" value="3.5" /></label>
+    <label>Coal price ($/MMBtu) <output data-o="coal"></output><input type="range" min="1" max="4" step="0.1" data-k="coal" value="2" /></label>
+    <label>Wind available (GW) <output data-o="wind"></output><input type="range" min="0" max="35" step="1" data-k="wind" value="15" /></label>
+    <label>Solar available (GW) <output data-o="solar"></output><input type="range" min="0" max="25" step="1" data-k="solar" value="10" /></label>
+  </div>
+  <div class="sx-grid">
+    <div class="fig sx-graph" data-graph></div>
+    <div class="sx-side"><div data-read></div></div>
+  </div>
+</div>
+
+<script>
+  import { fleet, dispatch } from "../../scripts/teach/esm.js";
+  import { plot } from "../../lib/fig.js";
+  import { bind, fmt, readout } from "../../scripts/teach/ui.js";
+
+  const CLS = { Wind: "bar", Solar: "bar", Nuclear: "fill-b", Coal: "fill-w", "Gas combined cycle": "fill", "Gas peaker": "fill-b" };
+  for (const root of document.querySelectorAll("[data-merit]")) {
+    const st = { d: 55, gas: 3.5, coal: 2, wind: 15, solar: 10 };
+    const draw = () => {
+      const F = fleet(st), r = dispatch(F, st.d);
+      const order = F.map((u, i) => ({ ...u, i })).sort((a, b) => a.cost - b.cost);
+      const total = F.reduce((s, u) => s + u.cap, 0), ymax = Math.max(100, Math.ceil(Math.max(...F.map((u) => u.cost)) / 20) * 20 + 10);
+      const g = plot({ w: 480, h: 320, x: [0, Math.ceil(total / 10) * 10], y: [0, ymax], pad: [14, 12, 40, 46] })
+        .axes({ xt: [0, 20, 40, 60, 80, 100].filter((v) => v <= total + 10), yt: [0, ymax / 2, ymax].map((v) => Math.round(v)), xl: "GW available, cheapest first", yl: "$/MWh", grid: true });
+      let x = 0;
+      for (const u of order) {
+        if (u.cap <= 0) continue;
+        g.rect(x, 0, x + u.cap, Math.max(u.cost, 0.8), CLS[u.name] || "fill");
+        if (u.cap >= 4) g.text(x + u.cap / 2, Math.max(u.cost, 0.8) + 3, u.name.replace("Gas combined cycle", "Gas CC"), { anchor: "middle" });
+        x += u.cap;
+      }
+      g.line([[st.d, 0], [st.d, ymax]], "dash-a").text(st.d, ymax - 6, `demand ${st.d} GW`, { dx: 4, cls: "accent" });
+      if (Number.isFinite(r.price)) g.line([[0, r.price], [Math.min(st.d, total), r.price]], "dash").text(1, r.price, `price $${fmt(r.price)}`, { dy: -5, cls: "strong" });
+      root.querySelector("[data-graph]").innerHTML = g.svg(`Merit order: demand ${st.d} GW clears at $${fmt(r.price)}/MWh, set by ${r.marginal}.`);
+      root.querySelector("[data-read]").innerHTML = readout(order.map((u) => [u.name, `$${fmt(u.cost)}/MWh · runs ${fmt(r.out[u.i])} of ${fmt(u.cap)} GW`])
+        .concat([["Clearing price", Number.isFinite(r.price) ? `<strong>$${fmt(r.price)}/MWh</strong> (${r.marginal})` : "demand exceeds the fleet"]]))
+        + `<p class="sx-say">Running cost = heat rate × fuel price + variable O&amp;M. Every unit running is paid the clearing price: what does that mean for the wind farm's revenue on a day the peakers set the price?</p>`;
+    };
+    bind(root, st, draw, { d: String, gas: (v) => `$${fmt(v)}`, coal: (v) => `$${fmt(v)}`, wind: String, solar: String });
+  }
+</script>

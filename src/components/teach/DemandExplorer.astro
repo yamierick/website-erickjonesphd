@@ -1,0 +1,62 @@
+---
+/**
+ * Module 1, a day's load built from sectors, with EVs as the transportation
+ * sector's new demand. Sliders set each sector's size and the number of EVs; three
+ * buttons move when they charge. The chart stacks the day; the readout gives the
+ * energy, the peak and the load factor. Engine: dayLoad() in esm.js.
+ */
+---
+<div class="sx" data-demand>
+  <p class="sx-head"><strong>Try it.</strong> Add EVs and move when they charge. Which changes more, the day's energy or its peak?</p>
+  <div class="sx-sliders">
+    <label>Residential peak (MW) <output data-o="res"></output><input type="range" min="0" max="500" step="10" data-k="res" value="300" /></label>
+    <label>Commercial peak (MW) <output data-o="com"></output><input type="range" min="0" max="400" step="10" data-k="com" value="200" /></label>
+    <label>Industrial (MW) <output data-o="ind"></output><input type="range" min="0" max="400" step="10" data-k="ind" value="150" /></label>
+    <label>EVs (10 kWh a day each) <output data-o="evs"></output><input type="range" min="0" max="150000" step="5000" data-k="evs" value="0" /></label>
+  </div>
+  <div class="hx-presets">
+    <button type="button" data-m="evening" aria-pressed="true">Charge on arrival home</button>
+    <button type="button" data-m="night" aria-pressed="false">Charge overnight</button>
+    <button type="button" data-m="work" aria-pressed="false">Charge at work</button>
+  </div>
+  <div class="sx-grid">
+    <div class="fig sx-graph" data-graph></div>
+    <div class="sx-side"><div data-read></div></div>
+  </div>
+</div>
+
+<script>
+  import { dayLoad } from "../../scripts/teach/esm.js";
+  import { plot } from "../../lib/fig.js";
+  import { bind, fmt, readout } from "../../scripts/teach/ui.js";
+
+  for (const root of document.querySelectorAll("[data-demand]")) {
+    const st = { res: 300, com: 200, ind: 150, evs: 0 };
+    let mode = "evening";
+    const draw = () => {
+      const D = dayLoad({ ...st, evKwh: 10, mode }), H = D.hours;
+      const top = Math.max(200, Math.ceil(D.peak / 100) * 100 + 100);
+      const g = plot({ w: 460, h: 300, x: [0, 23], y: [0, top], pad: [14, 12, 40, 46] })
+        .axes({ xt: [0, 6, 12, 18, 23], yt: [0, top / 2, top], xl: "hour of day", yl: "MW", grid: true, xfmt: (h) => `${h}:00`, yfmt: (v) => fmt(v, 0) });
+      const layer = (key, below, cls) => g.area([...H.map((x) => [x.h, below(x) + x[key]]), ...H.slice().reverse().map((x) => [x.h, below(x)])], cls);
+      layer("ind", () => 0, "fill-b");
+      layer("com", (x) => x.ind, "fill");
+      layer("res", (x) => x.ind + x.com, "fill-b");
+      layer("ev", (x) => x.ind + x.com + x.res, "fill-w");
+      g.line(H.map((x) => [x.h, x.total]), "ln").dot(D.peakHour, D.peak, "pt", 5).text(D.peakHour, D.peak, `peak ${fmt(D.peak, 0)} MW`, { dy: -8, anchor: "middle", cls: "strong" });
+      root.querySelector("[data-graph]").innerHTML = g.svg(`A day's load: peak ${fmt(D.peak, 0)} MW at ${D.peakHour}:00, ${fmt(D.energy, 0)} MWh in all.`);
+      root.querySelector("[data-read]").innerHTML = readout([
+        ["Energy in the day", `${fmt(D.energy, 0)} MWh`], ["Peak", `<strong>${fmt(D.peak, 0)} MW at ${D.peakHour}:00</strong>`],
+        ["Load factor = average ÷ peak", fmt(D.loadFactor)], ["EV energy", `${fmt(st.evs * 10 / 1000, 0)} MWh`],
+      ]) + `<p class="sx-say">Layers, bottom to top: industrial, commercial, residential, then EVs (red). The grid is built for the peak but paid for by the energy: what does a lower load factor do to the cost of each MWh?</p>`;
+    };
+    root.addEventListener("click", (e) => {
+      const b = e.target.closest("[data-m]");
+      if (!b) return;
+      mode = b.dataset.m;
+      for (const x of root.querySelectorAll("[data-m]")) x.setAttribute("aria-pressed", String(x === b));
+      draw();
+    });
+    bind(root, st, draw, { res: String, com: String, ind: String, evs: (v) => v.toLocaleString("en-US") });
+  }
+</script>
