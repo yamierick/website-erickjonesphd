@@ -1,0 +1,102 @@
+---
+/**
+ * R and Python side by side for IE 3301 (Jones, 2026-10-12: "keep both options
+ * python and R for 3301 ... and also have that one page cheat sheet"). The rows
+ * live in src/data/rpython.json; notebooks/check_rpython.py runs every checked row
+ * in both languages and fails if they disagree, so a row cannot quietly be wrong.
+ * Rows marked `trap` are the places the two languages differ in a way that gives
+ * a wrong answer without an error. Prints on as few pages as it can.
+ */
+import { Code } from "astro:components";
+import Base from "../../layouts/Base.astro";
+import data from "../../data/rpython.json";
+
+const checked = data.groups.flatMap((g) => g.rows).filter((r) => r.check && !r.random).length;
+---
+
+<Base title="R and Python Cheat Sheet" wide={true} description="One page of R and Python equivalents for engineering probability and statistics: describing data, distributions, tests, regression and simulation, with the traps that give wrong answers silently.">
+  <div class="rp">
+    <p class="rp-crumbs"><a href="/teaching/">Teaching</a> · <a href="/teaching/engineering-probability/">IE 3301 Engineering Probability</a></p>
+    <p class="rp-lead">
+      The same statistics in R and in Python, one line each. Rows marked <strong class="rp-flag">Watch out</strong>
+      are where the two differ in a way that gives a wrong answer without an error. Every row with a number
+      ({checked} of them) was run in both languages and gives the same result. The worked examples
+      <a href="/resources/stat-basics/">Statistics Basics and Linear Regression</a> and
+      <a href="/resources/simulation-basics/">The Basics of Simulation</a> use both languages step by step.
+    </p>
+
+    {data.groups.map((g) => (
+      <section class="rp-group">
+        <h2>{g.title}</h2>
+        {g.intro && <p class="rp-intro">{g.intro}</p>}
+        <table class="rp-table">
+          <thead><tr><th scope="col">Task</th><th scope="col">R</th><th scope="col">Python</th></tr></thead>
+          <tbody>
+            {g.rows.map((r) => (
+              <tr class={r.trap ? "rp-trap" : ""}>
+                <th scope="row">
+                  {r.task}
+                  {r.note && <span class="rp-note">{r.trap && <strong class="rp-flag">Watch out: </strong>}{r.note}</span>}
+                </th>
+                <td data-lang="R"><Code code={r.r} lang="r" themes={{ light: "github-light", dark: "github-dark" }} /></td>
+                <td data-lang="Python"><Code code={r.py} lang="python" themes={{ light: "github-light", dark: "github-dark" }} /></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </section>
+    ))}
+
+    <p class="rp-foot">
+      Python here means numpy, pandas, SciPy and statsmodels (<code>pip install numpy pandas scipy statsmodels matplotlib</code>);
+      R needs only <code>install.packages(c("car", "lmtest"))</code> beyond what it ships with. Free in the browser:
+      <a href="https://colab.research.google.com/">Google Colab</a> for Python and <a href="https://posit.cloud/">Posit Cloud</a> for R.
+    </p>
+  </div>
+</Base>
+
+<style is:global>
+  .rp-crumbs, .rp-foot, .rp-intro { font-family: system-ui, sans-serif; font-size: .85rem; color: var(--muted); }
+  .rp-lead { max-width: var(--max); }
+  .rp-group h2 { margin: 1.6rem 0 .3rem; }
+  .rp-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+  .rp-table thead th { font-family: system-ui, sans-serif; font-size: .8rem; text-align: left; color: var(--muted); border-bottom: 2px solid var(--rule); padding: .3rem .4rem; }
+  .rp-table thead th:first-child { width: 28%; }
+  .rp-table tbody th { font-family: system-ui, sans-serif; font-weight: 600; font-size: .85rem; text-align: left; vertical-align: top; padding: .45rem .4rem; }
+  .rp-table td { vertical-align: top; padding: .3rem .4rem; min-width: 0; }
+  .rp-table tr { border-bottom: 1px solid var(--rule); }
+  .rp-note { display: block; font-weight: 400; font-size: .78rem; color: var(--muted); margin-top: .15rem; }
+  .rp-flag { color: var(--accent); }
+  .rp-trap { background: var(--code-bg); }
+  .rp .astro-code { margin: 0; padding: .3rem .5rem; font-size: .78rem; border-radius: 3px; white-space: pre-wrap; word-break: break-word; }
+  .rp .astro-code code { background: transparent; }
+  @media (prefers-color-scheme: dark) {
+    .rp .astro-code, .rp .astro-code span { color: var(--shiki-dark) !important; background-color: var(--shiki-dark-bg) !important; }
+  }
+  /* Phones: each row becomes a small card, task first, then R, then Python. */
+  @media (max-width: 40rem) {
+    .rp-table, .rp-table tbody, .rp-table tr, .rp-table th, .rp-table td { display: block; width: auto; }
+    .rp-table thead { display: none; }
+    .rp-table tr { padding: .3rem 0 .6rem; }
+    .rp-table td::before { content: attr(data-lang); display: block; font-family: system-ui, sans-serif; font-size: .7rem; font-weight: 600; color: var(--muted); text-transform: uppercase; margin-top: .3rem; }
+  }
+  /* Print: drop the site chrome and tighten everything. */
+  @media print {
+    @page { size: letter landscape; margin: .25in; }
+    .rp { column-count: 2; column-gap: .25in; }
+    body { line-height: 1.15; }
+    .rp-table thead th:first-child { width: 30%; }
+    article > h1 { font-size: 13pt; margin: 0 0 .1rem; }
+    .site-header, .site-footer, .rp-crumbs, .rp-foot { display: none; }
+    main.wide { max-width: none; margin: 0; padding: 0; }
+    body { font-size: 8pt; line-height: 1.25; }
+    .rp-table tr { break-inside: avoid; }
+    .rp-group h2 { font-size: 9.5pt; margin: .35rem 0 .1rem; break-after: avoid; }
+    .rp-lead, .rp-intro, .rp-foot { font-size: 7pt; margin: .15rem 0; }
+    .rp-table thead th { font-size: 6.5pt; padding: 0 .25rem; }
+    .rp .astro-code { font-size: 6.5pt; padding: 0 .2rem; border: 0; line-height: 1.25; }
+    .rp-table tbody th { font-size: 7pt; padding: .05rem .25rem; line-height: 1.2; }
+    .rp-table td { padding: .05rem .25rem; }
+    .rp-note { font-size: 6pt; margin-top: 0; }
+  }
+</style>

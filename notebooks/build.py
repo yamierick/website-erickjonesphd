@@ -10,6 +10,10 @@ beside it as fig-<cell>.png so the page does not inline them.
     python notebooks/build.py                 every lesson
     python notebooks/build.py lp-algorithms   one or more by slug
 
+A lesson may give an R twin under any Python code cell (see parse()). It is then
+also built as <slug>-r.ipynb on the IRkernel ("ir") kernel, and the page offers
+Python, R, or both side by side (Jones, 2026-10-12, for IE 3301).
+
 It refuses to write a notebook when:
 - any cell raises (the error would otherwise be published as output), or writes
   to stderr (a warning would be);
@@ -43,8 +47,19 @@ OUT = SITE / "public" / "resources"
 FORBIDDEN = ["jonesec", "OneDrive", "Academic license", "LicenseID", "gurobi.lic", "uta.edu", "C:\\Users", "C:/Users"]
 
 
-def parse(path: Path) -> nbformat.NotebookNode:
-    """Percent-format source -> notebook. The header block becomes page metadata."""
+def parse(path: Path):
+    """Percent-format source -> (page metadata, cells in source order).
+
+    Cell markers:
+        # %% [markdown]       prose shown in every language
+        # %% [markdown py]    prose for the Python version only
+        # %% [markdown r]     prose for the R version only
+        # %%                  Python code
+        # %% [r]              the R twin of the Python cell just above it; its lines
+                              are written "# "-prefixed so this file stays valid Python
+    Each cell keeps its position as `step`, which pairs a twin with its Python cell
+    and names its figures (fig-<step>.png), so both notebooks share one numbering.
+    """
     text = path.read_text(encoding="utf-8")
     meta, body = {}, text
     m = re.match(r"# ---\n(.*?)\n# ---\n", text, flags=re.S)
@@ -56,18 +71,45 @@ def parse(path: Path) -> nbformat.NotebookNode:
     for need in ("title", "description"):
         if need not in meta:
             raise SystemExit(f"{path.name}: header needs '{need}'")
-    nb = nbformat.v4.new_notebook()
+    unprefix = lambda src: "\n".join(ln[2:] if ln.startswith("# ") else ln.lstrip("#") for ln in src.splitlines()).strip()
+    cells = []
     parts = re.split(r"^# %%(.*)$", body, flags=re.M)
-    for tag, src in zip(parts[1::2], parts[2::2]):
-        src = src.strip("\n")
-        if "[markdown]" in tag:
-            lines = [ln[2:] if ln.startswith("# ") else ln.lstrip("#") for ln in src.splitlines()]
-            nb.cells.append(nbformat.v4.new_markdown_cell("\n".join(lines).strip()))
+    for step, (tag, src) in enumerate(zip(parts[1::2], parts[2::2])):
+        src, tag = src.strip("\n"), tag.strip()
+        if tag.startswith("[markdown"):
+            lang = {"[markdown]": "both", "[markdown py]": "py", "[markdown r]": "r"}[tag]
+            cells.append({"kind": "markdown", "lang": lang, "src": unprefix(src), "step": step})
+        elif tag == "[r]":
+            prev = cells[-1] if cells else None
+            if not prev or prev["kind"] != "code" or prev["lang"] != "py":
+                raise SystemExit(f"{path.name}: an [r] cell must follow a Python code cell (step {step})")
+            cells.append({"kind": "code", "lang": "r", "src": unprefix(src), "step": step, "twin": prev["step"]})
+        elif tag == "":
+            cells.append({"kind": "code", "lang": "py", "src": src, "step": step})
         else:
-            nb.cells.append(nbformat.v4.new_code_cell(src))
-    nb.metadata["page"] = meta
-    nb.metadata["kernelspec"] = {"name": "python3", "display_name": "Python 3", "language": "python"}
-    nb.metadata["language_info"] = {"name": "python"}
+            raise SystemExit(f"{path.name}: unknown cell marker '# %% {tag}'")
+    return meta, cells
+
+
+KERNELS = {
+    "py": ({"name": "python3", "display_name": "Python 3", "language": "python"}, {"name": "python"}),
+    "r": ({"name": "ir", "display_name": "R", "language": "R"}, {"name": "R"}),
+}
+
+
+def notebook(meta, cells, lang) -> nbformat.NotebookNode:
+    """The notebook for one language: its code, plus the prose for all or for it."""
+    nb = nbformat.v4.new_notebook()
+    for c in cells:
+        if c["lang"] not in ("both", lang):
+            continue
+        cell = (nbformat.v4.new_markdown_cell if c["kind"] == "markdown" else nbformat.v4.new_code_cell)(c["src"])
+        cell.metadata["step"] = c["step"]
+        if "twin" in c:
+            cell.metadata["twin"] = c["twin"]
+        nb.cells.append(cell)
+    nb.metadata["page"] = {**meta, "lang": lang}
+    nb.metadata["kernelspec"], nb.metadata["language_info"] = KERNELS[lang]
     return nb
 
 
@@ -95,40 +137,51 @@ def outputs_text(cell) -> str:
     return "\n".join(s)
 
 
-def build(slug: str) -> None:
-    src = HERE / f"{slug}.py"
-    nb = parse(src)
-    dest = OUT / slug
-    dest.mkdir(parents=True, exist_ok=True)
+def run(nb, lang: str, dest: Path, figs: dict, problems: list) -> None:
+    """Execute one language's notebook in dest and collect its figures and problems."""
     # Data files a lesson reads sit beside the published notebook, so the download
     # finds them when run from the same folder; run there for the same reason.
-    NotebookClient(nb, timeout=600, kernel_name="python3", resources={"metadata": {"path": str(dest)}},
-                   record_timing=False, allow_errors=False).execute()
-
-    problems = []
-    for old in dest.glob("fig-*.png"):
-        old.unlink()
-    for i, cell in enumerate(nb.cells):
+    NotebookClient(nb, timeout=600, kernel_name=nb.metadata.kernelspec["name"],
+                   resources={"metadata": {"path": str(dest)}}, record_timing=False, allow_errors=False).execute()
+    for cell in nb.cells:
         if cell.cell_type != "code":
             continue
+        where = f"{lang} step {cell.metadata['step']}"
         cell.metadata.pop("execution", None)
         text = outputs_text(cell)
         for bad in FORBIDDEN:
             if bad.lower() in text.lower():
-                problems.append(f"cell {i}: output contains '{bad}'")
+                problems.append(f"{where}: output contains '{bad}'")
         if any(o.get("name") == "stderr" for o in cell.outputs):
-            problems.append(f"cell {i}: wrote to stderr (a warning would be published); fix the cause")
+            problems.append(f"{where}: wrote to stderr (a warning or message would be published); fix the cause")
         pngs = [o for o in cell.outputs if "image/png" in o.get("data", {})]
         if pngs and not re.search(r"^# alt: \S", cell.source, flags=re.M):
-            problems.append(f"cell {i}: draws a figure but has no '# alt:' line")
+            problems.append(f"{where}: draws a figure but has no '# alt:' line")
+        step = cell.metadata["step"]
         for k, o in enumerate(pngs):
-            name = f"fig-{i}.png" if len(pngs) == 1 else f"fig-{i}-{k}.png"
-            (dest / name).write_bytes(base64.b64decode(o["data"]["image/png"]))
+            figs[f"fig-{step}.png" if len(pngs) == 1 else f"fig-{step}-{k}.png"] = base64.b64decode(o["data"]["image/png"])
+
+
+def build(slug: str) -> None:
+    meta, cells = parse(HERE / f"{slug}.py")
+    langs = ["py"] + (["r"] if any(c["lang"] == "r" for c in cells) else [])
+    dest = OUT / slug
+    dest.mkdir(parents=True, exist_ok=True)
+    problems, figs, nbs = [], {}, {}
+    for lang in langs:
+        nbs[lang] = notebook(meta, cells, lang)
+        run(nbs[lang], lang, dest, figs, problems)
     if problems:
         raise SystemExit(f"{slug}: not written\n  " + "\n  ".join(problems))
-    nbformat.write(nb, dest / f"{slug}.ipynb")
-    n_code = sum(c.cell_type == "code" for c in nb.cells)
-    print(f"built {slug}: {len(nb.cells)} cells ({n_code} code), figures {len(list(dest.glob('fig-*.png')))}")
+    for old in dest.glob("fig-*.png"):
+        old.unlink()
+    for name, data in figs.items():
+        (dest / name).write_bytes(data)
+    # The Python notebook keeps the plain name, so existing download links still work.
+    for lang, nb in nbs.items():
+        nbformat.write(nb, dest / (f"{slug}.ipynb" if lang == "py" else f"{slug}-r.ipynb"))
+    n = {lang: sum(c.cell_type == "code" for c in nb.cells) for lang, nb in nbs.items()}
+    print(f"built {slug}: code cells {n}, figures {len(figs)}")
 
 
 if __name__ == "__main__":

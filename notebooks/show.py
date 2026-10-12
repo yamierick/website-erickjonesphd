@@ -1,6 +1,7 @@
 """Print a built notebook's code outputs as text, to review a lesson without a browser.
 
     python notebooks/show.py lp-algorithms
+    python notebooks/show.py stat-basics r      the R twin
 """
 import json
 import sys
@@ -8,12 +9,13 @@ from pathlib import Path
 
 sys.stdout.reconfigure(encoding="utf-8")
 slug = sys.argv[1]
-nb = json.loads((Path(__file__).resolve().parent.parent / "public" / "resources" / slug / f"{slug}.ipynb").read_text(encoding="utf-8"))
-for i, c in enumerate(nb["cells"]):
+name = f"{slug}-r.ipynb" if sys.argv[2:] == ["r"] else f"{slug}.ipynb"
+nb = json.loads((Path(__file__).resolve().parent.parent / "public" / "resources" / slug / name).read_text(encoding="utf-8"))
+for c in nb["cells"]:
     if c["cell_type"] != "code":
         continue
     first = "".join(c["source"]).splitlines()[0] if c["source"] else ""
-    print(f"--- cell {i}: {first[:70]}")
+    print(f"--- step {c['metadata'].get('step')}: {first[:70]}")
     for o in c.get("outputs", []):
         if "text" in o:
             print("".join(o["text"]).rstrip())

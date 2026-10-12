@@ -35,6 +35,7 @@ export const materials = {
   "sci-res-city":      "Light rail in a model city",
   "austin-land-use":   "Austin land use",
   "slsdesign":         "Selective laser sintering: wind-powered tops",
+  "r-python":          "R and Python cheat sheet: the same statistics in both, and the traps",
 };
 
 export const courses = [
@@ -189,7 +190,7 @@ export const courses = [
       "Homework, mostly computer assignments done in groups (10%)",
       "Quizzes and short assignments (5%)",
     ],
-    tools: "Optimization modeling in Python and Excel; stochastic modeling, visualization and reports in R and R Markdown.",
+    tools: "Optimization modeling in Python (GurobiPy) and Excel; stochastic modeling, simulation, visualization and reports in Python and Jupyter notebooks.",
     book: { title: "Operations Research: An Introduction, 10th edition", by: "Hamdy Taha", note: "available through the UTA library" },
     interactive: [
       { title: "Accurate, and Still Wrong", url: "/linked-models/", note: "a Gaussian-process surrogate linking two optimization models" },
@@ -209,7 +210,7 @@ export const courses = [
       { group: "Learn", title: "Stochastic Programming Society", url: "https://www.stoprog.org/", note: "tutorials and references" },
       { group: "Learn", title: "KKT conditions, APMonitor", url: "http://apmonitor.com/me575/index.php/Main/KuhnTucker" },
       { group: "Learn", title: "Column generation, explained", url: "https://www.science4all.org/article/column-generation/" },
-      { group: "Learn", title: "Queueing with simmer in R", url: "https://r-simmer.org/articles/simmer-06-queueing.html" },
+      { group: "Learn", title: "Queueing simulation with SimPy", url: "https://simpy.readthedocs.io/en/latest/examples/bank_renege.html", note: "a bank queue with customers who give up waiting, in Python" },
       { group: "Tools", title: "Gurobi documentation", url: "https://docs.gurobi.com/current/", note: "free academic licences for students" },
       { group: "Tools", title: "Pyomo", url: "https://www.pyomo.org/" },
       { group: "Tools", title: "NetworkX", url: "https://networkx.org/", note: "graphs and networks in Python" },
@@ -238,10 +239,12 @@ export const courses = [
       "Homework (10%)",
       "Quizzes (5%)",
     ],
-    tools: "Statistical analysis in R and in spreadsheets such as Excel.",
+    tools: "Statistical analysis in Python (pandas, SciPy and statsmodels) or R, and in spreadsheets such as Excel.",
     book: { title: "Probability and Statistics for Engineers and Scientists, 9th edition", by: "Walpole, Myers, Myers and Ye", note: "available through the UTA library" },
     interactive: [],
-    materials: ["stat-basics", "simulation-basics"],
+    // Both languages for this course (Jones, 2026-10-12): the two lessons carry R twins.
+    materials: ["stat-basics", "simulation-basics", "r-python"],
+    codeNote: "In Python and in R, step by step, with a switch to show either or both. Read them here, or download a notebook and run it.",
     concepts: [
       ["Random variable", "A number whose value depends on chance, described by its distribution: discrete (counts) or continuous (measurements)."],
       ["Conditional probability", "The probability of A given that B has happened: P(A | B) = P(A and B) / P(B)."],
@@ -257,7 +260,8 @@ export const courses = [
       { group: "Learn", title: "NIST/SEMATECH e-Handbook of Statistical Methods", url: "https://www.itl.nist.gov/div898/handbook/" },
       { group: "Learn", title: "Statistics by Jim", url: "https://statisticsbyjim.com/hypothesis-testing/one-tailed-two-tailed-hypothesis-tests/", note: "plain-language explanations" },
       { group: "Learn", title: "Linear regression in Python, Real Python", url: "https://realpython.com/linear-regression-in-python/" },
-      { group: "Tools", title: "R distribution functions, a quick reference", url: "https://www.stat.umn.edu/geyer/5101/examp/rlook.html" },
+      { group: "Tools", title: "SciPy distributions", url: "https://docs.scipy.org/doc/scipy/reference/stats.html", note: "every distribution's pdf, cdf, ppf (quantile) and rvs (random draws), and the common tests" },
+      { group: "Tools", title: "statsmodels", url: "https://www.statsmodels.org/stable/index.html", note: "regression, intervals and diagnostics in Python" },
       { group: "Tools", title: "Posit Cloud", url: "https://posit.cloud/", note: "R and RStudio in the browser" },
       { group: "Tools", title: "Google Colab", url: "https://colab.research.google.com/", note: "Python in the browser" },
     ],

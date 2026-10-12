@@ -1,0 +1,11 @@
+---
+/** One executed notebook code cell: its code, then its outputs. See src/lib/notebook.js. */
+import { Code } from "astro:components";
+const { cell } = Astro.props;
+---
+<Code code={cell.code} lang={cell.lang === "r" ? "r" : "python"} themes={{ light: "github-light", dark: "github-dark" }} />
+{cell.outs.map((o) => (
+  o.kind === "img" ? <img class="nb-img" src={o.src} alt={o.alt} loading="lazy" /> :
+  o.kind === "table" ? <div class="nb-table"><Fragment set:html={o.html} /></div> :
+  <pre class="nb-out"><Fragment set:html={o.html} /></pre>
+))}

@@ -7,11 +7,17 @@
  * download. The addresses are the old R pages' own, so existing links still work.
  * The R pages that stay (the city models and Austin land use) are static HTML in
  * public/resources/ and do not come through here.
+ *
+ * A lesson with R twins (IE 3301's, at Jones's request the same day: "keep both
+ * options python and R for 3301") also has <slug>-r.ipynb. The page then shows a
+ * Python / R / side-by-side switch; the prose is shared, so the two languages are
+ * compared step by step. Without script the page shows Python, and both notebooks
+ * stay downloadable.
  */
-import { Code } from "astro:components";
 import Base from "../../layouts/Base.astro";
+import NbCell from "../../components/NbCell.astro";
 import { courses } from "../../data/courses.js";
-import { blocks, loadNotebook, notebookSlugs } from "../../lib/notebook.js";
+import { blocks, loadNotebook, loadRNotebook, notebookSlugs } from "../../lib/notebook.js";
 import "katex/dist/katex.min.css";
 
 export function getStaticPaths() {
@@ -20,30 +26,52 @@ export function getStaticPaths() {
 
 const { slug } = Astro.params;
 const nb = loadNotebook(slug);
+const rnb = loadRNotebook(slug);
 const page = nb.metadata.page;
-const parts = blocks(nb, slug);
+const parts = blocks(nb, slug, rnb);
 const inCourses = courses.filter((c) => c.materials.includes(slug));
 const [relatedUrl, relatedText] = (page.related ?? "").split("|");
+const langClass = (l) => (l === "both" ? "" : `lang-${l}`);
 ---
 
-<Base title={page.title} description={page.description}>
+<Base title={page.title} description={page.description} wide={!!rnb}>
   <p class="nb-crumbs">
     <a href="/teaching/">Teaching</a>
     {inCourses.map((c) => <> · <a href={`/teaching/${c.slug}/`}>{c.code} {c.title}</a></>)}
   </p>
-  <p class="nb-meta">
-    Python, run with the free Gurobi licence where it uses Gurobi.
-    <a href={`/resources/${slug}/${slug}.ipynb`} download>Download the notebook</a> to run it yourself.
-    {page.first && <span> First published {page.first}.</span>}
-  </p>
+  {rnb ? (
+    <p class="nb-meta">
+      In Python and in R, step by step. Download the <a href={`/resources/${slug}/${slug}.ipynb`} download>Python notebook</a>
+      or the <a href={`/resources/${slug}/${slug}-r.ipynb`} download>R notebook</a> to run it yourself; a
+      <a href="/resources/r-python/">one-page R and Python cheat sheet</a> lists the equivalents.
+      {page.first && <span> First published {page.first}.</span>}
+    </p>
+  ) : (
+    <p class="nb-meta">
+      Python, run with the free Gurobi licence where it uses Gurobi.
+      <a href={`/resources/${slug}/${slug}.ipynb`} download>Download the notebook</a> to run it yourself.
+      {page.first && <span> First published {page.first}.</span>}
+    </p>
+  )}
 
-  <div class="nb">
+  <div class="nb" data-lang="py" data-nb>
+    {rnb && (
+      <div class="nb-switch" role="group" aria-label="Code language">
+        <span>Code:</span>
+        <button type="button" data-show="py" aria-pressed="true">Python</button>
+        <button type="button" data-show="r" aria-pressed="false">R</button>
+        <button type="button" data-show="both" aria-pressed="false">Side by side</button>
+      </div>
+    )}
     {parts.map((b) => (
-      b.kind === "md" ? <Fragment set:html={b.html} /> :
-      b.kind === "code" ? <Code code={b.code} lang="python" themes={{ light: "github-light", dark: "github-dark" }} /> :
-      b.kind === "img" ? <img class="nb-img" src={b.src} alt={b.alt} loading="lazy" /> :
-      b.kind === "table" ? <div class="nb-table"><Fragment set:html={b.html} /></div> :
-      <pre class="nb-out"><Fragment set:html={b.html} /></pre>
+      b.kind === "md" ? <div class={`nb-md ${langClass(b.lang)}`}><Fragment set:html={b.html} /></div> :
+      b.kind === "twin" ? (
+        <div class="nb-twin">
+          <div class="lang-py"><p class="nb-tag">Python</p><NbCell cell={b.py} /></div>
+          <div class="lang-r"><p class="nb-tag">R</p><NbCell cell={b.r} /></div>
+        </div>
+      ) :
+      <div class={langClass(b.cell.lang)}><NbCell cell={b.cell} /></div>
     ))}
   </div>
 
@@ -51,6 +79,29 @@ const [relatedUrl, relatedText] = (page.related ?? "").split("|");
     <p class="nb-meta">Going further: <a href={relatedUrl}>{relatedText}</a>.</p>
   )}
 </Base>
+
+<script>
+  // The language switch. The choice is remembered per browser; storage can be
+  // unavailable (private windows), so every access is guarded.
+  for (const root of document.querySelectorAll("[data-nb]")) {
+    const sw = root.querySelector(".nb-switch");
+    if (!sw) continue;
+    const show = (lang) => {
+      root.dataset.lang = lang;
+      for (const b of sw.querySelectorAll("button")) b.setAttribute("aria-pressed", String(b.dataset.show === lang));
+    };
+    // A link can ask for a view (?code=r or ?code=both); otherwise the reader's last choice.
+    const asked = new URLSearchParams(location.search).get("code");
+    if (["py", "r", "both"].includes(asked)) show(asked);
+    else try { const saved = localStorage.getItem("nb-lang"); if (saved) show(saved); } catch {}
+    sw.addEventListener("click", (e) => {
+      const b = e.target.closest("button[data-show]");
+      if (!b) return;
+      show(b.dataset.show);
+      try { localStorage.setItem("nb-lang", b.dataset.show); } catch {}
+    });
+  }
+</script>
 
 <style is:global>
   .nb-crumbs, .nb-meta { font-family: system-ui, sans-serif; font-size: .85rem; color: var(--muted); }
@@ -68,4 +119,19 @@ const [relatedUrl, relatedText] = (page.related ?? "").split("|");
   .nb .nb-table tr.nb-cut td { text-align: center; }
   .nb .katex-display { overflow-x: auto; overflow-y: hidden; position: relative; }
   .nb .katex { position: relative; }
+
+  /* The language switch: one language at a time, or both side by side. */
+  .nb-switch { position: sticky; top: 0; z-index: 2; display: flex; gap: .4rem; align-items: center; flex-wrap: wrap;
+    font-family: system-ui, sans-serif; font-size: .85rem; background: var(--bg); padding: .5rem 0; border-bottom: 1px solid var(--rule); }
+  .nb-switch button { font: inherit; border: 1px solid var(--accent); color: var(--accent); background: var(--bg); border-radius: 999px; padding: .15rem .8rem; cursor: pointer; }
+  .nb-switch button[aria-pressed="true"] { background: var(--accent); color: var(--bg); }
+  .nb .nb-tag { display: none; margin: .8rem 0 -.6rem; font-family: system-ui, sans-serif; font-size: .75rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+  .nb[data-lang="py"] .lang-r, .nb[data-lang="r"] .lang-py { display: none; }
+  .nb[data-lang="both"] .nb-tag { display: block; }
+  .nb[data-lang="both"] .nb-twin { display: grid; grid-template-columns: minmax(0, 1fr); column-gap: 1rem; }
+  @media (min-width: 60rem) { .nb[data-lang="both"] .nb-twin { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+  .nb .nb-twin > div { min-width: 0; }
+  /* A two-language lesson is a wide page, but only "side by side" needs the width:
+     prose and single-language code stay at the reading measure. */
+  .nb > .nb-md, .nb > div.lang-py, .nb > div.lang-r, .nb[data-lang="py"] .nb-twin, .nb[data-lang="r"] .nb-twin { max-width: var(--max); }
 </style>
