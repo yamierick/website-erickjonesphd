@@ -1,0 +1,257 @@
+---
+import Base from "../../../layouts/Base.astro";
+import { t, d } from "../../../lib/tex.js";
+import ToyDispatchExplorer from "../../../components/teach/ToyDispatchExplorer.astro";
+import DemandExplorer from "../../../components/teach/DemandExplorer.astro";
+import MeritOrderExplorer from "../../../components/teach/MeritOrderExplorer.astro";
+import LCOEExplorer from "../../../components/teach/LCOEExplorer.astro";
+import TriangleExplorer from "../../../components/teach/TriangleExplorer.astro";
+import StorageExplorer from "../../../components/teach/StorageExplorer.astro";
+import SupplyChainExplorer from "../../../components/teach/SupplyChainExplorer.astro";
+import FacilityExplorer from "../../../components/teach/FacilityExplorer.astro";
+import "katex/dist/katex.min.css";
+import "../../../styles/examples.css";
+
+/**
+ * REE 4301 / IE 5300 Energy Systems Modeling, worked examples (Jones, 2026-10-12):
+ * one interactive per module, 0 to 5, built on "What a Grid Is Made Of" (/materials/)
+ * and the course notebooks, whose running examples they reuse (the M0 toy LP, the M3
+ * three-bus Texas grid, the M5 Metroplex Industrial Park). Written to the course's
+ * own house style (Classes/REE 4301 - Energy System Modeling/CLAUDE.md): materials
+ * set up discussion and do not hold it, so each section poses its question and the
+ * interactive lets the reader find the answer; the facility thread is one soft
+ * italic question at the end of each section, never a headline. Every number quoted
+ * below comes from src/scripts/teach/esm.js and is checked in esm.test.mjs.
+ */
+---
+
+<Base title="Energy Systems Modeling Worked Examples" wide={true} description="Energy Systems Modeling, interactive: a toy dispatch model, a day of demand with EVs, the merit order and LCOE, power flow on a three-bus Texas grid, storage and mineral supply chains, and one facility at two sizes.">
+<div class="ex">
+  <p class="crumbs"><a href="/teaching/">Teaching</a> · <a href="/teaching/energy-systems-modeling/">REE 4301 / IE 5300 Energy Systems Modeling</a> · Worked examples</p>
+
+  <p>
+    One interactive for each of the course's six modules. They follow the system the course follows: from the
+    demand a city places on the grid, to the plants that meet it, the wires and pipes that carry it, the storage
+    and the metal behind it, and finally one facility deciding what to build. Each section sets up a question;
+    the interactive is where you answer it. The worked example is folded underneath, and the matching course
+    notebook is named in it.
+  </p>
+  <p class="meta">
+    The foundation is <a href="/materials/">What a Grid Is Made Of</a>: Module 4 uses its coefficients, so the two
+    pages cannot disagree. All prices and costs here are illustrative, for teaching, not forecasts.
+  </p>
+  <ol class="toc" start="0">
+    <li><a href="#m0">A model, and its boundary</a></li>
+    <li><a href="#m1">Demand</a></li>
+    <li><a href="#m2">Generation</a></li>
+    <li><a href="#m3">Networks</a></li>
+    <li><a href="#m4">Storage and supply chains</a></li>
+    <li><a href="#m5">One facility, two sizes</a></li>
+  </ol>
+
+  <!-- 0 ------------------------------------------------------------------ -->
+  <section id="m0">
+    <h2>0. A model, and its boundary</h2>
+    <ul class="able">
+      <li>Write a small model in its five parts: sets, parameters, variables, objective, constraints</li>
+      <li>Solve a one-hour dispatch by hand, then by solver</li>
+      <li>Say where a price comes from in a model, and where the boundary is</li>
+    </ul>
+    <p class="demo-lead">
+      One hour, one place, 100 MW to serve. Solar has 40 MW available at no running cost; gas has 500 MW at
+      $22.14/MWh. Which runs, how much, and what does the hour cost? Solve it in your head first, then move the sliders.
+    </p>
+
+    <ToyDispatchExplorer />
+
+    <details class="full">
+      <summary>Worked example: the toy LP, by hand</summary>
+      <Fragment set:html={d`\min\ 0\,p_{\text{solar}} + 22.14\,p_{\text{gas}} \quad\text{s.t.}\quad p_{\text{solar}} + p_{\text{gas}} = 100,\quad p_{\text{solar}} \le 40,\quad p_{\text{gas}} \le 500,\quad p \ge 0`} />
+      <ol class="steps">
+        <li>Solar costs nothing, so run all 40 MW of it.</li>
+        <li>The other 60 MW comes from gas: <Fragment set:html={t`60 \times 22.14 = 1{,}328.40`} /> dollars for the hour.</li>
+        <li>One more MW of demand would come from gas, so the price, the dual of the balance constraint, is <span class="answer">$22.14/MWh</span>.</li>
+      </ol>
+      <p class="note-box">Notebooks: <code>M0_Toy_LP_to_PyPSA</code> (the same problem on paper, in gurobipy and in PyPSA) and <code>M0B_Model_Boundary</code>.</p>
+    </details>
+    <p class="note-box"><em>Here the price came out of the model. If you were running one warehouse, would you compute this price, or download it?</em></p>
+  </section>
+
+  <!-- 1 ------------------------------------------------------------------ -->
+  <section id="m1">
+    <h2>1. Demand</h2>
+    <ul class="able">
+      <li>Build a load profile from its sectors</li>
+      <li>Tell energy (MWh) from peak (MW), and compute a load factor</li>
+      <li>Add a new load, such as EVs, and see what it does to each</li>
+    </ul>
+    <p class="demo-lead">
+      A city's day is the sum of its sectors: homes peak in the evening, offices in the working day, industry runs
+      nearly flat. Transportation is joining them as EVs. A grid is sized for its peak but paid for through its energy,
+      so the two numbers that matter are the day's MWh and its highest MW, and their ratio, the
+      <strong>load factor</strong> = average ÷ peak.
+    </p>
+
+    <DemandExplorer />
+
+    <details class="full">
+      <summary>Worked example: 60,000 EVs, three ways to charge</summary>
+      <p>The default city uses about <strong>10,984 MWh</strong> a day with a peak of <strong>625 MW</strong> at 18:00, a load factor of 0.73. Add 60,000 EVs at 10 kWh each, 600 MWh a day:</p>
+      <div class="scroll"><table class="num">
+        <thead><tr><th>When they charge</th><th>Day's energy</th><th>Peak</th><th>Load factor</th></tr></thead>
+        <tbody>
+          <tr><td>On arrival home, 17:00–22:00</td><td>11,584 MWh</td><td>775 MW</td><td>0.62</td></tr>
+          <tr><td>Overnight, 0:00–6:00</td><td>11,584 MWh</td><td>625 MW</td><td>0.77</td></tr>
+          <tr><td>At work, 9:00–15:00</td><td>11,584 MWh</td><td>625 MW</td><td>0.77</td></tr>
+        </tbody>
+      </table></div>
+      <p>The same energy every time. Which of these would you rather plan a grid for, and what would it take to make drivers choose it?</p>
+      <p class="note-box">Notebooks: <code>SB1_Example_Energy_Balance</code> (one house's energy balance) and <code>SB2_Representative_Days</code> (a year compressed into three days, and the check that it reconciles).</p>
+    </details>
+    <p class="note-box"><em>A facility's bill often charges for its demand in four peak intervals a year (ERCOT's 4CP). Where in this day would you least want your own peak to fall?</em></p>
+  </section>
+
+  <!-- 2 ------------------------------------------------------------------ -->
+  <section id="m2">
+    <h2>2. Generation</h2>
+    <ul class="able">
+      <li>Build a merit order from running costs: heat rate × fuel price + variable O&amp;M</li>
+      <li>Find the clearing price, and say which plant sets it</li>
+      <li>Compute a levelized cost (LCOE), and say what it leaves out</li>
+    </ul>
+    <p class="demo-lead">
+      In each hour, plants are dispatched cheapest first until demand is met, and the last one needed sets the price
+      everyone is paid. Over a lifetime, a plant's <strong>LCOE</strong> spreads its capital, upkeep and fuel over the
+      energy it makes:
+    </p>
+    <Fragment set:html={d`\text{LCOE} = \frac{\text{CRF}\times\text{capital} + \text{fixed O\&M}}{8.76 \times \text{capacity factor}} + \text{variable O\&M} + \frac{\text{heat rate}}{1000}\times\text{fuel price},\qquad \text{CRF} = \frac{r(1+r)^n}{(1+r)^n - 1}`} />
+
+    <MeritOrderExplorer />
+    <LCOEExplorer />
+
+    <details class="full">
+      <summary>Worked examples: a clearing price, and two LCOEs</summary>
+      <p><strong>Clearing price.</strong> At 55 GW, wind, solar, nuclear and coal are all running and the last MW comes from combined-cycle gas: <Fragment set:html={t`6.6 \times \$3.50 + \$2 = \$25.10`} />/MWh. Coal, at <Fragment set:html={t`10.0 \times \$2.00 + \$4.50 = \$24.50`} />, runs just ahead of it. Drop gas to $2 and the order flips.</p>
+      <p><strong>LCOE</strong> at 7% over 30 years (<Fragment set:html={t`\text{CRF} = 0.0806`} />):</p>
+      <ul>
+        <li>Solar, $1,300/kW, $20/kW-yr, capacity factor 0.24: <Fragment set:html={t`(0.0806 \times 1300 + 20)/(8.76 \times 0.24) = 49.83 + 9.51`} /> = <span class="answer">$59.34/MWh</span></li>
+        <li>Gas combined cycle, $1,100/kW, $15/kW-yr, $2 VOM, heat rate 6,600 at $3.50, capacity factor 0.56: <Fragment set:html={t`18.07 + 3.06 + 2 + 23.10`} /> = <span class="answer">$46.23/MWh</span></li>
+      </ul>
+      <p>Solar's cost is almost all capital; gas's is half fuel. Which of the two would a higher interest rate hurt more, and which would a gas price spike?</p>
+      <p class="note-box">Notebook: <code>SB3_Capital_and_LCOE</code> (two 250 MW plants, coal and gas, one line of arithmetic at a time).</p>
+    </details>
+    <p class="note-box"><em>A small site buys at whatever this stack clears at. What would it take for a site to move the clearing price itself?</em></p>
+  </section>
+
+  <!-- 3 ------------------------------------------------------------------ -->
+  <section id="m3">
+    <h2>3. Networks</h2>
+    <ul class="able">
+      <li>Tell a transport model (pipelines: you choose the flows) from a power-flow model (wires: physics does)</li>
+      <li>Compute DC power flows on a small network</li>
+      <li>Explain locational prices and congestion rent</li>
+    </ul>
+    <p class="demo-lead">
+      Three buses in a triangle, every line the same: 150 MW of free wind in West Texas, 100 MW of gas at $40 in
+      Houston, 120 MW of demand in Dallas. The West Texas–Dallas line holds only 70 MW. In a power-flow model each
+      line's flow is set by the angle difference across it, <Fragment set:html={t`F_{ij} = (\theta_i - \theta_j)/X_{ij}`} />, so power
+      takes every path at once.
+    </p>
+
+    <TriangleExplorer />
+
+    <details class="full">
+      <summary>Worked example: the notebook's answer</summary>
+      <ol class="steps">
+        <li>With equal reactances, a MW injected in West Texas splits two-thirds on the direct line to Dallas and one-third the long way through Houston; Houston's gas splits the mirror way.</li>
+        <li>So the direct line carries <Fragment set:html={t`\tfrac23 w + \tfrac13 g \le 70`} /> with <Fragment set:html={t`w + g = 120`} />: wind can run at most <Fragment set:html={t`w = 90`} />, and gas makes up 30.</li>
+        <li>Flows: 70 MW West Texas → Dallas (full), 50 MW Houston → Dallas, 20 MW West Texas → Houston.</li>
+        <li>Prices: <span class="answer">$0 in West Texas, $40 in Houston, $80 in Dallas</span>. One more MW in Dallas needs wind turned <em>down</em> by 1 and gas <em>up</em> by 2.</li>
+        <li>Congestion rent: Dallas pays <Fragment set:html={t`120 \times 80 = 9{,}600`} /> dollars an hour, generators receive 1,200, and the grid operator keeps <strong>$8,400</strong>.</li>
+      </ol>
+      <p>Raise the limit past 80 and wind serves all 120 MW: every price falls to $0, and the rent vanishes with it.</p>
+      <p class="note-box">Notebooks: <code>M3_Transport_Companion</code> (pipelines as a transport model) and <code>M3_PowerFlow_Companion</code> (this example). The <a href="/demos/texas-grid/">Texas grid demo</a> shows where ERCOT's power is actually made.</p>
+    </details>
+    <p class="note-box"><em>If you were siting a large load, would you rather sit at the constrained bus or the cheap one, and what would your arrival do to the price you picked it for?</em></p>
+  </section>
+
+  <!-- 4 ------------------------------------------------------------------ -->
+  <section id="m4">
+    <h2>4. Storage and supply chains</h2>
+    <ul class="able">
+      <li>Value storage by buying low and selling high, after losses</li>
+      <li>Turn a build plan into tonnes of metal and of rock</li>
+      <li>Walk a mineral supply chain from mine to refinery, and measure its concentration</li>
+    </ul>
+    <p class="demo-lead">
+      A battery earns by moving energy from cheap hours to dear ones, and loses some on the way. Every MW and MWh
+      built is also made of something: steel, copper, aluminum, lithium, nickel. That metal comes from rock, and the
+      rock comes from a handful of countries.
+    </p>
+
+    <StorageExplorer />
+    <SupplyChainExplorer />
+
+    <details class="full">
+      <summary>Worked examples: a day of arbitrage, and what 1 GW of solar is made of</summary>
+      <p><strong>Arbitrage.</strong> A 100 MW, 4-hour battery at 85% round trip buys 400 MWh in the four cheapest hours (11:00–14:00, $4,700) and sells 340 MWh in the four dearest later ones (17:00–20:00, $31,025). <span class="answer">$26,325 a day</span>, about $24,000 a year per MWh of storage if every day were like this one.</p>
+      <p><strong>1 GW of solar</strong> (the /materials/ coefficients):</p>
+      <div class="scroll"><table class="num">
+        <thead><tr><th>Metal</th><th>Tonnes of metal</th><th>Tonnes of rock</th></tr></thead>
+        <tbody>
+          <tr><td>Steel</td><td>25,550</td><td>40,880</td></tr>
+          <tr><td>Aluminum</td><td>9,500</td><td>39,900</td></tr>
+          <tr><td>Copper</td><td>3,000</td><td>660,000</td></tr>
+        </tbody>
+      </table></div>
+      <p>Steel is the heaviest metal by far; copper is the heaviest rock. And 1 TWh a year needs 0.48 GW of solar but only 0.34 GW of wind, because of capacity factor. Which of those two multipliers would you check first in someone else's study?</p>
+      <p class="note-box">Notebook: <code>M4_Supply_Chain</code> (cobalt sourcing as the Module 3 transport model with new labels, then build-plan accounting). Related: <a href="/supply-gap/">Why Supply Can't Catch Up</a> and the <a href="/demos/mineral-supply-chains/">mineral supply chains demo</a>.</p>
+    </details>
+    <p class="note-box"><em>A site that wants storage on its own meter is buying these same metals. Would you rather it chose LFP or NMC, and what would you want to know about the supply chain first?</em></p>
+  </section>
+
+  <!-- 5 ------------------------------------------------------------------ -->
+  <section id="m5">
+    <h2>5. One facility, two sizes</h2>
+    <ul class="able">
+      <li>State a facility's boundary: what is inside, outside, and crossing it</li>
+      <li>Tell a price taker from a price maker</li>
+      <li>Decide whether a site should build its own generation</li>
+    </ul>
+    <p class="demo-lead">
+      The Metroplex Industrial Park, north of Dallas, draws 50 MW. In the course's story, investors convert it into a
+      500 MW data center: same land, same substation, ten times the load. Here it joins the city from Module 1 in a
+      small local market built from Module 2's merit order. Does the site take the price, or make it? And should it
+      build solar on site?
+    </p>
+
+    <FacilityExplorer />
+
+    <details class="full">
+      <summary>Worked example: the park and the data center</summary>
+      <div class="scroll"><table class="num">
+        <thead><tr><th>Site</th><th>Average local price</th><th>The city's extra cost</th><th>Site's grid bill</th></tr></thead>
+        <tbody>
+          <tr><td>50 MW</td><td>$35.00 → $35.00</td><td>$0 a day</td><td>$15.3M a year</td></tr>
+          <tr><td>200 MW</td><td>$35.00 → $40.66</td><td>$67,000 a day</td><td>$69.4M a year</td></tr>
+          <tr><td>500 MW</td><td>$35.00 → $90.00</td><td>$604,000 a day</td><td>$394.2M a year</td></tr>
+        </tbody>
+      </table></div>
+      <p>Now add on-site solar at its Module 2 LCOE of $59.34/MWh:</p>
+      <ul>
+        <li>50 MW site with 50 MW of solar: $9.7M of grid power plus $9.6M of solar, against $15.3M for the grid alone.</li>
+        <li>500 MW site with 300 MW of solar: $274.5M of grid power plus $57.7M of solar, against $394.2M for the grid alone.</li>
+      </ul>
+      <p>Same technology, same cost, opposite answers. What changed between the two sites, and which number in your model captured it?</p>
+      <p class="note-box">Notebooks: <code>M0B_Model_Boundary</code> (one site, two lives) and <code>M5_Facility_Decision</code> (should the Metroplex Industrial Park build on-site generation?).</p>
+    </details>
+  </section>
+
+  <p class="meta">
+    The course's open textbook: <a href="https://uta.pressbooks.pub/energysystemmodeling/">Introduction to Energy System Modeling</a> (Mavs Open Press, in progress).
+    More on this site: <a href="/materials/">What a Grid Is Made Of</a>, <a href="/supply-gap/">Why Supply Can't Catch Up</a>, the <a href="/demos/texas-grid/">Texas grid demo</a>
+    and the <a href="/demos/mineral-supply-chains/">mineral supply chains demo</a>.
+  </p>
+  <p class="back"><a href="/teaching/energy-systems-modeling/">← Energy Systems Modeling</a></p>
+</div>
+</Base>

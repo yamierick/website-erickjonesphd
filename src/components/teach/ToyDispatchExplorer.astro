@@ -1,0 +1,47 @@
+---
+/**
+ * Module 0's toy LP, live (M0_Toy_LP_to_PyPSA Part A): one hour, solar and gas, a
+ * demand to meet. Sliders move demand, the solar available and gas's running cost;
+ * the stack shows what runs, and the readout gives the cost and the price, which is
+ * the dual of the balance constraint. Engine: dispatch() in esm.js.
+ */
+---
+<div class="sx" data-toy>
+  <p class="sx-head"><strong>Try it.</strong> One hour, one place. Move demand past the solar available, then past everything. What sets the price each time?</p>
+  <div class="sx-sliders">
+    <label>Demand (MW) <output data-o="d"></output><input type="range" min="0" max="600" step="5" data-k="d" value="100" /></label>
+    <label>Solar available (MW) <output data-o="s"></output><input type="range" min="0" max="200" step="5" data-k="s" value="40" /></label>
+    <label>Gas cost ($/MWh) <output data-o="c"></output><input type="range" min="5" max="60" step="0.01" data-k="c" value="22.14" /></label>
+  </div>
+  <div class="sx-grid">
+    <div class="fig sx-graph" data-graph></div>
+    <div class="sx-side"><div data-read></div></div>
+  </div>
+</div>
+
+<script>
+  import { dispatch } from "../../scripts/teach/esm.js";
+  import { plot } from "../../lib/fig.js";
+  import { bind, fmt, money, readout } from "../../scripts/teach/ui.js";
+
+  for (const root of document.querySelectorAll("[data-toy]")) {
+    const st = { d: 100, s: 40, c: 22.14 };
+    const draw = () => {
+      const units = [{ name: "solar", cap: st.s, cost: 0 }, { name: "gas", cap: 500, cost: st.c }];
+      const r = dispatch(units, st.d);
+      const g = plot({ w: 420, h: 300, x: [0, 640], y: [0, 70], pad: [14, 12, 40, 46] })
+        .axes({ xt: [0, 160, 320, 480, 640], yt: [0, 20, 40, 60], xl: "MW, cheapest first", yl: "$/MWh", grid: true })
+        .rect(0, 0, st.s, 0.8, "bar").text(st.s / 2, 3, "solar $0", { anchor: "middle", cls: "accent" })
+        .rect(st.s, 0, st.s + 500, st.c, "fill-b").text(st.s + 250, st.c + 3, `gas $${fmt(st.c)}`, { anchor: "middle" })
+        .line([[st.d, 0], [st.d, 70]], "dash-a").text(st.d, 66, `demand ${st.d}`, { dx: 4, cls: "accent" });
+      root.querySelector("[data-graph]").innerHTML = g.svg(`Supply stack: ${st.s} MW of solar at $0, then 500 MW of gas at $${fmt(st.c)}; demand ${st.d} MW.`);
+      root.querySelector("[data-read]").innerHTML = readout([
+        ["Solar runs", `${fmt(r.out[0])} MW`], ["Gas runs", `${fmt(r.out[1])} MW`],
+        ["Cost of the hour", money(r.cost)],
+        ["Price: cost of one more MW", r.unmet > 0 ? "no finite price: demand not met" : `<strong>$${fmt(r.price)}/MWh</strong>`],
+      ]) + `<p class="sx-say">${r.unmet > 0 ? `${fmt(r.unmet)} MW goes unserved. What would a real market do in this hour?` :
+        "The price is the dual of the balance constraint. Did you choose it, or did it come out of the model?"}</p>`;
+    };
+    bind(root, st, draw, { d: String, s: String, c: (v) => `$${fmt(v)}` });
+  }
+</script>

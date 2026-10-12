@@ -1,0 +1,47 @@
+---
+/**
+ * Module 4, storage as arbitrage. A day of hourly prices (illustrative: cheap at
+ * night, solar-depressed midday, an evening ramp); the battery buys in its cheapest
+ * hours and sells in the dearest later ones, one cycle a day. Sliders set power,
+ * duration and round-trip efficiency. Engine: arbitrage() and PRICES in esm.js.
+ */
+---
+<div class="sx" data-storage>
+  <p class="sx-head"><strong>Try it.</strong> Make the battery longer, then less efficient. Which hours does it give up first, and why?</p>
+  <div class="sx-sliders">
+    <label>Power (MW) <output data-o="mw"></output><input type="range" min="10" max="200" step="10" data-k="mw" value="100" /></label>
+    <label>Duration (hours) <output data-o="hrs"></output><input type="range" min="1" max="8" step="1" data-k="hrs" value="4" /></label>
+    <label>Round-trip efficiency <output data-o="eff"></output><input type="range" min="0.6" max="0.95" step="0.01" data-k="eff" value="0.85" /></label>
+  </div>
+  <div class="sx-grid">
+    <div class="fig sx-graph" data-graph></div>
+    <div class="sx-side"><div data-read></div></div>
+  </div>
+</div>
+
+<script>
+  import { arbitrage, PRICES } from "../../scripts/teach/esm.js";
+  import { plot } from "../../lib/fig.js";
+  import { bind, fmt, money, pct, readout } from "../../scripts/teach/ui.js";
+
+  for (const root of document.querySelectorAll("[data-storage]")) {
+    const st = { mw: 100, hrs: 4, eff: 0.85 };
+    const draw = () => {
+      const a = arbitrage(PRICES, st.mw, st.hrs, st.eff);
+      const g = plot({ w: 480, h: 290, x: [-0.5, 23.5], y: [0, 130], pad: [14, 12, 40, 46] })
+        .axes({ xt: [0, 6, 12, 18, 23], yt: [0, 40, 80, 120], xl: "hour of day", yl: "$/MWh", grid: true, xfmt: (h) => `${h}:00` });
+      PRICES.forEach((p, h) => g.rect(h - 0.38, 0, h + 0.38, p, a.cheap.includes(h) ? "bar" : a.dear.includes(h) ? "fill-w" : "fill-b"));
+      g.text(Math.min(...a.cheap), 8, "charge", { anchor: "middle", cls: "accent", dy: -2 })
+        .text(Math.max(...a.dear), 125, "discharge", { anchor: "middle", cls: "warn" });
+      root.querySelector("[data-graph]").innerHTML = g.svg(`Hourly prices; the battery charges in hours ${a.cheap.join(", ")} and discharges in ${a.dear.join(", ")}.`);
+      const mwh = st.mw * st.hrs;
+      root.querySelector("[data-read]").innerHTML = readout([
+        ["Energy stored", `${fmt(mwh, 0)} MWh (${st.mw} MW × ${st.hrs} h)`],
+        ["Bought (green hours)", money(a.buy, 0)], ["Sold (red hours), after losses", money(a.sell, 0)],
+        ["Profit a day", `<strong>${money(a.profit, 0)}</strong>`], ["Over a year, if every day were like this", money(a.profit * 365, 0)],
+        ["Per MWh of storage, a year", money((a.profit * 365) / mwh, 0)],
+      ]) + `<p class="sx-say">Illustrative prices. ${pct(1 - st.eff, 0)} of what goes in never comes back. Compare the yearly profit per MWh with what a MWh of storage costs to build: what would have to change for this battery to pay for itself?</p>`;
+    };
+    bind(root, st, draw, { mw: String, hrs: String, eff: (v) => pct(v, 0) });
+  }
+</script>

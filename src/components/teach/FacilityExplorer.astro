@@ -1,0 +1,64 @@
+---
+/**
+ * Module 5, one facility at two sizes (M0B / M5_Facility_Decision): the Metroplex
+ * Industrial Park at 50 MW, and the same site as a 500 MW data center. The site
+ * joins the city from Module 1 in a small local market (Module 2's merit order,
+ * illustrative fleet). Sliders set the site's load and its on-site solar; the chart
+ * shows the day's prices with and without the site, and the readout compares the
+ * site's bill buying everything from the grid against adding solar at its LCOE.
+ * Engine: facilityDay(), lcoe() and TECH in esm.js (taker/maker checked in esm.test.mjs).
+ */
+---
+<div class="sx" data-facility>
+  <p class="sx-head"><strong>Try it.</strong> Start at 50 MW, then grow the site to 500. At what size does the site start setting its own price? Then add on-site solar.</p>
+  <div class="hx-presets">
+    <button type="button" data-site="50">Industrial park, 50 MW</button>
+    <button type="button" data-site="500">Data center, 500 MW</button>
+  </div>
+  <div class="sx-sliders">
+    <label>Site load (MW, flat) <output data-o="site"></output><input type="range" min="0" max="600" step="10" data-k="site" value="50" /></label>
+    <label>On-site solar (MW) <output data-o="pv"></output><input type="range" min="0" max="600" step="10" data-k="pv" value="0" /></label>
+  </div>
+  <div class="sx-grid">
+    <div class="fig sx-graph" data-graph></div>
+    <div class="sx-side"><div data-read></div></div>
+  </div>
+</div>
+
+<script>
+  import { facilityDay, lcoe, TECH } from "../../scripts/teach/esm.js";
+  import { plot } from "../../lib/fig.js";
+  import { bind, fmt, money, readout } from "../../scripts/teach/ui.js";
+
+  const SOLAR_LCOE = lcoe(TECH.Solar).total; // $/MWh, the Module 2 number
+  for (const root of document.querySelectorAll("[data-facility]")) {
+    const st = { site: 50, pv: 0 };
+    const draw = () => {
+      const F = facilityDay({ site: st.site, onsite: st.pv }), G = facilityDay({ site: st.site, onsite: 0 });
+      const ymax = Math.max(100, ...F.hours.map((x) => Math.min(x.with, 520)));
+      const cap = (v) => Math.min(v, ymax);
+      const g = plot({ w: 470, h: 290, x: [0, 23], y: [0, ymax], pad: [14, 12, 40, 46] })
+        .axes({ xt: [0, 6, 12, 18, 23], yt: [0, Math.round(ymax / 2), Math.round(ymax)], xl: "hour of day", yl: "$/MWh", grid: true, xfmt: (h) => `${h}:00` })
+        .line(F.hours.map((x) => [x.h, cap(x.without)]), "ln-m")
+        .line(F.hours.map((x) => [x.h, cap(x.with)]), "ln-a")
+        .text(0.3, cap(F.hours[0].without), "without the site", { dy: 14 })
+        .text(0.3, cap(F.hours[0].with), "with the site", { dy: -6, cls: "accent" });
+      root.querySelector("[data-graph]").innerHTML = g.svg(`Local hourly prices with and without a ${st.site} MW site: average ${fmt(F.avgWithout)} before, ${fmt(F.avgWith)} after.`);
+      const solarCost = F.solarMwh * SOLAR_LCOE, withSolar = F.bill + solarCost;
+      root.querySelector("[data-read]").innerHTML = readout([
+        ["Average local price", `$${fmt(F.avgWithout)} → <strong>$${fmt(F.avgWith)}</strong>/MWh`],
+        ["The city's extra cost because the site is here", `${money(F.cityBill - F.cityBefore, 0)} a day`],
+        ["Site bill, all from the grid", `${money(G.bill * 365 / 1e6, 1)}M a year`],
+        ["Site bill with on-site solar", st.pv ? `${money(withSolar * 365 / 1e6, 1)}M a year (solar ${fmt(F.solarMwh, 0)} MWh a day at $${fmt(SOLAR_LCOE, 0)})` : "add solar to compare"],
+      ]) + `<p class="sx-say">Illustrative local market: the city of Module 1, with 150 MW of grid solar, 120 MW of wind, 600 MW of combined cycle at $35 and 400 MW of peakers at $90.
+        At 50 MW the site takes the price it is given; somewhere on the way to 500 it starts making it. When the site makes the price, is the downloaded price series still the right input to its model?</p>`;
+    };
+    root.addEventListener("click", (e) => {
+      const b = e.target.closest("[data-site]");
+      if (!b) return;
+      const s = root.querySelector('[data-k="site"]');
+      s.value = b.dataset.site; s.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    bind(root, st, draw, { site: String, pv: String });
+  }
+</script>

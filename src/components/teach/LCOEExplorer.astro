@@ -1,0 +1,79 @@
+---
+/**
+ * Module 2, levelized cost. Five technologies with illustrative costs; pick one
+ * and change its capital cost and capacity factor, and change the shared discount
+ * rate and fuel prices. Stacked bars split each LCOE into capital, fixed O&M,
+ * variable O&M and fuel, so the reader sees which term dominates which technology.
+ * Engine: lcoe() and TECH in esm.js (checked by hand in esm.test.mjs).
+ */
+---
+<div class="sx" data-lcoe>
+  <p class="sx-head"><strong>Try it.</strong> Pick a technology and change its capital cost or capacity factor. Then raise the discount rate. Which technologies care most?</p>
+  <div class="hx-presets" data-pick></div>
+  <div class="sx-sliders">
+    <label>Capital cost ($/kW) <output data-o="capex"></output><input type="range" min="500" max="10000" step="50" data-k="capex" /></label>
+    <label>Capacity factor <output data-o="cf"></output><input type="range" min="0.1" max="0.95" step="0.01" data-k="cf" /></label>
+    <label>Discount rate <output data-o="r"></output><input type="range" min="0.02" max="0.15" step="0.005" data-k="r" value="0.07" /></label>
+    <label>Gas ($/MMBtu) <output data-o="gas"></output><input type="range" min="1.5" max="8" step="0.1" data-k="gas" value="3.5" /></label>
+    <label>Coal ($/MMBtu) <output data-o="coal"></output><input type="range" min="1" max="4" step="0.1" data-k="coal" value="2" /></label>
+  </div>
+  <div class="sx-grid">
+    <div class="fig sx-graph" data-graph></div>
+    <div class="sx-side"><div data-read></div></div>
+  </div>
+</div>
+
+<script>
+  import { lcoe, crf, TECH } from "../../scripts/teach/esm.js";
+  import { plot } from "../../lib/fig.js";
+  import { fmt, pct, readout } from "../../scripts/teach/ui.js";
+
+  for (const root of document.querySelectorAll("[data-lcoe]")) {
+    const techs = Object.fromEntries(Object.entries(TECH).map(([k, v]) => [k, { ...v }]));
+    const shared = { r: 0.07, gas: 3.5, coal: 2.0, uranium: 0.7 };
+    let pick = "Solar";
+    const $ = (s) => root.querySelector(s);
+    $("[data-pick]").innerHTML = Object.keys(techs).map((k) => `<button type="button" data-t="${k}" aria-pressed="${k === pick}">${k}</button>`).join("");
+    const fuelOf = (t) => (t.fuelKey ? shared[t.fuelKey] : 0);
+    const syncSliders = () => {
+      const t = techs[pick];
+      $('[data-k="capex"]').value = t.capex; $('[data-k="cf"]').value = t.cf;
+      $('[data-o="capex"]').textContent = `$${t.capex.toLocaleString("en-US")}`; $('[data-o="cf"]').textContent = pct(t.cf, 0);
+      $('[data-o="r"]').textContent = pct(shared.r, 1); $('[data-o="gas"]').textContent = `$${fmt(shared.gas)}`; $('[data-o="coal"]').textContent = `$${fmt(shared.coal)}`;
+    };
+    const draw = () => {
+      const rows = Object.entries(techs).map(([k, t]) => [k, lcoe({ ...t, fuel: fuelOf(t), r: shared.r })]);
+      const ymax = Math.max(120, Math.ceil(Math.max(...rows.map(([, L]) => L.total)) / 20) * 20);
+      const g = plot({ w: 460, h: 300, x: [-0.6, rows.length - 0.4], y: [0, ymax], pad: [14, 12, 46, 46] })
+        .axes({ xt: rows.map((_, i) => i), yt: [0, ymax / 2, ymax], xl: "", yl: "$/MWh", grid: true, xfmt: (i) => rows[i][0].replace("Gas combined cycle", "Gas CC") });
+      rows.forEach(([k, L], i) => {
+        let y = 0;
+        for (const [part, cls] of [["capital", "bar"], ["fixed", "fill-b"], ["vom", "fill"], ["fuel", "fill-w"]]) {
+          if (L[part] > 0) { g.rect(i - 0.32, y, i + 0.32, y + L[part], cls); y += L[part]; }
+        }
+        g.text(i, L.total, fmt(L.total, 0), { anchor: "middle", dy: -5, cls: k === pick ? "accent" : "strong" });
+      });
+      $("[data-graph]").innerHTML = g.svg(`Levelized cost by technology: ${rows.map(([k, L]) => `${k} ${fmt(L.total, 0)}`).join(", ")} dollars per MWh.`);
+      const t = techs[pick], L = lcoe({ ...t, fuel: fuelOf(t), r: shared.r });
+      $("[data-read]").innerHTML = `<p class="sx-say"><strong>${pick}</strong>, broken down (dark: capital; gold: fixed O&amp;M; light: variable O&amp;M; red: fuel):</p>` + readout([
+        [`Capital: CRF × capex ÷ MWh per kW-yr`, `${fmt(crf(shared.r, 30), 4)} × $${t.capex.toLocaleString("en-US")} ÷ ${fmt(8.76 * t.cf, 2)} = $${fmt(L.capital)}`],
+        ["Fixed O&amp;M", `$${fmt(L.fixed)}`], ["Variable O&amp;M", `$${fmt(L.vom)}`],
+        ["Fuel: heat rate × fuel price", t.hr ? `${(t.hr / 1000).toFixed(1)} MMBtu × $${fmt(fuelOf(t))} = $${fmt(L.fuel)}` : "none"],
+        ["LCOE", `<strong>$${fmt(L.total)}/MWh</strong>`],
+      ]) + `<p class="sx-say">Illustrative costs, 30-year life. LCOE compares the cost of a MWh, not its value: is a solar MWh at noon worth the same as a gas MWh at 7 pm?</p>`;
+    };
+    root.addEventListener("click", (e) => {
+      const b = e.target.closest("[data-t]");
+      if (!b) return;
+      pick = b.dataset.t;
+      for (const x of root.querySelectorAll("[data-t]")) x.setAttribute("aria-pressed", String(x === b));
+      syncSliders(); draw();
+    });
+    root.addEventListener("input", (e) => {
+      const k = e.target.dataset?.k, v = Number(e.target.value);
+      if (k === "capex" || k === "cf") techs[pick][k] = v; else if (k) shared[k] = v;
+      syncSliders(); draw();
+    });
+    syncSliders(); draw();
+  }
+</script>

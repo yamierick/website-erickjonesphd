@@ -26,7 +26,7 @@ const { c } = Astro.props;
   {c.modules && (
     <>
       <h2>Modules</h2>
-      <ol class="modules">
+      <ol class="modules" start={c.modulesStart ?? 1}>
         {c.modules.map(([m, d]) => <li><strong>{m}</strong>: {d}</li>)}
       </ol>
     </>
