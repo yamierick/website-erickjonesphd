@@ -160,3 +160,8 @@
 .ex .doe-t tfoot th { text-align: left; font-weight: 600; }
 .ex .doe-t tfoot tr:first-child > * { border-top: 2px solid var(--rule); }
 .ex [data-state] { outline: none; }
+/* The DOE's design and replicate controls; [hidden] must beat the flex labels it hides. */
+.ex [hidden] { display: none !important; }
+.ex .sx-lab { font-family: system-ui, sans-serif; font-size: .8rem; color: var(--muted); align-self: center; margin-left: .3rem; }
+.ex .doe-reps { font-size: .75rem; color: var(--muted); }
+.ex .doe-t th.doe-sub { padding-left: 1.2rem; font-weight: 400; font-style: italic; }

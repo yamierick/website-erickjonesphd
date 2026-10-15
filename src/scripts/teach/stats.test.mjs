@@ -54,4 +54,18 @@ assert.ok(S.joint([[0.2, 0.2, 0.1], [0.2, 0.2, 0.1]], [0, 1], [0, 1, 2]).indepen
 
 // 2×2 factorial: A 16, B 8, AB 4, mean 70.
 assert.deepEqual(S.effects([60, 72, 64, 84]), { mean: 70, A: 16, B: 8, AB: 4 });
+// F and incomplete beta, against scipy.
+assert.ok(near(S.betaInc(0.3, 2.5, 4), 0.3521975859, 1e-8) && near(1 - S.fSf(3.2, 2, 6), 0.8867107516, 1e-8) && near(S.fSf(6.4, 1, 4), 0.0646768940, 1e-8));
+// Replicated 2×2 (cell averages 60, 72, 64, 84; two runs each), against statsmodels' anova_lm.
+let av = S.anova2([[[58, 62], [63, 65]], [[70, 74], [83, 85]]]); // rows: A low, A high; columns: B low, B high
+assert.ok(near(av.A.ss, 512) && near(av.B.ss, 128) && near(av.AB.ss, 32) && near(av.SS.E, 20) && av.df.E === 4);
+assert.ok(near(av.A.F, 102.4) && near(av.A.p, 0.000537, 1e-5) && near(av.AB.F, 6.4) && near(av.AB.p, 0.064677, 1e-5) && near(av.s, 2.236068, 1e-5));
+// Unreplicated: no error degrees of freedom, so nothing can be tested.
+av = S.anova2([[[60], [64]], [[72], [84]]]);
+assert.ok(av.df.E === 0 && av.s === null && av.A.p === null && near(av.A.ss, 256));
+// 2×3 with two replicates, and B's linear and curvature split.
+av = S.anova2([[[59, 61], [65, 69], [63, 65]], [[70, 74], [80, 82], [83, 85]]]); // B: low, mid, high
+assert.ok(near(av.A.ss, 705.333333, 1e-5) && near(av.B.ss, 170.666667, 1e-5) && near(av.AB.ss, 34.666667, 1e-5) && near(av.SS.E, 24));
+assert.ok(near(av.A.p, 0.000011, 1e-6) && near(av.B.F, 21.333333, 1e-5) && near(av.B.p, 0.001874, 1e-5) && near(av.AB.p, 0.068464, 1e-5));
+assert.ok(near(av.lin.ss, 128) && near(av.lin.p, 0.0013107, 1e-6) && near(av.curve.ss, 42.666667, 1e-5) && near(av.curve.p, 0.01712, 1e-6));
 console.log("stats: all tests passed");

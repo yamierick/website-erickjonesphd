@@ -311,13 +311,17 @@ const doeSvg = dp2.svg("Interaction plot for the 2 by 2 experiment. With a short
       <li>Lay out a 2×2 factorial design</li>
       <li>Calculate main effects and the interaction</li>
       <li>Read the same results as a regression, and say why each coefficient is half its effect</li>
+      <li>Use replicates to estimate the noise and test each effect</li>
+      <li>Add a third level to see whether a factor's effect bends</li>
     </ul>
     <p class="demo-lead">
       Regression on data you happened to collect shows association; a designed experiment <em>sets</em> the
       factors, so it can show cause. Run every combination of two factors at two levels (coded −1 and +1), and lay
       the runs out as a table of signs before collecting anything: that table is the data-collection plan, and every
       run feeds every estimate. An effect is the average at + minus the average at −, and the interaction is the same
-      for the product column.
+      for the product column. One run per cell gives the effects but no way to test them; <strong>replicates</strong>
+      (repeat runs of each cell) measure the noise. A <strong>third level</strong> of a factor shows whether its effect
+      is a straight line or bends.
     </p>
 
     <DOEExplorer />
@@ -332,6 +336,44 @@ const doeSvg = dp2.svg("Interaction plot for the 2 by 2 experiment. With a short
         <li><strong>Why 8 and not 16:</strong> the effect is the rise from <Fragment set:html={t`x_1 = -1`} /> to <Fragment set:html={t`x_1 = +1`} />, a run of 2, so the slope is <Fragment set:html={t`16/2 = 8`} />. It is section 5's <Fragment set:html={t`b_1 = S_{xy}/S_{xx}`} /> too: coded <Fragment set:html={t`x_1`} /> has mean 0, so <Fragment set:html={t`S_{xy} = -60 + 72 - 64 + 84 = 32`} />, <Fragment set:html={t`S_{xx} = 4`} />, and <Fragment set:html={t`32/4 = 8`} />.</li>
       </ol>
       <figure class="fig"><Fragment set:html={doeSvg} /><figcaption>Parallel lines would mean no interaction; these spread apart.</figcaption></figure>
+      <p>With one run per cell, the four runs are used up by four estimates (the mean, A, B and AB), leaving no degrees of freedom for error. Is AB = 4 real or noise? This design cannot say.</p>
+    </details>
+    <details class="full">
+      <summary>Worked example: the same experiment, replicated</summary>
+      <ol class="steps">
+        <li><strong>Data:</strong> two runs per cell, (58, 62), (70, 74), (63, 65), (83, 85); N = 8. The cell averages are still 60, 72, 64, 84, so the effects are still A = 16, B = 8, AB = 4.</li>
+        <li><strong>Equations:</strong> pooled <Fragment set:html={t`s^2`} /> = the average of the four cells' variances, with <Fragment set:html={t`4(n-1)`} /> df; each effect is an average of N/2 runs minus another, so <Fragment set:html={t`SE = 2s/\sqrt{N}`} />, and <Fragment set:html={t`t = \text{effect}/SE`} />.</li>
+        <li><strong>Fill in:</strong> cell variances 8, 8, 2, 2, so <Fragment set:html={t`s^2 = 20/4 = 5`} />, <Fragment set:html={t`s = 2.236`} />, 4 df; <Fragment set:html={t`SE = 2(2.236)/\sqrt 8 = 1.581`} />; t = 10.12, 5.06 and 2.53, against <Fragment set:html={t`t_{0.025,4} = 2.776`} />.</li>
+        <li><strong>Answer:</strong> <span class="answer">A (p &lt; 0.001) and B (p = 0.007) are real; AB (p = 0.065) is not distinguishable from noise</span>. A two-way ANOVA gives the same tests: each F is t², 102.4, 25.6 and 6.4.</li>
+      </ol>
+    </details>
+    <details class="full">
+      <summary>Worked example: a third level of time (2×3)</summary>
+      <p>Temperature (A) at two levels and time (B) at three, two runs per cell (N = 12, 6 error df):</p>
+      <div class="scroll"><table class="num">
+        <thead><tr><th></th><th>B low</th><th>B mid</th><th>B high</th><th>row mean</th></tr></thead>
+        <tbody>
+          <tr><th>A low</th><td>59, 61 → 60</td><td>65, 69 → 67</td><td>63, 65 → 64</td><td>63.67</td></tr>
+          <tr><th>A high</th><td>70, 74 → 72</td><td>80, 82 → 81</td><td>83, 85 → 84</td><td>79.00</td></tr>
+          <tr><th>column mean</th><td>66</td><td>74</td><td>74</td><td>71.33</td></tr>
+        </tbody>
+      </table></div>
+      <ol class="steps">
+        <li><strong>Curvature:</strong> the middle level against the straight line between the ends, <Fragment set:html={t`\bar y_{mid} - (\bar y_{low} + \bar y_{high})/2 = 74 - (66 + 74)/2 = 4`} />. Two levels of time could not have shown it.</li>
+        <li><strong>Split B's 2 df</strong> with the contrasts (−1, 0, 1) and (1, −2, 1): <Fragment set:html={t`SS = a\,n\,(\textstyle\sum_j c_j \bar y_j)^2 / \sum_j c_j^2`} />, giving 128 (linear) and 42.67 (curvature), which add to B's 170.67.</li>
+      </ol>
+      <div class="scroll"><table class="num">
+        <thead><tr><th>Source</th><th>SS</th><th>df</th><th>MS</th><th>F</th><th>p</th></tr></thead>
+        <tbody>
+          <tr><th>A (temperature)</th><td>705.33</td><td>1</td><td>705.33</td><td>176.33</td><td>&lt; 0.001</td></tr>
+          <tr><th>B (time)</th><td>170.67</td><td>2</td><td>85.33</td><td>21.33</td><td>0.002</td></tr>
+          <tr><th>&nbsp;&nbsp;linear</th><td>128.00</td><td>1</td><td>128.00</td><td>32.00</td><td>0.001</td></tr>
+          <tr><th>&nbsp;&nbsp;curvature</th><td>42.67</td><td>1</td><td>42.67</td><td>10.67</td><td>0.017</td></tr>
+          <tr><th>AB</th><td>34.67</td><td>2</td><td>17.33</td><td>4.33</td><td>0.068</td></tr>
+          <tr><th>Error</th><td>24.00</td><td>6</td><td>4.00</td><td></td><td></td></tr>
+        </tbody>
+      </table></div>
+      <p><strong>Answer:</strong> <span class="answer">temperature and time both matter, time's effect bends (p = 0.017), and the interaction is not significant at 5% (p = 0.068)</span>. Checked against statsmodels' <code>anova_lm</code>.</p>
     </details>
   </section>
 
