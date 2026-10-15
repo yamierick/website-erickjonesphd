@@ -150,6 +150,23 @@ export function mmc(lambda, mu, c) {
   return { rho, p0, Lq, L: Lq + a, Wq: Lq / lambda, W: Lq / lambda + 1 / mu, pWait };
 }
 
+/**
+ * M/M/c state probabilities: the long-run share of time with n cars there, for
+ * n = 0..N, and the rest (more than N) as `tail`. The birth-death balance gives
+ * p_n = p_0 a^n / n! while n <= c, and p_0 a^n / (c! c^(n-c)) above. null if unstable.
+ */
+export function mmcStates(lambda, mu, c, N = 7) {
+  const q = mmc(lambda, mu, c);
+  if (!q) return null;
+  const a = lambda / mu, p = [];
+  let term = 1; // a^n / n! up to c, then times a/c per step
+  for (let n = 0; n <= N; n++) {
+    if (n > 0) term *= n <= c ? a / n : a / c;
+    p.push(q.p0 * term);
+  }
+  return { p, tail: Math.max(0, 1 - p.reduce((s, v) => s + v, 0)) };
+}
+
 /** Seeded random numbers (mulberry32), so a simulation replays the same way. */
 export function rng(seed = 1) {
   let s = seed >>> 0;

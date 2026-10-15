@@ -1,16 +1,32 @@
 ---
 /**
  * The charger's Up/Down chain, live. Sliders set the daily break and repair
- * chances; the page shows P, the steady state solved in one line, how fast the
- * chain forgets a breakdown, and a simulated 120 days so the long-run share can be
- * seen emerging from randomness. Engine: twoState() and rng() in or.js.
+ * chances. The state diagram (Jones, 2026-10-15: "MC and Queue need interactive
+ * state diagrams") draws the chain itself: each arrow's width and label is its
+ * transition probability, and each state is shaded by its long-run share. A walker
+ * steps through the chain a day at a time (or runs), lighting the state it is in
+ * and counting visits, so the steady state can be watched emerging; clicking a
+ * state starts the walk there. Below: P, the steady state solved in one line, how
+ * fast the chain forgets a breakdown, and a simulated 120 days.
+ * Engine: twoState() and rng() in or.js.
  */
 ---
 <div class="sx" data-markov>
-  <p class="sx-head"><strong>Try it.</strong> Change how often the charger breaks and how fast it gets fixed.</p>
+  <p class="sx-head"><strong>Try it.</strong> Change how often the charger breaks and how fast it gets fixed. Then walk the chain a day at a time: which state does it spend more days in?</p>
   <div class="sx-sliders">
     <label>Breaks on a given day <output data-o="a"></output><input type="range" min="0.01" max="0.3" step="0.01" data-k="a" value="0.05" /></label>
     <label>Fixed by the next day <output data-o="r"></output><input type="range" min="0.1" max="0.95" step="0.05" data-k="r" value="0.5" /></label>
+  </div>
+  <div class="sx-grid">
+    <div class="fig sx-graph" data-diagram></div>
+    <div class="sx-side">
+      <div data-walk></div>
+      <div class="sx-buttons">
+        <button type="button" data-act="step">Step one day</button>
+        <button type="button" data-act="run">Run</button>
+        <button type="button" data-act="reset">Reset</button>
+      </div>
+    </div>
   </div>
   <div class="sx-grid">
     <div class="sx-side"><div data-read></div></div>
@@ -28,8 +44,58 @@
   for (const root of document.querySelectorAll("[data-markov]")) {
     const st = { a: 0.05, r: 0.5 };
     let seed = 3;
+    // The walker: current state, days walked, days spent up, its own random stream.
+    const walk = { state: "U", days: 0, up: 0, R: rng(101), last: null, timer: null };
+
+    const diagram = () => {
+      const { a, r } = st, m = twoState(a, r);
+      const W = 460, H = 220, U = [140, 120], D = [320, 120], rad = 42;
+      const c = canvas(W, H);
+      // Stroke width follows the probability, so a likely move looks heavier.
+      const sw = (p) => `style="stroke-width:${(1 + 7 * p).toFixed(1)}"`;
+      const arc = (d, p, cls) => c.add(`<path class="${cls}" ${sw(p)} d="${d}" marker-end="url(#__AH__)"/>`);
+      const just = walk.last; // the move just taken, drawn in the accent colour
+      arc(`M ${U[0] + 30} ${U[1] - 30} Q 230 40 ${D[0] - 30} ${D[1] - 30}`, a, just === "UD" ? "arr" : "arr-m");
+      arc(`M ${D[0] - 30} ${D[1] + 30} Q 230 200 ${U[0] + 30} ${U[1] + 30}`, r, just === "DU" ? "arr" : "arr-m");
+      arc(`M ${U[0] - 30} ${U[1] - 30} C ${U[0] - 120} ${U[1] - 110} ${U[0] - 120} ${U[1] + 110} ${U[0] - 34} ${U[1] + 26}`, 1 - a, just === "UU" ? "arr" : "arr-m");
+      arc(`M ${D[0] + 30} ${D[1] - 30} C ${D[0] + 120} ${D[1] - 110} ${D[0] + 120} ${D[1] + 110} ${D[0] + 34} ${D[1] + 26}`, 1 - r, just === "DD" ? "arr" : "arr-m");
+      c.text(230, 52, `breaks  ${fmt(a)}`, "strong").text(230, 206, `fixed  ${fmt(r)}`, "strong")
+        .text(U[0] - 72, 196, `stays up ${fmt(1 - a)}`, "note").text(D[0] + 72, 196, `stays down ${fmt(1 - r)}`, "note");
+      for (const [key, [x, y], name, share] of [["U", U, "Up", m.up], ["D", D, "Down", m.down]]) {
+        const here = walk.state === key;
+        // The fill's opacity is the long-run share (kept light enough to read the name on);
+        // the heavy ring marks where the walker is now.
+        c.add(`<g data-state="${key}" style="cursor:pointer" role="button" aria-label="Start the walk in ${name}">` +
+          `<circle cx="${x}" cy="${y}" r="${rad}" class="bar" style="fill-opacity:${(0.08 + 0.42 * share).toFixed(2)}"/>` +
+          `<circle cx="${x}" cy="${y}" r="${rad}" class="${here ? "node-a" : "node"}" style="fill:none${here ? ";stroke-width:4" : ""}"/>` +
+          `<text class="nodet" x="${x}" y="${y + 5}" text-anchor="middle">${name}</text></g>`);
+        c.text(x, y + rad + 16, `π = ${fmt(share, 3)}`, "strong");
+      }
+      if (walk.days) c.text(walk.state === "U" ? U[0] : D[0], U[1] - rad - 8, "today", "accent");
+      const svg = c.svg(`State diagram: Up stays up with probability ${fmt(1 - a)} and breaks with ${fmt(a)}; Down is fixed with ${fmt(r)} and stays down with ${fmt(1 - r)}. Long run: up ${pct(m.up)}. The walker is ${walk.state === "U" ? "up" : "down"} today.`);
+      // canvas() names its arrowhead per figure; point the hand-written paths at it.
+      const id = svg.match(/marker id="([^"]+)"/)[1];
+      root.querySelector("[data-diagram]").innerHTML = svg.replaceAll("__AH__", id);
+      root.querySelector("[data-walk]").innerHTML = `
+        <p class="hx-step"><strong>Walk the chain.</strong> Each day, roll for a move from the state you are in. Click Up or Down to start there.</p>
+        <p class="hx-verdict">Day ${walk.days}: <strong>${walk.state === "U" ? "up" : "down"}</strong>.
+          Up on ${walk.days ? pct(walk.up / walk.days) : "—"} of the days walked; the steady state says ${pct(m.up)}.</p>`;
+    };
+
+    const step = () => {
+      const from = walk.state, u = walk.R();
+      walk.state = from === "U" ? (u < st.a ? "D" : "U") : (u < st.r ? "U" : "D");
+      walk.last = from + walk.state;
+      walk.days++;
+      if (walk.state === "U") walk.up++;
+      diagram();
+    };
+    const stop = () => { clearInterval(walk.timer); walk.timer = null; root.querySelector("[data-act=run]").textContent = "Run"; };
+    const reset = (state = "U") => { stop(); Object.assign(walk, { state, days: 0, up: 0, last: null }); diagram(); };
+
     const draw = () => {
       const { a, r } = st, m = twoState(a, r);
+      diagram();
       root.querySelector("[data-read]").innerHTML = `
         <p class="hx-step"><strong>1. Transition matrix</strong> (rows: today, columns: tomorrow)</p>
         <table class="num hx-H"><tr><th></th><th>Up</th><th>Down</th></tr>
@@ -57,7 +123,19 @@
       t.text(0, 60, `120 simulated days: up ${pct(share)} of them (green), down the rest (red). The steady state says ${pct(m.up)}.`, "note", "start");
       root.querySelector("[data-strip]").innerHTML = t.svg(`120 simulated days; the charger was up on ${pct(share)} of them.`);
     };
+
+    root.addEventListener("click", (e) => {
+      const s = e.target.closest("[data-state]");
+      if (s) return reset(s.dataset.state);
+      const act = e.target.closest("button")?.dataset.act;
+      if (act === "step") { stop(); step(); }
+      else if (act === "run") {
+        if (walk.timer) return stop();
+        e.target.textContent = "Pause";
+        walk.timer = setInterval(() => { step(); if (walk.days >= 365) stop(); }, 250);
+      } else if (act === "reset") reset();
+      else if (act === "sim") { seed++; draw(); }
+    });
     bind(root, st, draw, { a: (v) => pct(v, 0), r: (v) => pct(v, 0) });
-    root.querySelector("[data-act=sim]").addEventListener("click", () => { seed++; draw(); });
   }
 </script>

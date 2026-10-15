@@ -131,7 +131,7 @@ import "../../../styles/examples.css";
 
     <details class="full">
       <summary>Worked examples: a clearing price, and two LCOEs</summary>
-      <p><strong>Clearing price.</strong> At 55 GW, wind, solar, nuclear and coal are all running and the last MW comes from combined-cycle gas: <Fragment set:html={t`6.6 \times \$3.50 + \$2 = \$25.10`} />/MWh. Coal, at <Fragment set:html={t`10.0 \times \$2.00 + \$4.50 = \$24.50`} />, runs just ahead of it. Drop gas to $2 and the order flips.</p>
+      <p><strong>Clearing price.</strong> At 55 GW, wind, solar, nuclear and coal are all running and the last MW comes from combined-cycle gas: <Fragment set:html={t`6.6 \times \$3.50 + \$2 = \$25.10`} />/MWh. Coal, at <Fragment set:html={t`10.0 \times \$2.00 + \$4.50 = \$24.50`} />, runs just ahead of it. Below about $3.41 the order flips and gas runs before coal: that is the order in the class's <code>M2_Dispatch_Walkthrough</code>, where Houston gas at $2.65 per thousand cubic feet puts a combined-cycle plant at $21.63/MWh and San Antonio coal at $25.74.</p>
       <p><strong>LCOE</strong> at 7% over 30 years (<Fragment set:html={t`\text{CRF} = 0.0806`} />):</p>
       <ul>
         <li>Solar, $1,300/kW, $20/kW-yr, capacity factor 0.24: <Fragment set:html={t`(0.0806 \times 1300 + 20)/(8.76 \times 0.24) = 49.83 + 9.51`} /> = <span class="answer">$59.34/MWh</span></li>

@@ -153,3 +153,10 @@
 .ex .hx-presets button[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); font-weight: 700; }
 .ex .sx-sliders input[type="range"] { max-width: 11rem; }
 .ex .demo-lead { font-family: system-ui, sans-serif; font-size: .95rem; }
+/* Checkboxes under an interactive (the regression bands), and the DOE sign table. */
+.ex .sx-checks { display: flex; flex-wrap: wrap; gap: .3rem 1.4rem; font-family: system-ui, sans-serif; font-size: .85rem; margin: 0 0 .4rem; }
+.ex .sx-checks label { display: flex; align-items: center; gap: .35rem; }
+.ex .doe-t th, .ex .doe-t td { text-align: center; }
+.ex .doe-t tfoot th { text-align: left; font-weight: 600; }
+.ex .doe-t tfoot tr:first-child > * { border-top: 2px solid var(--rule); }
+.ex [data-state] { outline: none; }

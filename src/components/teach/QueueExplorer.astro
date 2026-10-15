@@ -7,15 +7,21 @@
  * emerging from random arrivals. Engine: mmc() and simulate() in or.js; a long
  * simulation is checked against the formula in or.test.mjs. Nothing moves until the
  * reader presses Play.
+ *
+ * The state diagram (Jones, 2026-10-15) is the queue as a birth-death chain: state n
+ * is the number of cars there, arrivals move it right at rate λ, finished charges
+ * move it left at rate min(n, c)·μ. Each state's bar is its long-run share of time
+ * (mmcStates() in or.js), and during Play the state the simulated day is in lights up.
  */
 ---
 <div class="sx" data-queue>
-  <p class="sx-head"><strong>Try it.</strong> Push the arrival rate toward the charging rate and watch the wait explode. Press Play to watch a simulated day.</p>
+  <p class="sx-head"><strong>Try it.</strong> Push the arrival rate toward the charging rate and watch the wait explode. Press Play to watch a simulated day move through the states.</p>
   <div class="sx-sliders">
     <label>Cars arriving per hour λ <output data-o="lam"></output><input type="range" min="0.5" max="7.5" step="0.1" data-k="lam" value="3" /></label>
     <label>Charges per hour per charger μ <output data-o="mu"></output><input type="range" min="2" max="8" step="0.5" data-k="mu" value="4" /></label>
     <label>Chargers <output data-o="c"></output><input type="range" min="1" max="3" step="1" data-k="c" value="1" /></label>
   </div>
+  <div class="fig sx-graph" data-diagram></div>
   <div class="sx-grid">
     <div class="sx-side"><div data-read></div></div>
     <div class="fig sx-graph" data-graph></div>
@@ -28,14 +34,49 @@
 </div>
 
 <script>
-  import { mmc, simulate } from "../../scripts/teach/or.js";
+  import { mmc, mmcStates, simulate } from "../../scripts/teach/or.js";
   import { plot, canvas } from "../../lib/fig.js";
-  import { bind, fmt, readout } from "../../scripts/teach/ui.js";
+  import { bind, fmt, pct, readout } from "../../scripts/teach/ui.js";
 
   const HOURS = 12;
   for (const root of document.querySelectorAll("[data-queue]")) {
     const st = { lam: 3, mu: 4, c: 1 };
     let seed = 5, cars = [], clock = 0, playing = false, last = 0;
+
+    // The birth-death diagram. `now` is the number of cars there at the simulated
+    // moment (null when not playing), which lights that state.
+    const N = 7; // states 0..7 drawn, then "8+"
+    const diagram = (now) => {
+      const W = 600, H = 210, x0 = 40, dx = (W - 80) / (N + 1), y = 70, rad = 19;
+      const s = mmcStates(st.lam, st.mu, st.c, N);
+      const c = canvas(W, H);
+      for (let n = 0; n <= N; n++) {
+        const xa = x0 + n * dx, xb = xa + dx, out = Math.min(n + 1, st.c) * st.mu;
+        c.add(`<path class="arr-m" d="M ${xa + 12} ${y - 15} Q ${(xa + xb) / 2} ${y - 42} ${xb - 12} ${y - 15}" marker-end="url(#__AH__)"/>`)
+          .text((xa + xb) / 2, y - 34, fmt(st.lam, 1), "note")
+          .add(`<path class="arr-m" d="M ${xb - 12} ${y + 15} Q ${(xa + xb) / 2} ${y + 42} ${xa + 12} ${y + 15}" marker-end="url(#__AH__)"/>`)
+          .text((xa + xb) / 2, y + 44, fmt(out, 1), "note");
+      }
+      const share = (n) => (!s ? null : n <= N ? s.p[n] : s.tail);
+      const top = s ? Math.max(...s.p, s.tail) : 1;
+      for (let n = 0; n <= N + 1; n++) {
+        const x = x0 + n * dx, here = now != null && (n <= N ? now === n : now > N), p = share(n);
+        c.circle(x, y, rad, n <= N ? String(n) : `${N + 1}+`, here ? "node-a" : "node");
+        if (p != null) {
+          const bh = (p / top) * 60;
+          c.add(`<rect class="bar" x="${(x - 12).toFixed(1)}" y="${(185 - bh).toFixed(1)}" width="24" height="${bh.toFixed(1)}"/>`)
+            .text(x, 200, pct(p, 0), "note");
+        }
+      }
+      c.text(x0 - 22, y - 34, "arrive", "note", "start").text(x0 - 22, y + 44, "leave", "note", "start");
+      const label = s
+        ? `Birth-death diagram: arrivals move the state up at ${fmt(st.lam, 1)} an hour, charges finished move it down at ${fmt(st.mu, 1)} times the number charging. Long run: empty ${pct(s.p[0], 0)} of the time.${now != null ? ` Now ${now} cars are there.` : ""}`
+        : `Birth-death diagram with no steady state: arrivals outrun the chargers, so the state drifts up without limit.`;
+      const svg = c.svg(label);
+      const id = svg.match(/marker id="([^"]+)"/)[1];
+      root.querySelector("[data-diagram]").innerHTML = svg.replaceAll("__AH__", id) +
+        `<p class="sx-say">State n = cars there. Arrows right: an arrival (rate λ). Arrows left: a charge finishes (rate μ per busy charger). Bars: the share of time in each state${s ? "" : " (none: no steady state)"}${now != null ? ". The ringed state is the simulated day right now." : "; press Play to watch a day move through them."}</p>`;
+    };
 
     const frame = (t) => {
       const W = 600, H = 150, t2 = canvas(W, H);
@@ -54,6 +95,7 @@
       t2.text(10, 22, `hour ${h}:${String(mnt).padStart(2, "0")} of ${HOURS}`, "strong", "start")
         .text(10, 128, `in line now: ${waiting.length} · charged so far: ${done.length} · their average wait: ${fmt(seen * 60, 0)} min`, "note", "start");
       root.querySelector("[data-anim]").innerHTML = t2.svg(`Simulated hour ${h}: ${waiting.length} cars waiting, ${serving.length} charging.`);
+      diagram(playing ? waiting.length + serving.length : null);
     };
 
     const draw = () => {

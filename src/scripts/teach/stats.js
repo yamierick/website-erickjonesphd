@@ -124,6 +124,36 @@ export function regress(pts) {
   return { n, xb, yb, Sxx, Sxy, b0, b1, SSE, SST, r2: SST > 0 ? 1 - SSE / SST : 1 };
 }
 
+/** P(T <= x) for Student's t with v degrees of freedom (Simpson's rule on the density). */
+export function tCdf(x, v) {
+  const a = Math.abs(x), n = 400, h = a / n;
+  let s = tPdf(0, v) + tPdf(a, v);
+  for (let i = 1; i < n; i++) s += (i % 2 ? 4 : 2) * tPdf(i * h, v);
+  return 0.5 + Math.sign(x) * (s * h) / 3;
+}
+
+/** The t quantile: the x with P(T <= x) = p (bisection). */
+export function tInv(p, v) {
+  let lo = -60, hi = 60;
+  for (let i = 0; i < 80; i++) { const mid = (lo + hi) / 2; if (tCdf(mid, v) < p) lo = mid; else hi = mid; }
+  return (lo + hi) / 2;
+}
+
+/**
+ * Confidence band for the mean response and prediction band for one new
+ * observation at x, from a fit made by regress():
+ *   ŷ ± t·s·sqrt(1/n + (x − x̄)²/Sxx)        (the mean at x)
+ *   ŷ ± t·s·sqrt(1 + 1/n + (x − x̄)²/Sxx)    (one new y at x)
+ * with s² = SSE/(n − 2) and t at n − 2 degrees of freedom. null below 3 points.
+ */
+export function regressBand(r, x, level = 0.95) {
+  if (!r || r.n < 3) return null;
+  const t = tInv(1 - (1 - level) / 2, r.n - 2), s = Math.sqrt(r.SSE / (r.n - 2));
+  const fit = r.b0 + r.b1 * x, lev = 1 / r.n + (x - r.xb) ** 2 / r.Sxx;
+  const ci = t * s * Math.sqrt(lev), pi = t * s * Math.sqrt(1 + lev);
+  return { fit, ciLo: fit - ci, ciHi: fit + ci, piLo: fit - pi, piHi: fit + pi, t, s };
+}
+
 /** Moments of a joint pmf given as a matrix p[i][j] over x-values xs and y-values ys. */
 export function joint(p, xs, ys) {
   const px = p.map((r) => r.reduce((a, b) => a + b, 0)), py = ys.map((_, j) => p.reduce((s, r) => s + r[j], 0));

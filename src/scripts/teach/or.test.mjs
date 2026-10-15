@@ -53,6 +53,13 @@ assert.ok(near(q.L, 3) && near(q.Lq, 2.25) && near(q.W, 1) && near(q.Wq, 0.75));
 q = O.mmc(3.5, 4, 2);
 assert.ok(near(q.Lq, 0.20713, 1e-4) && near(q.Wq * 60, 3.5507, 1e-3) && near(q.p0, 0.391304, 1e-5));
 assert.equal(O.mmc(4, 4, 1), null);
+// State probabilities: M/M/1 is geometric, p_n = (1 − ρ) ρ^n; they and the tail sum to 1;
+// and the M/M/2 ones reproduce L = Σ n p_n (far enough out that the tail is negligible).
+let s = O.mmcStates(3, 4, 1);
+assert.ok(near(s.p[0], 0.25) && near(s.p[2], 0.25 * 0.75 ** 2) && near(s.p.reduce((a, b) => a + b, 0) + s.tail, 1));
+s = O.mmcStates(3.5, 4, 2, 200);
+assert.ok(near(s.p.reduce((a, p, n) => a + n * p, 0), O.mmc(3.5, 4, 2).L, 1e-6));
+assert.equal(O.mmcStates(4, 4, 1), null);
 // A long simulation agrees with the formula (within noise).
 const sim = O.simulate(3, 4, 1, 20000, 11);
 const simWq = sim.reduce((s, x) => s + (x.start - x.arrive), 0) / sim.length;

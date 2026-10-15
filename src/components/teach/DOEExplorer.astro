@@ -3,6 +3,12 @@
  * A 2×2 factorial, live. Four sliders set the yield at each corner of the design;
  * the main effects, the interaction, the coded regression and the interaction plot
  * update together. Presets show no interaction, the page's example, and a crossover.
+ *
+ * Jones (2026-10-15) asked for the design laid out as a table, and for where "half
+ * the effect" comes from. So: the sign table is the experiment (one row per run, one
+ * column per effect, every run used in every estimate), each effect is computed from
+ * it as Σ(sign × y)/2 and each coefficient as Σ(sign × y)/4, and the plot draws A's
+ * average line, whose rise over the coded run of 2 is the coefficient.
  * Engine: effects() in stats.js.
  */
 ---
@@ -20,33 +26,64 @@
     <label>Run 4: A high, B high <output data-o="y4"></output><input type="range" min="40" max="100" step="1" data-k="y4" value="84" /></label>
   </div>
   <div class="sx-grid">
+    <div class="sx-side"><div data-table></div></div>
     <div class="fig sx-graph" data-graph></div>
-    <div class="sx-side"><div data-read></div></div>
   </div>
+  <div data-read></div>
 </div>
 
 <script>
   import { effects } from "../../scripts/teach/stats.js";
   import { plot } from "../../lib/fig.js";
-  import { bind, fmt, readout } from "../../scripts/teach/ui.js";
+  import { bind, fmt } from "../../scripts/teach/ui.js";
 
+  // The design: one row per run, the signs of A, B and their product AB.
+  const RUNS = [[-1, -1], [1, -1], [-1, 1], [1, 1]];
+  const sign = (v) => (v > 0 ? "+" : "−");
   const sgn = (v) => (v < 0 ? " − " : " + ") + fmt(Math.abs(v));
+
   for (const root of document.querySelectorAll("[data-doe]")) {
     const st = { y1: 60, y2: 72, y3: 64, y4: 84 };
     const set = bind(root, st, () => draw(), { y1: String, y2: String, y3: String, y4: String });
     function draw() {
       const y = [st.y1, st.y2, st.y3, st.y4], E = effects(y);
+      const col = { A: RUNS.map(([a]) => a), B: RUNS.map(([, b]) => b), AB: RUNS.map(([a, b]) => a * b) };
+      const dot = (k) => col[k].reduce((s, c, i) => s + c * y[i], 0);
+
+      // 1. The sign table: the experiment itself, then the arithmetic every effect shares.
+      root.querySelector("[data-table]").innerHTML = `
+        <p class="hx-step"><strong>The design.</strong> Four runs, every combination of A and B at two levels. Each column is a contrast: which runs count + and which count −.</p>
+        <div class="scroll"><table class="num doe-t">
+          <thead><tr><th>Run</th><th>A</th><th>B</th><th>AB = A×B</th><th>yield y</th></tr></thead>
+          <tbody>${RUNS.map(([a, b], i) => `<tr><td>${i + 1}</td><td>${sign(a)}</td><td>${sign(b)}</td><td>${sign(a * b)}</td><td>${y[i]}</td></tr>`).join("")}</tbody>
+          <tfoot>
+            <tr><th>Σ(sign × y)</th><td>${dot("A")}</td><td>${dot("B")}</td><td>${dot("AB")}</td><td></td></tr>
+            <tr><th>effect = Σ ÷ 2</th><td><strong>${fmt(dot("A") / 2)}</strong></td><td><strong>${fmt(dot("B") / 2)}</strong></td><td><strong>${fmt(dot("AB") / 2)}</strong></td><td></td></tr>
+            <tr><th>coefficient = Σ ÷ 4</th><td>${fmt(dot("A") / 4)}</td><td>${fmt(dot("B") / 4)}</td><td>${fmt(dot("AB") / 4)}</td><td>mean ${fmt(E.mean)}</td></tr>
+          </tfoot>
+        </table></div>
+        <p class="hx-step">Every run appears in every column, so all four runs inform every estimate. Changing one factor at a time would use only some runs for each comparison, and could never see AB.</p>`;
+
+      // 2. The interaction plot, with A's average line: its rise over a run of 2 is the coefficient.
+      const lo = (y[0] + y[2]) / 2, hi = (y[1] + y[3]) / 2;
       const g = plot({ w: 420, h: 290, x: [-1.4, 1.4], y: [35, 105], pad: [14, 16, 40, 46] })
         .axes({ xt: [-1, 1], yt: [40, 60, 80, 100], xl: "A: temperature (coded)", yl: "yield", xfmt: (v) => (v < 0 ? "−1 (low)" : "+1 (high)") })
+        .line([[-1, lo], [1, hi]], "dash")
         .line([[-1, y[0]], [1, y[1]]], "ln-m").line([[-1, y[2]], [1, y[3]]], "ln-a");
       [[-1, y[0], "pt-m"], [1, y[1], "pt-m"], [-1, y[2], "pt"], [1, y[3], "pt"]].forEach(([x, v, c]) => g.dot(x, v, c, 5).text(x, v, String(v), { dx: x < 0 ? -10 : 10, dy: 4, anchor: x < 0 ? "end" : "start" }));
-      g.text(1.35, y[3], "B high", { anchor: "end", dy: y[3] >= y[1] ? -10 : 18, cls: "accent" }).text(1.35, y[1], "B low", { anchor: "end", dy: y[1] > y[3] ? -10 : 18 });
-      root.querySelector("[data-graph]").innerHTML = g.svg(`Interaction plot: effect A ${fmt(E.A)}, B ${fmt(E.B)}, AB ${fmt(E.AB)}.`);
-      root.querySelector("[data-read]").innerHTML = readout([
-        ["Effect of A = (y₂ + y₄)/2 − (y₁ + y₃)/2", `<strong>${fmt(E.A)}</strong>`],
-        ["Effect of B = (y₃ + y₄)/2 − (y₁ + y₂)/2", `<strong>${fmt(E.B)}</strong>`],
-        ["Interaction AB = (y₁ + y₄)/2 − (y₂ + y₃)/2", `<strong>${fmt(E.AB)}</strong>`],
-      ]) + `<p class="sx-say">As a regression on coded x₁, x₂: <strong>ŷ = ${fmt(E.mean)}${sgn(E.A / 2)}x₁${sgn(E.B / 2)}x₂${sgn(E.AB / 2)}x₁x₂</strong>. Each coefficient is half its effect.
+      g.text(1.35, y[3], "B high", { anchor: "end", dy: y[3] >= y[1] ? -10 : 18, cls: "accent" }).text(1.35, y[1], "B low", { anchor: "end", dy: y[1] > y[3] ? -10 : 18 })
+        .text(0, 39, `dashed: the average over B, rising ${fmt(hi - lo)} over a run of 2`, { anchor: "middle" });
+      root.querySelector("[data-graph]").innerHTML = g.svg(`Interaction plot: effect A ${fmt(E.A)}, B ${fmt(E.B)}, AB ${fmt(E.AB)}. The dashed line averages over B and rises ${fmt(hi - lo)} from A low to A high.`);
+
+      // 3. Where "half the effect" comes from, with this design's numbers.
+      root.querySelector("[data-read]").innerHTML = `
+        <p class="hx-step"><strong>Effect of A:</strong> the average where A is +, minus the average where A is −:
+          (${y[1]} + ${y[3]})/2 − (${y[0]} + ${y[2]})/2 = ${fmt(hi)} − ${fmt(lo)} = <strong>${fmt(E.A)}</strong>.</p>
+        <p class="hx-step"><strong>Why the regression coefficient is half of it.</strong> The effect is the change in yield from A = −1 to A = +1:
+          a run of 2 coded units. Slope is rise over run: ${fmt(E.A)} ÷ 2 = <strong>${fmt(E.A / 2)}</strong>.
+          It is also the least-squares slope from section 5, S<sub>xy</sub>/S<sub>xx</sub>: the coded x has mean 0, so S<sub>xy</sub> = Σ(sign × y) = ${dot("A")}
+          and S<sub>xx</sub> = Σ(sign²) = 4, giving ${dot("A")} ÷ 4 = ${fmt(dot("A") / 4)}.</p>
+        <p class="sx-say">As a regression on coded x₁ (A) and x₂ (B): <strong>ŷ = ${fmt(E.mean)}${sgn(E.A / 2)}x₁${sgn(E.B / 2)}x₂${sgn(E.AB / 2)}x₁x₂</strong>.
         ${Math.abs(E.AB) < 1e-9 ? "No interaction: the lines are parallel, and A's effect is the same at either level of B." :
           Math.sign(y[1] - y[0]) !== Math.sign(y[3] - y[2]) && y[1] !== y[0] && y[3] !== y[2] ? "A crossover: raising A helps at one level of B and hurts at the other, so A's main effect alone would mislead." :
           "The lines are not parallel: A's effect depends on B. That is the interaction."}</p>`;
