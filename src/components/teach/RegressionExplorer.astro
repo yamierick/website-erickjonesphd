@@ -4,12 +4,20 @@
  * data); the least-squares line, its residuals, b0, b1 and R² update. A slope slider
  * lets the reader try their own line through the means and compare its sum of
  * squared errors with least squares, which can never be beaten.
- * Engine: regress() in stats.js (checked against the page in stats.test.mjs).
+ * The 95% bands (Jones, 2026-10-15: "Error bands on LR graph?"): shaded, the
+ * confidence band for the mean yield at each temperature; dashed, the prediction
+ * band for one new run. Both pinch at x-bar and flare toward the ends.
+ * Engine: regress() and regressBand() in stats.js (bands checked against
+ * statsmodels in stats.test.mjs).
  */
 ---
 <div class="sx" data-regress>
   <p class="sx-head"><strong>Try it.</strong> Click the chart to add points. Then try to beat least squares with your own slope.</p>
   <div class="sx-sliders"><label>Your slope (through the means) <output data-o="m"></output><input type="range" min="-0.6" max="0.6" step="0.005" data-k="m" value="0.15" /></label></div>
+  <div class="sx-checks">
+    <label><input type="checkbox" data-band="ci" checked /> 95% band for the mean (shaded)</label>
+    <label><input type="checkbox" data-band="pi" checked /> 95% band for one new run (dashed)</label>
+  </div>
   <div class="sx-grid">
     <div class="fig sx-graph sx-click" data-graph></div>
     <div class="sx-side"><div data-read></div>
@@ -23,12 +31,20 @@
 </div>
 
 <script>
-  import { regress } from "../../scripts/teach/stats.js";
+  import { regress, regressBand } from "../../scripts/teach/stats.js";
   import { plot } from "../../lib/fig.js";
   import { bind, fmt, readout } from "../../scripts/teach/ui.js";
 
   const REACTOR = [[150, 62.1], [160, 64.8], [170, 66.0], [180, 69.3], [190, 70.1], [200, 73.4], [210, 74.0], [220, 77.2]];
   const X0 = 140, X1 = 230, Y0 = 55, Y1 = 85, W = 460, H = 330, PAD = [14, 12, 40, 46];
+
+  // How wide the bands are at the centre and at the edge of the data: the reason they flare.
+  const bandNote = (r, xs) => {
+    if (r.n < 3) return "";
+    const mid = regressBand(r, r.xb), end = regressBand(r, xs);
+    return `<p class="sx-say"><strong>95% bands</strong> (t = ${fmt(mid.t, 3)} with ${r.n - 2} df, s = ${fmt(mid.s, 3)}). At x̄ = ${fmt(r.xb, 1)}: mean ± ${fmt(mid.ciHi - mid.fit, 2)}, one new run ± ${fmt(mid.piHi - mid.fit, 2)}.
+      At ${fmt(xs, 0)}: ± ${fmt(end.ciHi - end.fit, 2)} and ± ${fmt(end.piHi - end.fit, 2)}. The (x − x̄)²/S<sub>xx</sub> term is why they widen away from the centre.</p>`;
+  };
 
   for (const root of document.querySelectorAll("[data-regress]")) {
     const st = { m: 0.15 };
@@ -38,6 +54,15 @@
       const g = plot({ w: W, h: H, x: [X0, X1], y: [Y0, Y1], pad: PAD })
         .axes({ xt: [140, 160, 180, 200, 220], yt: [55, 65, 75, 85], xl: "temperature (°C)", yl: "yield (%)", grid: true });
       let mine = null;
+      const show = { ci: root.querySelector('[data-band="ci"]').checked, pi: root.querySelector('[data-band="pi"]').checked };
+      if (r && r.n >= 3) {
+        // The bands, sampled across the chart; clipped to the plot so a wide one stays readable.
+        const xs = Array.from({ length: 61 }, (_, i) => X0 + ((X1 - X0) * i) / 60);
+        const clip = (v) => Math.max(Y0, Math.min(Y1, v));
+        const B = xs.map((x) => regressBand(r, x));
+        if (show.ci) g.area([...xs.map((x, i) => [x, clip(B[i].ciHi)]), ...xs.slice().reverse().map((x, i) => [x, clip(B[60 - i].ciLo)])], "fill");
+        if (show.pi) { g.line(xs.map((x, i) => [x, clip(B[i].piHi)]), "dash-a"); g.line(xs.map((x, i) => [x, clip(B[i].piLo)]), "dash-a"); }
+      }
       if (r) {
         const yhat = (x) => r.b0 + r.b1 * x;
         pts.forEach(([x, y]) => g.line([[x, y], [x, yhat(x)]], "ln-b"));
@@ -50,8 +75,8 @@
       root.querySelector("[data-graph]").innerHTML = g.svg(r ? `${pts.length} points; least-squares line y-hat = ${fmt(r.b0)} + ${fmt(r.b1, 4)} x, R² ${fmt(r.r2, 3)}.` : "Click to add points.");
       root.querySelector("[data-read]").innerHTML = r ? readout([
         ["Points n", r.n], ["Slope b₁ = S<sub>xy</sub>/S<sub>xx</sub>", `<strong>${fmt(r.b1, 4)}</strong>`], ["Intercept b₀ = ȳ − b₁x̄", fmt(r.b0, 2)],
-        ["R² = 1 − SSE/SST", `<strong>${fmt(r.r2, 3)}</strong>`], ["SSE, least squares", fmt(r.SSE, 2)], ["SSE, your slope (dashed)", fmt(mine, 2)],
-      ]) + `<p class="sx-say">${mine <= r.SSE + 1e-6 ? "Your line matches least squares." : `Your line's squared errors are ${fmt(mine / Math.max(r.SSE, 1e-9), 1)} times the least-squares total. No line through the data does better than the green one.`}</p>`
+        ["R² = 1 − SSE/SST", `<strong>${fmt(r.r2, 3)}</strong>`], ["SSE, least squares", fmt(r.SSE, 2)], ["SSE, your slope (dashed grey)", fmt(mine, 2)],
+      ]) + bandNote(r, Math.max(...pts.map((p) => p[0]))) + `<p class="sx-say">${mine <= r.SSE + 1e-6 ? "Your line matches least squares." : `Your line's squared errors are ${fmt(mine / Math.max(r.SSE, 1e-9), 1)} times the least-squares total. No line through the data does better than the green one.`}</p>`
         : `<p class="sx-say">Add at least two points with different temperatures.</p>`;
     };
     root.querySelector("[data-graph]").addEventListener("click", (e) => {
@@ -67,6 +92,7 @@
       if (a === "data") pts = REACTOR.slice(); else if (a === "undo") pts.pop(); else if (a === "clear") pts = []; else return;
       draw();
     });
+    root.addEventListener("change", (e) => { if (e.target.closest("[data-band]")) draw(); });
     bind(root, st, draw, { m: (v) => fmt(v, 3) });
   }
 </script>

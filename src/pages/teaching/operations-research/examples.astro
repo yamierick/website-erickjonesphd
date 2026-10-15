@@ -277,20 +277,13 @@ const polySvg = pf.svg("Plot of f(x) = x⁴ − 3x² + x on [−2, 2]: two valle
           <tr><td><Fragment set:html={t`x(c - A^\top y) = 0`} /></td><td><Fragment set:html={t`24(0) + 8(0) = 0`} /></td><td>yes</td></tr>
         </tbody>
       </table></div>
-      <p>All four hold: <span class="answer"><Fragment set:html={t`z = w = 1{,}360`} /></span>, both optimal. KKT is always necessary; it is also sufficient for convex problems (every LP), and only necessary for nonconvex ones.</p>
+      <p>All four hold: <span class="answer"><Fragment set:html={t`z = w = 1{,}360`} /></span>, both optimal. KKT is always necessary; it is also sufficient for convex problems (every LP), and only necessary for nonconvex ones. Sections 5 and 6 show one of each.</p>
     </details>
     <details class="full">
-      <summary>The full KKT conditions, for nonlinear problems</summary>
-      <p>For <Fragment set:html={t`\max f(x)`} /> subject to <Fragment set:html={t`g_i(x) \le b_i`} />, dual feasibility becomes <em>stationarity</em>:</p>
-      <Fragment set:html={d`\begin{aligned}
-        &\text{stationarity:} && \nabla f(x^*) = \textstyle\sum_i \lambda_i \nabla g_i(x^*)\\
-        &\text{primal feasibility:} && g_i(x^*) \le b_i\\
-        &\text{dual feasibility:} && \lambda_i \ge 0\\
-        &\text{complementary slackness:} && \lambda_i\,\big(b_i - g_i(x^*)\big) = 0
-      \end{aligned}`} />
-      <p>For the shop, <Fragment set:html={t`(40, 50) = 16\,(1, 2) + 6\,(4, 3)`} />: the objective's direction is a positive mix of the binding constraints' directions.</p>
-      <figure class="fig"><Fragment set:html={kkt} /><figcaption>Stationarity: c lies inside the cone of the binding constraints' normals.</figcaption></figure>
-      <p>Nonlinear example: <Fragment set:html={t`\min (x-3)^2 + (y-2)^2`} /> subject to <Fragment set:html={t`x + y \le 4`} /> gives <Fragment set:html={t`x^* = (2.5, 1.5)`} />, <Fragment set:html={t`\lambda = 1`} />; the objective is convex, so it is the global minimum.</p>
+      <summary>Why it works: the objective inside the cone</summary>
+      <p>The dual-feasibility line, read as geometry: at the optimum the objective's direction is a positive mix of the binding constraints' directions, with the prices as the weights. For the shop, <Fragment set:html={t`(40, 50) = 16\,(1, 2) + 6\,(4, 3)`} />.</p>
+      <figure class="fig"><Fragment set:html={kkt} /><figcaption>c lies inside the cone of the binding constraints' normals, so no feasible direction improves z.</figcaption></figure>
+      <p>For a nonlinear problem the same idea is called <em>stationarity</em>, with gradients in place of <Fragment set:html={t`c`} /> and <Fragment set:html={t`A`} />: see sections 5 and 6.</p>
     </details>
   </section>
 
@@ -355,6 +348,7 @@ const polySvg = pf.svg("Plot of f(x) = x⁴ − 3x² + x on [−2, 2]: two valle
       <li>Build the Hessian of a function</li>
       <li>Find the leading principal minors and apply Sylvester's criterion</li>
       <li>Decide whether the objective and every constraint are convex</li>
+      <li>Solve the KKT conditions of a convex problem, and say why its answer is the global optimum</li>
     </ul>
     <p class="demo-lead">
       A convex problem has one valley, so any local minimum is the global one. To check a function: build the
@@ -376,6 +370,25 @@ const polySvg = pf.svg("Plot of f(x) = x⁴ − 3x² + x on [−2, 2]: two valle
       <figure class="fig pair"><Fragment set:html={convSvg} /><Fragment set:html={sadSvg} />
         <figcaption>Ellipses mean a bowl, hyperbolas a saddle. The arrows are the Hessian's eigenvectors.</figcaption></figure>
     </details>
+    <details class="full">
+      <summary>Worked example: KKT on a convex problem</summary>
+      <p>For <Fragment set:html={t`\min f(x)`} /> subject to <Fragment set:html={t`g_i(x) \le b_i`} />, the four KKT lines from section 2 become:</p>
+      <Fragment set:html={d`\begin{aligned}
+        &\text{stationarity:} && \nabla f(x^*) + \textstyle\sum_i \lambda_i \nabla g_i(x^*) = 0\\
+        &\text{primal feasibility:} && g_i(x^*) \le b_i\\
+        &\text{dual feasibility:} && \lambda_i \ge 0\\
+        &\text{complementary slackness:} && \lambda_i\,\big(b_i - g_i(x^*)\big) = 0
+      \end{aligned}`} />
+      <div class="problem"><p><strong>Problem.</strong> Minimize <Fragment set:html={t`f = (x-3)^2 + (y-2)^2`} /> subject to <Fragment set:html={t`x + y \le 4`} />: the point nearest <Fragment set:html={t`(3, 2)`} /> on the safe side of a line.</p></div>
+      <ol class="steps">
+        <li><strong>Convex?</strong> <Fragment set:html={t`H = \begin{bmatrix} 2 & 0 \\ 0 & 2 \end{bmatrix}`} />: <Fragment set:html={t`D_1 = 2`} />, <Fragment set:html={t`D_2 = 4`} />, both positive, and the constraint is linear. So any KKT point is the global minimum.</li>
+        <li><strong>Is the constraint binding?</strong> The unconstrained best, <Fragment set:html={t`(3, 2)`} />, has <Fragment set:html={t`x + y = 5 > 4`} />: infeasible. So <Fragment set:html={t`x + y = 4`} /> and <Fragment set:html={t`\lambda`} /> may be positive.</li>
+        <li><strong>Stationarity:</strong> <Fragment set:html={t`2(x-3) + \lambda = 0`} /> and <Fragment set:html={t`2(y-2) + \lambda = 0`} />, so <Fragment set:html={t`x - 3 = y - 2`} />.</li>
+        <li><strong>Solve</strong> with <Fragment set:html={t`x + y = 4`} />: <span class="answer"><Fragment set:html={t`x^* = (2.5,\ 1.5),\ \lambda = 1,\ f^* = 0.5`} /></span></li>
+        <li><strong>Check:</strong> feasible (<Fragment set:html={t`4 \le 4`} />), <Fragment set:html={t`\lambda = 1 \ge 0`} />, and <Fragment set:html={t`\lambda(4 - 4) = 0`} />. All four hold, and the problem is convex: global.</li>
+      </ol>
+      <p><Fragment set:html={t`\lambda = 1`} /> is a shadow price, just as in section 2: allow <Fragment set:html={t`x + y \le 4.1`} /> and <Fragment set:html={t`f`} /> falls by about 0.1. Gurobi gives the same point and the same dual.</p>
+    </details>
   </section>
 
   <!-- 6 ------------------------------------------------------------------ -->
@@ -385,6 +398,7 @@ const polySvg = pf.svg("Plot of f(x) = x⁴ − 3x² + x on [−2, 2]: two valle
       <li>Spot a nonconvex objective or constraint</li>
       <li>Lift a polynomial into a quadratic by adding variables</li>
       <li>Approximate other nonlinear terms with a Taylor series or pieces</li>
+      <li>Explain why a point that passes KKT can still be the wrong answer</li>
     </ul>
     <p class="demo-lead">
       With more than one valley, a local method stops in whichever one it starts in. Lift polynomials into
@@ -404,6 +418,20 @@ const polySvg = pf.svg("Plot of f(x) = x⁴ − 3x² + x on [−2, 2]: two valle
         <li><strong>Solve globally</strong> (Gurobi, <code>NonConvex=2</code>): <span class="answer"><Fragment set:html={t`x^* = -1.3008,\ f^* = -3.5139`} /></span></li>
       </ol>
       <figure class="fig"><Fragment set:html={polySvg} /><figcaption>Two valleys: a global solver finds the deeper one and proves it.</figcaption></figure>
+    </details>
+    <details class="full">
+      <summary>Worked example: KKT on this nonconvex problem</summary>
+      <p>The same four lines as in section 5. The bounds <Fragment set:html={t`-2 \le x \le 2`} /> are not binding at any of the points below, so complementary slackness sets both multipliers to 0 and stationarity is just <Fragment set:html={t`f'(x) = 0`} />:</p>
+      <Fragment set:html={d`f'(x) = 4x^3 - 6x + 1 = 0`} />
+      <div class="scroll"><table class="num">
+        <thead><tr><th>KKT point</th><th>f(x)</th><th>f''(x)</th><th>What it is</th></tr></thead>
+        <tbody>
+          <tr><td>x = −1.3008</td><td>−3.5139</td><td>14.31</td><td><strong>global minimum</strong></td></tr>
+          <tr><td>x = 0.1699</td><td>0.0841</td><td>−5.65</td><td>local maximum</td></tr>
+          <tr><td>x = 1.1309</td><td>−1.0702</td><td>9.35</td><td>local minimum</td></tr>
+        </tbody>
+      </table></div>
+      <p>All three pass every KKT line, the hilltop included. On a convex problem a KKT point settles it (section 5); here it only shortlists candidates. Which one would a local solver report, and what decides it?</p>
     </details>
     <details class="full">
       <summary>How the global solvers do it</summary>

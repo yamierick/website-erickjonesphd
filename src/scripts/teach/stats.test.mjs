@@ -40,6 +40,12 @@ assert.ok(near(pw.power, 0.659744, 1e-5), `power ${pw.power}`); // scipy: 0.6597
 const rx = [150, 160, 170, 180, 190, 200, 210, 220], ry = [62.1, 64.8, 66.0, 69.3, 70.1, 73.4, 74.0, 77.2];
 const g = S.regress(rx.map((x, i) => [x, ry[i]]));
 assert.ok(near(g.b1, 0.2079762, 1e-6) && near(g.b0, 31.136905, 1e-5) && near(g.r2, 0.986524, 1e-5));
+// t quantiles and the bands, against scipy and statsmodels' get_prediction().summary_frame().
+assert.ok(near(S.tInv(0.975, 6), 2.4469119, 1e-5) && near(S.tInv(0.975, 3), 3.1824463, 1e-5) && near(S.tInv(0.9, 20), 1.3253407, 1e-5));
+let b = S.regressBand(g, 185);
+assert.ok(near(b.fit, 69.6125, 1e-4) && near(b.ciLo, 69.056136, 1e-4) && near(b.ciHi, 70.168864, 1e-4) && near(b.piLo, 67.943408, 1e-4) && near(b.piHi, 71.281592, 1e-4));
+b = S.regressBand(g, 150);
+assert.ok(near(b.ciLo, 61.317556, 1e-4) && near(b.piHi, 64.206334, 1e-4));
 
 // Joint table: covariance 0.175, correlation 0.4418, not independent.
 const J = S.joint([[0.30, 0.15, 0.05], [0.10, 0.20, 0.20]], [0, 1], [0, 1, 2]);

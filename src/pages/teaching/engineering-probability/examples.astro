@@ -281,6 +281,7 @@ const doeSvg = dp2.svg("Interaction plot for the 2 by 2 experiment. With a short
       <li>Fit a least-squares line</li>
       <li>Interpret the slope and R²</li>
       <li>Check the residuals</li>
+      <li>Read the confidence band for the mean and the prediction band for one new point</li>
     </ul>
     <p class="demo-lead">
       Least squares picks the line that makes the squared vertical distances to the points (the residuals) as small
@@ -297,6 +298,7 @@ const doeSvg = dp2.svg("Interaction plot for the 2 by 2 experiment. With a short
         <li><strong>Variables:</strong> <Fragment set:html={t`\bar x = 185,\ \bar y = 69.61,\ S_{xx} = 4200,\ S_{xy} = 873.5`} />.</li>
         <li><strong>Fill in:</strong> <Fragment set:html={t`b_1 = 873.5/4200`} />; <Fragment set:html={t`b_0 = 69.61 - 0.208(185)`} />.</li>
         <li><strong>Answer:</strong> <span class="answer"><Fragment set:html={t`\hat y = 31.14 + 0.208x,\ R^2 = 0.987`} /></span>. The slope test gives <Fragment set:html={t`t \approx 21 > 2.447`} />: temperature matters.</li>
+        <li><strong>Error bands at 185 °C</strong> (<Fragment set:html={t`s = \sqrt{\text{SSE}/(n-2)},\ t_{0.025,6} = 2.447`} />): the mean yield is <Fragment set:html={t`\hat y \pm t\,s\sqrt{1/n + (x-\bar x)^2/S_{xx}}`} /> = <span class="answer">69.06 to 70.17</span>; one new run is <Fragment set:html={t`\hat y \pm t\,s\sqrt{1 + 1/n + (x-\bar x)^2/S_{xx}}`} /> = <span class="answer">67.94 to 71.28</span>. The extra 1 under the root is the new run's own scatter.</li>
       </ol>
       <figure class="fig"><Fragment set:html={rgSvg} /><figcaption>The line and its residuals; use it only inside the data, 150 to 220 °C.</figcaption></figure>
     </details>
@@ -308,12 +310,14 @@ const doeSvg = dp2.svg("Interaction plot for the 2 by 2 experiment. With a short
     <ul class="able">
       <li>Lay out a 2×2 factorial design</li>
       <li>Calculate main effects and the interaction</li>
-      <li>Read the same results as a regression</li>
+      <li>Read the same results as a regression, and say why each coefficient is half its effect</li>
     </ul>
     <p class="demo-lead">
       Regression on data you happened to collect shows association; a designed experiment <em>sets</em> the
-      factors, so it can show cause. Run every combination of two factors at two levels (coded −1 and +1). An effect
-      is the average at + minus the average at −, and the interaction is the same for the product column.
+      factors, so it can show cause. Run every combination of two factors at two levels (coded −1 and +1), and lay
+      the runs out as a table of signs before collecting anything: that table is the data-collection plan, and every
+      run feeds every estimate. An effect is the average at + minus the average at −, and the interaction is the same
+      for the product column.
     </p>
 
     <DOEExplorer />
@@ -325,6 +329,7 @@ const doeSvg = dp2.svg("Interaction plot for the 2 by 2 experiment. With a short
         <li><strong>Variables:</strong> yields 60, 72, 64, 84 at (A, B) = (−, −), (+, −), (−, +), (+, +).</li>
         <li><strong>Fill in:</strong> A: <Fragment set:html={t`(72+84)/2 - (60+64)/2`} />; B: <Fragment set:html={t`(64+84)/2 - (60+72)/2`} />; AB: <Fragment set:html={t`(60+84)/2 - (72+64)/2`} />.</li>
         <li><strong>Answer:</strong> <span class="answer">A = 16, B = 8, AB = 4</span>; as a regression, <Fragment set:html={t`\hat y = 70 + 8x_1 + 4x_2 + 2x_1x_2`} />.</li>
+        <li><strong>Why 8 and not 16:</strong> the effect is the rise from <Fragment set:html={t`x_1 = -1`} /> to <Fragment set:html={t`x_1 = +1`} />, a run of 2, so the slope is <Fragment set:html={t`16/2 = 8`} />. It is section 5's <Fragment set:html={t`b_1 = S_{xy}/S_{xx}`} /> too: coded <Fragment set:html={t`x_1`} /> has mean 0, so <Fragment set:html={t`S_{xy} = -60 + 72 - 64 + 84 = 32`} />, <Fragment set:html={t`S_{xx} = 4`} />, and <Fragment set:html={t`32/4 = 8`} />.</li>
       </ol>
       <figure class="fig"><Fragment set:html={doeSvg} /><figcaption>Parallel lines would mean no interaction; these spread apart.</figcaption></figure>
     </details>
@@ -332,7 +337,7 @@ const doeSvg = dp2.svg("Interaction plot for the 2 by 2 experiment. With a short
 
   <p class="meta">
     More worked material: <a href="/resources/stat-basics/">statistics basics and linear regression</a> and
-    <a href="/resources/simulation-basics/">the basics of simulation</a>, in Python.
+    <a href="/resources/simulation-basics/">the basics of simulation</a>, in Python and R side by side, with an <a href="/resources/r-python/">R and Python cheat sheet</a>.
   </p>
   <p class="back"><a href="/teaching/engineering-probability/">← IE 3301 Engineering Probability</a></p>
 </div>
