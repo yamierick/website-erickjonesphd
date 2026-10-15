@@ -56,8 +56,11 @@ export const courses = [
       ["Introduction", "what a model is, its boundary, and a first linear program"],
       ["Demand", "residential, commercial, industrial and transportation"],
       ["Generation", "the electricity system, fossil fuels and other sources"],
-      ["Networks", "transmission, distribution and pipelines"],
-      ["Storage and supply chains", "batteries, oil and gas, other storage, and material flows"],
+      // Order follows the syllabus as revised 2026-10-15: transport modes and the
+      // network model first, then pipelines and Uri, transmission, distribution,
+      // power flow; Other Storage folded into Oil and Gas so Module 5 fits before Exam 2.
+      ["Networks", "transport modes and network models, pipelines and Winter Storm Uri, transmission and distribution, and power flow"],
+      ["Storage and supply chains", "batteries, oil, gas and other storage, and material flows"],
       ["Facility decision", "one site at two sizes: should it build its own generation?"],
     ],
     examples: "Interactive, one per module: a toy dispatch model, a day of demand with EVs, the merit order and LCOE, power flow on a three-bus Texas grid, storage and mineral supply chains, and one facility at two sizes.",
