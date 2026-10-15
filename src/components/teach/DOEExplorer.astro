@@ -1,30 +1,45 @@
 ---
 /**
- * A 2×2 factorial, live. Four sliders set the yield at each corner of the design;
- * the main effects, the interaction, the coded regression and the interaction plot
- * update together. Presets show no interaction, the page's example, and a crossover.
+ * A factorial experiment, live: a 2×2 (A and B at two levels) or a 2×3 (B gets a
+ * middle level, so a bend in B's effect can show), with 1, 2 or 3 replicates per
+ * cell (Jones, 2026-10-15).
  *
- * Jones (2026-10-15) asked for the design laid out as a table, and for where "half
- * the effect" comes from. So: the sign table is the experiment (one row per run, one
- * column per effect, every run used in every estimate), each effect is computed from
- * it as Σ(sign × y)/2 and each coefficient as Σ(sign × y)/4, and the plot draws A's
- * average line, whose rise over the coded run of 2 is the coefficient.
- * Engine: effects() in stats.js.
+ * Sliders set each cell's AVERAGE. Replicates scatter around it with spread σ,
+ * drawn from a seeded generator and then centred, so a cell's average is exactly
+ * its slider: the effects never move when only the noise does, and the 2×2 with one
+ * replicate is the page's worked example (60, 72, 64, 84). Two presets load the
+ * worked examples' exact replicate values.
+ *
+ * 2×2: the sign table is the experiment; each effect is Σ(sign × ȳ)/2 and each
+ * coefficient Σ(sign × ȳ)/4, and with replicates each effect gets s, SE = 2s/√N, t
+ * and p. With one replicate there are no degrees of freedom for error, and the page
+ * says so. 2×3: the data table, B's linear and curvature contrasts, and the two-way
+ * ANOVA. Engines: effects(), anova2(), tInv() in stats.js (anova2 checked against
+ * statsmodels in stats.test.mjs).
  */
 ---
 <div class="sx" data-doe>
-  <p class="sx-head"><strong>Try it.</strong> Set the yield at each of the four runs. Make the lines parallel to kill the interaction, or cross them.</p>
-  <div class="hx-presets">
-    <button type="button" data-p="60,72,64,84">The page's example</button>
-    <button type="button" data-p="60,72,64,76">No interaction</button>
-    <button type="button" data-p="60,80,75,62">Crossover</button>
+  <p class="sx-head"><strong>Try it.</strong> Set each cell's average, then add replicates. With one run per cell, can any effect be tested? With two?</p>
+  <div class="hx-presets" role="group" aria-label="Design">
+    <span class="sx-lab">Design</span>
+    <button type="button" data-design="2x2" aria-pressed="true">2×2</button>
+    <button type="button" data-design="2x3" aria-pressed="false">2×3 (B at three levels)</button>
+    <span class="sx-lab">Replicates per cell</span>
+    <button type="button" data-n="1" aria-pressed="true">1</button>
+    <button type="button" data-n="2" aria-pressed="false">2</button>
+    <button type="button" data-n="3" aria-pressed="false">3</button>
   </div>
+  <div class="hx-presets" data-presets></div>
   <div class="sx-sliders">
-    <label>Run 1: A low, B low <output data-o="y1"></output><input type="range" min="40" max="100" step="1" data-k="y1" value="60" /></label>
-    <label>Run 2: A high, B low <output data-o="y2"></output><input type="range" min="40" max="100" step="1" data-k="y2" value="72" /></label>
-    <label>Run 3: A low, B high <output data-o="y3"></output><input type="range" min="40" max="100" step="1" data-k="y3" value="64" /></label>
-    <label>Run 4: A high, B high <output data-o="y4"></output><input type="range" min="40" max="100" step="1" data-k="y4" value="84" /></label>
+    <label data-cell="y1"><span data-lab></span> <output data-o="y1"></output><input type="range" min="40" max="100" step="1" data-k="y1" value="60" /></label>
+    <label data-cell="y2"><span data-lab></span> <output data-o="y2"></output><input type="range" min="40" max="100" step="1" data-k="y2" value="72" /></label>
+    <label data-cell="y5"><span data-lab></span> <output data-o="y5"></output><input type="range" min="40" max="100" step="1" data-k="y5" value="67" /></label>
+    <label data-cell="y6"><span data-lab></span> <output data-o="y6"></output><input type="range" min="40" max="100" step="1" data-k="y6" value="81" /></label>
+    <label data-cell="y3"><span data-lab></span> <output data-o="y3"></output><input type="range" min="40" max="100" step="1" data-k="y3" value="64" /></label>
+    <label data-cell="y4"><span data-lab></span> <output data-o="y4"></output><input type="range" min="40" max="100" step="1" data-k="y4" value="84" /></label>
+    <label data-noise>Replicate noise σ <output data-o="sigma"></output><input type="range" min="0.5" max="8" step="0.5" data-k="sigma" value="2" /></label>
   </div>
+  <div class="sx-buttons" data-noise><button type="button" data-act="scatter">New random scatter</button></div>
   <div class="sx-grid">
     <div class="sx-side"><div data-table></div></div>
     <div class="fig sx-graph" data-graph></div>
@@ -33,65 +48,197 @@
 </div>
 
 <script>
-  import { effects } from "../../scripts/teach/stats.js";
+  import { effects, anova2, tInv, rng } from "../../scripts/teach/stats.js";
   import { plot } from "../../lib/fig.js";
   import { bind, fmt } from "../../scripts/teach/ui.js";
 
-  // The design: one row per run, the signs of A, B and their product AB.
-  const RUNS = [[-1, -1], [1, -1], [-1, 1], [1, 1]];
   const sign = (v) => (v > 0 ? "+" : "−");
   const sgn = (v) => (v < 0 ? " − " : " + ") + fmt(Math.abs(v));
+  const pv = (p) => (p == null ? "—" : p < 0.001 ? "< 0.001" : fmt(p, 3));
+  // Cells by key: [A level (0 low, 1 high), B level (0 low, 1 mid, 2 high)].
+  const CELL = { y1: [0, 0], y2: [1, 0], y5: [0, 1], y6: [1, 1], y3: [0, 2], y4: [1, 2] };
+  const KEYS = { "2x2": ["y1", "y2", "y3", "y4"], "2x3": ["y1", "y2", "y5", "y6", "y3", "y4"] };
+  // The worked examples' replicate deviations (each pair centred on its cell average).
+  const WORKED = {
+    "2x2": { means: { y1: 60, y2: 72, y3: 64, y4: 84 }, devs: { y1: [-2, 2], y2: [-2, 2], y3: [-1, 1], y4: [-1, 1] } },
+    "2x3": { means: { y1: 60, y2: 72, y5: 67, y6: 81, y3: 64, y4: 84 }, devs: { y1: [-1, 1], y2: [-2, 2], y5: [-2, 2], y6: [-1, 1], y3: [-1, 1], y4: [-1, 1] } },
+  };
+  const PRESETS = {
+    "2x2": [["The page's example", { y1: 60, y2: 72, y3: 64, y4: 84 }, 1], ["Worked example, 2 replicates", "worked", 2],
+            ["No interaction", { y1: 60, y2: 72, y3: 64, y4: 76 }, null], ["Crossover", { y1: 60, y2: 80, y3: 75, y4: 62 }, null]],
+    "2x3": [["Worked 2×3, 2 replicates", "worked", 2], ["No bend in B", { y1: 60, y2: 72, y5: 62, y6: 78, y3: 64, y4: 84 }, null],
+            ["Bend only at A high", { y1: 60, y2: 72, y5: 62, y6: 86, y3: 64, y4: 84 }, null]],
+  };
+  const LAB = {
+    "2x2": { y1: "A low, B low", y2: "A high, B low", y3: "A low, B high", y4: "A high, B high" },
+    "2x3": { y1: "A low, B low", y2: "A high, B low", y5: "A low, B mid", y6: "A high, B mid", y3: "A low, B high", y4: "A high, B high" },
+  };
 
   for (const root of document.querySelectorAll("[data-doe]")) {
-    const st = { y1: 60, y2: 72, y3: 64, y4: 84 };
-    const set = bind(root, st, () => draw(), { y1: String, y2: String, y3: String, y4: String });
-    function draw() {
-      const y = [st.y1, st.y2, st.y3, st.y4], E = effects(y);
-      const col = { A: RUNS.map(([a]) => a), B: RUNS.map(([, b]) => b), AB: RUNS.map(([a, b]) => a * b) };
-      const dot = (k) => col[k].reduce((s, c, i) => s + c * y[i], 0);
+    const st = { y1: 60, y2: 72, y3: 64, y4: 84, y5: 67, y6: 81, sigma: 2 };
+    let design = "2x2", n = 1, seed = 7, devs = {};
 
-      // 1. The sign table: the experiment itself, then the arithmetic every effect shares.
-      root.querySelector("[data-table]").innerHTML = `
-        <p class="hx-step"><strong>The design.</strong> Four runs, every combination of A and B at two levels. Each column is a contrast: which runs count + and which count −.</p>
+    // Replicate scatter: n normal draws per cell, centred so the cell's average is its slider.
+    const scatter = () => {
+      const R = rng(seed);
+      devs = {};
+      for (const k of Object.keys(CELL)) {
+        const z = Array.from({ length: n }, () => st.sigma * Math.sqrt(-2 * Math.log(1 - R())) * Math.cos(2 * Math.PI * R()));
+        const m = z.reduce((s, v) => s + v, 0) / n;
+        devs[k] = z.map((v) => Math.round((v - m) * 10) / 10);
+        // Rounding to 0.1 can leave the deviations not quite summing to 0; the last run absorbs it.
+        if (n > 1) devs[k][n - 1] = -Math.round(devs[k].slice(0, -1).reduce((s, v) => s + v, 0) * 10) / 10;
+      }
+    };
+    const obs = (k) => devs[k].map((d) => Math.round((st[k] + d) * 10) / 10);
+
+    const drawTable2 = (y, E, av) => {
+      const runs = KEYS["2x2"].map((k) => [k, ...CELL[k]]);
+      const col = { A: runs.map(([, a]) => (a ? 1 : -1)), B: runs.map(([, , b]) => (b ? 1 : -1)) };
+      col.AB = col.A.map((a, i) => a * col.B[i]);
+      const dot = (c) => col[c].reduce((s, v, i) => s + v * y[i], 0);
+      const N = 4 * n, se = av.s == null ? null : (2 * av.s) / Math.sqrt(N), tc = av.df.E ? tInv(0.975, av.df.E) : null;
+      const reps = Array.from({ length: n }, (_, r) => `<th>y<sub>${r + 1}</sub></th>`).join("");
+      const blank = `<td></td>`.repeat(n);
+      const row = (label, f) => `<tr><th>${label}</th>${["A", "B", "AB"].map((c) => `<td>${f(c)}</td>`).join("")}${blank}<td></td></tr>`;
+      const tests = av.s == null ? "" : [
+        row(`SE = 2s/√N`, () => fmt(se, 3)),
+        row(`t = effect ÷ SE`, (c) => fmt(dot(c) / 2 / se, 2)),
+        row(`p (df ${av.df.E})`, (c) => `<strong>${pv(av[c].p)}</strong>`),
+      ].join("");
+      return `
+        <p class="hx-step"><strong>The design.</strong> Four cells, every combination of A and B at two levels, ${n === 1 ? "one run each" : `${n} runs each (N = ${N})`}. Each column is a contrast: which cells count + and which count −.</p>
         <div class="scroll"><table class="num doe-t">
-          <thead><tr><th>Run</th><th>A</th><th>B</th><th>AB = A×B</th><th>yield y</th></tr></thead>
-          <tbody>${RUNS.map(([a, b], i) => `<tr><td>${i + 1}</td><td>${sign(a)}</td><td>${sign(b)}</td><td>${sign(a * b)}</td><td>${y[i]}</td></tr>`).join("")}</tbody>
+          <thead><tr><th>Cell</th><th>A</th><th>B</th><th>AB</th>${reps}<th>ȳ</th></tr></thead>
+          <tbody>${runs.map(([k, a, b], i) => `<tr><td>${i + 1}</td><td>${sign(a ? 1 : -1)}</td><td>${sign(b ? 1 : -1)}</td><td>${sign(col.AB[i])}</td>${obs(k).map((v) => `<td>${fmt(v, 1)}</td>`).join("")}<td>${fmt(y[i], 1)}</td></tr>`).join("")}</tbody>
           <tfoot>
-            <tr><th>Σ(sign × y)</th><td>${dot("A")}</td><td>${dot("B")}</td><td>${dot("AB")}</td><td></td></tr>
-            <tr><th>effect = Σ ÷ 2</th><td><strong>${fmt(dot("A") / 2)}</strong></td><td><strong>${fmt(dot("B") / 2)}</strong></td><td><strong>${fmt(dot("AB") / 2)}</strong></td><td></td></tr>
-            <tr><th>coefficient = Σ ÷ 4</th><td>${fmt(dot("A") / 4)}</td><td>${fmt(dot("B") / 4)}</td><td>${fmt(dot("AB") / 4)}</td><td>mean ${fmt(E.mean)}</td></tr>
+            ${row("Σ(sign × ȳ)", (c) => fmt(dot(c)))}
+            ${row("effect = Σ ÷ 2", (c) => `<strong>${fmt(dot(c) / 2)}</strong>`)}
+            ${row("coefficient = Σ ÷ 4", (c) => fmt(dot(c) / 4))}
+            ${tests}
           </tfoot>
-        </table></div>
-        <p class="hx-step">Every run appears in every column, so all four runs inform every estimate. Changing one factor at a time would use only some runs for each comparison, and could never see AB.</p>`;
+        </table></div>`;
+    };
 
-      // 2. The interaction plot, with A's average line: its rise over a run of 2 is the coefficient.
-      const lo = (y[0] + y[2]) / 2, hi = (y[1] + y[3]) / 2;
+    const drawTable3 = (av) => {
+      const rows = [0, 1].map((a) => `<tr><th>A ${a ? "high" : "low"}</th>${[0, 1, 2].map((b) => {
+        const k = Object.keys(CELL).find((key) => CELL[key][0] === a && CELL[key][1] === b);
+        return `<td>${n > 1 ? `<span class="doe-reps">${obs(k).map((v) => fmt(v, 1)).join(", ")}</span><br>` : ""}<strong>${fmt(av.cell[a][b], 1)}</strong></td>`;
+      }).join("")}<td>${fmt(av.row[a], 2)}</td></tr>`).join("");
+      const line = (name, x, indent = false) => `<tr><th${indent ? ' class="doe-sub"' : ""}>${name}</th><td>${fmt(x.ss, 2)}</td><td>${x.df ?? 1}</td><td>${fmt(x.ss / (x.df ?? 1), 2)}</td><td>${x.F == null ? "—" : fmt(x.F, 2)}</td><td><strong>${pv(x.p)}</strong></td></tr>`;
+      return `
+        <p class="hx-step"><strong>The data.</strong> A at two levels, B at three: six cells${n > 1 ? `, ${n} runs each (N = ${av.N}); each cell lists its runs, then its average` : ", one run each"}.</p>
+        <div class="scroll"><table class="num doe-t">
+          <thead><tr><th></th><th>B low</th><th>B mid</th><th>B high</th><th>row mean</th></tr></thead>
+          <tbody>${rows}<tr><th>column mean</th>${av.col.map((m) => `<td>${fmt(m, 2)}</td>`).join("")}<td>${fmt(av.grand, 2)}</td></tr></tbody>
+        </table></div>
+        <p class="hx-step"><strong>Two-way ANOVA.</strong> ${av.df.E ? `F = MS ÷ MSE, with ${av.df.E} error df.` : "No error degrees of freedom: the sums of squares can be computed, but not tested."}</p>
+        <div class="scroll"><table class="num doe-t">
+          <thead><tr><th>Source</th><th>SS</th><th>df</th><th>MS</th><th>F</th><th>p</th></tr></thead>
+          <tbody>${line("A", av.A)}${line("B", av.B)}${line("B linear", av.lin, true)}${line("B curvature", av.curve, true)}${line("AB", av.AB)}
+            <tr><th>Error</th><td>${fmt(av.SS.E, 2)}</td><td>${av.df.E}</td><td>${av.MSE == null ? "—" : fmt(av.MSE, 2)}</td><td></td><td></td></tr></tbody>
+        </table></div>`;
+    };
+
+    function draw() {
+      for (const lab of root.querySelectorAll("[data-cell]")) {
+        const k = lab.dataset.cell, on = KEYS[design].includes(k);
+        lab.hidden = !on;
+        if (on) lab.querySelector("[data-lab]").textContent = `${LAB[design][k]}${n > 1 ? " (average)" : ""}`;
+      }
+      for (const el of root.querySelectorAll("[data-noise]")) el.hidden = n === 1;
+      root.querySelectorAll("[data-design]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.design === design)));
+      root.querySelectorAll("[data-n]").forEach((b) => b.setAttribute("aria-pressed", String(+b.dataset.n === n)));
+      root.querySelector("[data-presets]").innerHTML = PRESETS[design].map(([name], i) => `<button type="button" data-p="${i}">${name}</button>`).join("");
+
+      // The data, as cells[A level][B level] = replicate observations, for anova2().
+      const cols = design === "2x2" ? [0, 2] : [0, 1, 2];
+      const cells = [0, 1].map((a) => cols.map((b) => obs(Object.keys(CELL).find((k) => CELL[k][0] === a && CELL[k][1] === b))));
+      const av = anova2(cells);
+      const g = design === "2x2" ? graph2(av) : graph3(av);
+      root.querySelector("[data-graph]").innerHTML = g;
+
+      if (design === "2x2") {
+        const y = [av.cell[0][0], av.cell[1][0], av.cell[0][1], av.cell[1][1]], E = effects(y);
+        root.querySelector("[data-table]").innerHTML = drawTable2(y, E, av);
+        const lo = (y[0] + y[2]) / 2, hi = (y[1] + y[3]) / 2, N = 4 * n;
+        root.querySelector("[data-read]").innerHTML = `
+          <p class="hx-step"><strong>Effect of A:</strong> the average where A is +, minus the average where A is −:
+            (${fmt(y[1], 1)} + ${fmt(y[3], 1)})/2 − (${fmt(y[0], 1)} + ${fmt(y[2], 1)})/2 = ${fmt(hi)} − ${fmt(lo)} = <strong>${fmt(E.A)}</strong>.</p>
+          <p class="hx-step"><strong>Why the regression coefficient is half of it.</strong> The effect is the change from A = −1 to A = +1:
+            a run of 2 coded units, so the slope is ${fmt(E.A)} ÷ 2 = <strong>${fmt(E.A / 2)}</strong>. It is section 5's S<sub>xy</sub>/S<sub>xx</sub> too:
+            the coded x has mean 0, so S<sub>xy</sub> = Σ(sign × ȳ) = ${fmt(2 * E.A)} and S<sub>xx</sub> = 4.</p>
+          ${n === 1
+            ? `<p class="hx-verdict"><strong>One run per cell: nothing can be tested.</strong> Four runs give four numbers, and the four estimates (the mean, A, B and AB) use them all, leaving no degrees of freedom to measure run-to-run noise. Is 4 a real interaction or just noise? This design cannot say. Add replicates.</p>`
+            : `<p class="hx-verdict"><strong>Replicates measure the noise.</strong> The spread of runs within each cell gives s = ${fmt(av.s, 3)} with 4(n − 1) = ${av.df.E} df.
+               Each effect is an average of N/2 = ${N / 2} runs minus another, so SE = 2s/√N = ${fmt((2 * av.s) / Math.sqrt(N), 3)}, and t = effect ÷ SE is compared with
+               t<sub>0.025, ${av.df.E}</sub> = ${fmt(tInv(0.975, av.df.E), 3)}. Which effects clear it?</p>`}
+          <p class="sx-say">As a regression on coded x₁ (A) and x₂ (B): <strong>ŷ = ${fmt(E.mean)}${sgn(E.A / 2)}x₁${sgn(E.B / 2)}x₂${sgn(E.AB / 2)}x₁x₂</strong>.
+          ${Math.abs(E.AB) < 1e-9 ? "No interaction: the lines are parallel, and A's effect is the same at either level of B." :
+            Math.sign(y[1] - y[0]) !== Math.sign(y[3] - y[2]) && y[1] !== y[0] && y[3] !== y[2] ? "A crossover: raising A helps at one level of B and hurts at the other, so A's main effect alone would mislead." :
+            "The lines are not parallel: A's effect depends on B. That is the interaction."}</p>`;
+      } else {
+        root.querySelector("[data-table]").innerHTML = drawTable3(av);
+        const bend = av.col[1] - (av.col[0] + av.col[2]) / 2;
+        root.querySelector("[data-read]").innerHTML = `
+          <p class="hx-step"><strong>What the third level adds.</strong> Two levels of B can only draw a straight line between them. The middle level shows
+            whether the response bends: curvature = ȳ<sub>mid</sub> − (ȳ<sub>low</sub> + ȳ<sub>high</sub>)/2 = ${fmt(av.col[1], 2)} − (${fmt(av.col[0], 2)} + ${fmt(av.col[2], 2)})/2 = <strong>${fmt(bend, 2)}</strong>.
+            B's sum of squares (2 df) splits into a linear part, from the contrast (−1, 0, 1), and a curvature part, from (1, −2, 1), one df each.</p>
+          <p class="hx-verdict">${n === 1
+            ? "<strong>One run per cell: nothing can be tested.</strong> Six runs, six cell averages, and no degrees of freedom left for error. (If you were willing to assume no interaction, its 2 df could stand in for error; that is an assumption, not a measurement.) Add replicates."
+            : `<strong>${av.df.E} error df from the replicates.</strong> The spread of runs within each cell gives s = ${fmt(av.s, 3)}. Each source's F = MS ÷ MSE, and a p below 0.05 means that source is bigger than the noise at the 5% level. Is the bend real, and does it depend on A?`}</p>`;
+      }
+    }
+
+    const graph2 = (av) => {
+      const y = [av.cell[0][0], av.cell[1][0], av.cell[0][1], av.cell[1][1]], lo = (y[0] + y[2]) / 2, hi = (y[1] + y[3]) / 2;
       const g = plot({ w: 420, h: 290, x: [-1.4, 1.4], y: [35, 105], pad: [14, 16, 40, 46] })
         .axes({ xt: [-1, 1], yt: [40, 60, 80, 100], xl: "A: temperature (coded)", yl: "yield", xfmt: (v) => (v < 0 ? "−1 (low)" : "+1 (high)") })
         .line([[-1, lo], [1, hi]], "dash")
         .line([[-1, y[0]], [1, y[1]]], "ln-m").line([[-1, y[2]], [1, y[3]]], "ln-a");
-      [[-1, y[0], "pt-m"], [1, y[1], "pt-m"], [-1, y[2], "pt"], [1, y[3], "pt"]].forEach(([x, v, c]) => g.dot(x, v, c, 5).text(x, v, String(v), { dx: x < 0 ? -10 : 10, dy: 4, anchor: x < 0 ? "end" : "start" }));
+      if (n > 1) for (const k of KEYS["2x2"]) { const [a, b] = CELL[k]; obs(k).forEach((v) => g.dot((a ? 1 : -1) + (b ? 0.06 : -0.06), v, b ? "pt" : "pt-m", 2.2)); }
+      [[-1, y[0], "pt-m"], [1, y[1], "pt-m"], [-1, y[2], "pt"], [1, y[3], "pt"]].forEach(([x, v, c]) => g.dot(x, v, c, 5).text(x, v, fmt(v, 1), { dx: x < 0 ? -12 : 12, dy: 4, anchor: x < 0 ? "end" : "start" }));
       g.text(1.35, y[3], "B high", { anchor: "end", dy: y[3] >= y[1] ? -10 : 18, cls: "accent" }).text(1.35, y[1], "B low", { anchor: "end", dy: y[1] > y[3] ? -10 : 18 })
         .text(0, 39, `dashed: the average over B, rising ${fmt(hi - lo)} over a run of 2`, { anchor: "middle" });
-      root.querySelector("[data-graph]").innerHTML = g.svg(`Interaction plot: effect A ${fmt(E.A)}, B ${fmt(E.B)}, AB ${fmt(E.AB)}. The dashed line averages over B and rises ${fmt(hi - lo)} from A low to A high.`);
+      return g.svg(`Interaction plot, cell averages: B low ${fmt(y[0], 1)} to ${fmt(y[1], 1)}, B high ${fmt(y[2], 1)} to ${fmt(y[3], 1)} as A goes from low to high${n > 1 ? `, with ${n} replicate runs per cell shown as small dots` : ""}.`);
+    };
 
-      // 3. Where "half the effect" comes from, with this design's numbers.
-      root.querySelector("[data-read]").innerHTML = `
-        <p class="hx-step"><strong>Effect of A:</strong> the average where A is +, minus the average where A is −:
-          (${y[1]} + ${y[3]})/2 − (${y[0]} + ${y[2]})/2 = ${fmt(hi)} − ${fmt(lo)} = <strong>${fmt(E.A)}</strong>.</p>
-        <p class="hx-step"><strong>Why the regression coefficient is half of it.</strong> The effect is the change in yield from A = −1 to A = +1:
-          a run of 2 coded units. Slope is rise over run: ${fmt(E.A)} ÷ 2 = <strong>${fmt(E.A / 2)}</strong>.
-          It is also the least-squares slope from section 5, S<sub>xy</sub>/S<sub>xx</sub>: the coded x has mean 0, so S<sub>xy</sub> = Σ(sign × y) = ${dot("A")}
-          and S<sub>xx</sub> = Σ(sign²) = 4, giving ${dot("A")} ÷ 4 = ${fmt(dot("A") / 4)}.</p>
-        <p class="sx-say">As a regression on coded x₁ (A) and x₂ (B): <strong>ŷ = ${fmt(E.mean)}${sgn(E.A / 2)}x₁${sgn(E.B / 2)}x₂${sgn(E.AB / 2)}x₁x₂</strong>.
-        ${Math.abs(E.AB) < 1e-9 ? "No interaction: the lines are parallel, and A's effect is the same at either level of B." :
-          Math.sign(y[1] - y[0]) !== Math.sign(y[3] - y[2]) && y[1] !== y[0] && y[3] !== y[2] ? "A crossover: raising A helps at one level of B and hurts at the other, so A's main effect alone would mislead." :
-          "The lines are not parallel: A's effect depends on B. That is the interaction."}</p>`;
-    }
+    const graph3 = (av) => {
+      const g = plot({ w: 420, h: 290, x: [-1.5, 1.5], y: [35, 105], pad: [14, 16, 40, 46] })
+        .axes({ xt: [-1, 0, 1], yt: [40, 60, 80, 100], xl: "B: time (coded)", yl: "yield", xfmt: (v) => (v < 0 ? "−1 (low)" : v > 0 ? "+1 (high)" : "0 (mid)") });
+      [0, 1].forEach((a) => {
+        const pts = [-1, 0, 1].map((x, j) => [x, av.cell[a][j]]);
+        g.line([[-1, pts[0][1]], [1, pts[2][1]]], "dash").line(pts, a ? "ln-a" : "ln-m");
+        if (n > 1) [0, 1, 2].forEach((j) => { const k = Object.keys(CELL).find((key) => CELL[key][0] === a && CELL[key][1] === j); obs(k).forEach((v) => g.dot(j - 1 + (a ? 0.05 : -0.05), v, a ? "pt" : "pt-m", 2.2)); });
+        pts.forEach(([x, v]) => g.dot(x, v, a ? "pt" : "pt-m", 5));
+        g.text(1.45, pts[2][1], a ? "A high" : "A low", { anchor: "end", dy: a ? -10 : 18, cls: a ? "accent" : "note" });
+      });
+      g.text(0, 39, "dashed: the straight line two levels of B would assume", { anchor: "middle" });
+      return g.svg(`Cell averages against B for A low (${av.cell[0].map((v) => fmt(v, 1)).join(", ")}) and A high (${av.cell[1].map((v) => fmt(v, 1)).join(", ")}). Dashed lines join B low to B high; the middle level sits ${fmt(av.col[1] - (av.col[0] + av.col[2]) / 2, 1)} above them on average.`);
+    };
+
+    scatter(); // before bind(), which draws once straight away
+    const set = bind(root, st, () => draw(), { y1: String, y2: String, y3: String, y4: String, y5: String, y6: String, sigma: (v) => fmt(v, 1) });
+    // Moving σ redraws the scatter; moving a cell average only shifts its runs.
+    root.querySelector('[data-k="sigma"]').addEventListener("input", () => { scatter(); draw(); });
     root.addEventListener("click", (e) => {
-      const b = e.target.closest("[data-p]");
+      const b = e.target.closest("button");
       if (!b) return;
-      b.dataset.p.split(",").map(Number).forEach((v, i) => set(`y${i + 1}`, v));
+      if (b.dataset.design) { design = b.dataset.design; }
+      else if (b.dataset.n) { n = +b.dataset.n; scatter(); }
+      else if (b.dataset.act === "scatter") { seed++; scatter(); }
+      else if (b.dataset.p != null) {
+        const [, vals, reps] = PRESETS[design][+b.dataset.p];
+        if (vals === "worked") {
+          const w = WORKED[design];
+          Object.entries(w.means).forEach(([k, v]) => set(k, v));
+          n = reps; devs = { ...devs, ...Object.fromEntries(Object.entries(w.devs)) };
+          for (const k of Object.keys(CELL)) if (!w.devs[k]) devs[k] = Array(n).fill(0);
+        } else {
+          Object.entries(vals).forEach(([k, v]) => set(k, v));
+          if (reps && reps !== n) { n = reps; scatter(); }
+        }
+      } else return;
       draw();
     });
   }

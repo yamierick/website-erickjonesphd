@@ -171,3 +171,62 @@ export function effects([y1, y2, y3, y4]) {
   const A = (y2 + y4) / 2 - (y1 + y3) / 2, B = (y3 + y4) / 2 - (y1 + y2) / 2, AB = (y1 + y4) / 2 - (y2 + y3) / 2;
   return { mean: (y1 + y2 + y3 + y4) / 4, A, B, AB };
 }
+
+/** Regularized incomplete beta I_x(a, b), by the continued fraction (Numerical Recipes 6.4). */
+export function betaInc(x, a, b) {
+  if (x <= 0) return 0;
+  if (x >= 1) return 1;
+  const front = Math.exp(lgamma(a + b) - lgamma(a) - lgamma(b) + a * Math.log(x) + b * Math.log(1 - x));
+  // The fraction converges fast below the mean; use the symmetry I_x(a,b) = 1 − I_{1−x}(b,a) above it.
+  if (x > (a + 1) / (a + b + 2)) return 1 - betaInc(1 - x, b, a);
+  const tiny = 1e-300;
+  let c = 1, d = 1 - ((a + b) * x) / (a + 1);
+  d = 1 / (Math.abs(d) < tiny ? tiny : d);
+  let h = d;
+  for (let m = 1; m <= 300; m++) {
+    for (const num of [(m * (b - m) * x) / ((a + 2 * m - 1) * (a + 2 * m)), -((a + m) * (a + b + m) * x) / ((a + 2 * m) * (a + 2 * m + 1))]) {
+      d = 1 + num * d; d = 1 / (Math.abs(d) < tiny ? tiny : d);
+      c = 1 + num / c; if (Math.abs(c) < tiny) c = tiny;
+      h *= d * c;
+    }
+    if (Math.abs(d * c - 1) < 1e-14) break;
+  }
+  return (front * h) / a;
+}
+
+/** P(F > f) for an F distribution with d1 and d2 degrees of freedom. */
+export const fSf = (f, d1, d2) => (f <= 0 ? 1 : betaInc(d2 / (d2 + d1 * f), d2 / 2, d1 / 2));
+
+/**
+ * Balanced two-way ANOVA. cells[i][j] holds the replicate observations for level i
+ * of A and level j of B (the same number n in every cell). Returns the cell,
+ * row and column means, the sums of squares, degrees of freedom, mean squares,
+ * F and p for A, B and AB, and s = sqrt(MSE). With one observation per cell the
+ * error has no degrees of freedom, so F, p and s are null: nothing can be tested.
+ * When B has three equally spaced levels, B's sum of squares is also split into a
+ * linear part (contrast −1, 0, 1) and a curvature part (1, −2, 1), one df each.
+ */
+export function anova2(cells) {
+  const a = cells.length, b = cells[0].length, n = cells[0][0].length, N = a * b * n;
+  const mean = (v) => v.reduce((s, x) => s + x, 0) / v.length;
+  const cell = cells.map((r) => r.map(mean));
+  const row = cell.map(mean), col = Array.from({ length: b }, (_, j) => mean(cell.map((r) => r[j])));
+  const grand = mean(row);
+  const SS = {
+    A: b * n * row.reduce((s, m) => s + (m - grand) ** 2, 0),
+    B: a * n * col.reduce((s, m) => s + (m - grand) ** 2, 0),
+    AB: n * cell.reduce((s, r, i) => s + r.reduce((t, m, j) => t + (m - row[i] - col[j] + grand) ** 2, 0), 0),
+    E: cells.reduce((s, r, i) => s + r.reduce((t, ys, j) => t + ys.reduce((u, y) => u + (y - cell[i][j]) ** 2, 0), 0), 0),
+  };
+  const df = { A: a - 1, B: b - 1, AB: (a - 1) * (b - 1), E: a * b * (n - 1) };
+  const MSE = df.E > 0 ? SS.E / df.E : null;
+  const test = (ss, d) => (MSE ? { F: ss / d / MSE, p: fSf(ss / d / MSE, d, df.E) } : { F: null, p: null });
+  const out = { a, b, n, N, cell, row, col, grand, SS, df, MSE, s: MSE == null ? null : Math.sqrt(MSE) };
+  for (const k of ["A", "B", "AB"]) out[k] = { ss: SS[k], df: df[k], ms: SS[k] / df[k], ...test(SS[k], df[k]) };
+  if (b === 3) {
+    const contrast = (c) => { const v = c.reduce((s, ci, j) => s + ci * col[j], 0), ss = (a * n * v * v) / c.reduce((s, ci) => s + ci * ci, 0); return { value: v, ss, ...test(ss, 1) }; };
+    out.lin = contrast([-1, 0, 1]);
+    out.curve = contrast([1, -2, 1]);
+  }
+  return out;
+}
