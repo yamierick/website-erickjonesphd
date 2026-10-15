@@ -106,7 +106,7 @@ import "../../../styles/examples.css";
         </tbody>
       </table></div>
       <p>The same energy every time. Which of these would you rather plan a grid for, and what would it take to make drivers choose it?</p>
-      <p class="note-box">Notebooks: <code>SB1_Example_Energy_Balance</code> (one house's energy balance) and <code>SB2_Representative_Days</code> (a year compressed into three days, and the check that it reconciles).</p>
+      <p class="note-box">Notebooks: <code>M1_Smart_Meter_Walkthrough</code> (one meter's year: the base load, the daily shape, and the spikes), <code>SB1_Example_Energy_Balance</code> (one house's energy balance) and <code>SB2_Representative_Days</code> (a year compressed into three days, and the check that it reconciles).</p>
     </details>
     <p class="note-box"><em>A facility's bill often charges for its demand in four peak intervals a year (ERCOT's 4CP). Where in this day would you least want your own peak to fall?</em></p>
   </section>
@@ -138,7 +138,7 @@ import "../../../styles/examples.css";
         <li>Gas combined cycle, $1,100/kW, $15/kW-yr, $2 VOM, heat rate 6,600 at $3.50, capacity factor 0.56: <Fragment set:html={t`18.07 + 3.06 + 2 + 23.10`} /> = <span class="answer">$46.23/MWh</span></li>
       </ul>
       <p>Solar's cost is almost all capital; gas's is half fuel. Which of the two would a higher interest rate hurt more, and which would a gas price spike?</p>
-      <p class="note-box">Notebook: <code>SB3_Capital_and_LCOE</code> (two 250 MW plants, coal and gas, one line of arithmetic at a time).</p>
+      <p class="note-box">Notebooks: <code>M2_Dispatch_Walkthrough</code> (the merit order by hand, the same plants in PyPSA, then carbon as a price and as a cap) and <code>SB3_Capital_and_LCOE</code> (two 250 MW plants, coal and gas, one line of arithmetic at a time).</p>
     </details>
     <p class="note-box"><em>A small site buys at whatever this stack clears at. What would it take for a site to move the clearing price itself?</em></p>
   </section>
@@ -205,7 +205,7 @@ import "../../../styles/examples.css";
         </tbody>
       </table></div>
       <p>Steel is the heaviest metal by far; copper is the heaviest rock. And 1 TWh a year needs 0.48 GW of solar but only 0.34 GW of wind, because of capacity factor. Which of those two multipliers would you check first in someone else's study?</p>
-      <p class="note-box">Notebook: <code>M4_Supply_Chain</code> (cobalt sourcing as the Module 3 transport model with new labels, then build-plan accounting). Related: <a href="/supply-gap/">Why Supply Can't Catch Up</a> and the <a href="/demos/mineral-supply-chains/">mineral supply chains demo</a>.</p>
+      <p class="note-box">Notebooks: <code>M4_Storage_Walkthrough</code> (Module 0's day with and without a battery, the battery that ends the day empty, and 2, 4 and 8 hours of storage) and <code>M4_Supply_Chain</code> (cobalt sourcing as the Module 3 transport model with new labels, then build-plan accounting). Related: <a href="/supply-gap/">Why Supply Can't Catch Up</a> and the <a href="/demos/mineral-supply-chains/">mineral supply chains demo</a>.</p>
     </details>
     <p class="note-box"><em>A site that wants storage on its own meter is buying these same metals. Would you rather it chose LFP or NMC, and what would you want to know about the supply chain first?</em></p>
   </section>
