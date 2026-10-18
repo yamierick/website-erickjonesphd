@@ -276,6 +276,40 @@ th, td { border: 1px solid var(--rule); padding: .35rem .6rem; text-align: left;
 }
 .sponsor strong { color: var(--text); }
 
+/* A callout with one big button (first use: "Built on the RAID Lab" on rfid, 2026-10-18).
+   Tokens only, so it follows the reader's light or dark theme. */
+.callout {
+  background: var(--code-bg);
+  border: 1px solid var(--rule);
+  border-left: 4px solid var(--accent);
+  border-radius: 6px;
+  padding: 1rem 1.1rem;
+  margin: 0 0 1.8rem;
+  max-width: var(--max);
+}
+.callout p { margin: 0 0 .9rem; }
+.callout .callout-kicker {
+  font: 600 .72rem/1 system-ui, sans-serif;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: .55rem;
+}
+.callout-btn {
+  display: inline-flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: .6rem;
+  background: var(--accent);
+  color: var(--bg);
+  text-decoration: none;
+  font: 600 1.05rem/1.2 system-ui, sans-serif;
+  padding: .8rem 1.35rem;
+  border-radius: 8px;
+}
+.callout-btn:hover, .callout-btn:focus-visible { filter: brightness(1.1); text-decoration: none; }
+.callout-sub { font-size: .8rem; font-weight: 400; opacity: .9; }
+
 .people { list-style: none; padding: 0; margin: 0 0 .6rem; display: grid; gap: .1rem 1.2rem; grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr)); }
 .people li { padding: .3rem 0; border-bottom: 1px dotted var(--rule); display: flex; align-items: baseline; gap: .5rem; }
 .people .who { flex: 1 1 auto; }
