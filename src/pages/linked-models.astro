@@ -12,12 +12,37 @@ import Base from "../layouts/Base.astro";
  * Its companion is "What a Grid Is Made Of", where the reader picks the mix.
  * Here a model picks it, and the question is whether the next model can trust
  * a cheap stand-in for the first.
+ *
+ * The boxed note at the top is the landing spot for the INFORMS 2026 talk QR
+ * code (Jones, 2026-11-01). Keep the URL /linked-models/ stable.
  */
 ---
 
 <Base title="Accurate, and Still Wrong" wide={true} og="models"
       description="A teaching toy: a surrogate can predict one model's output well and still send the next model to the wrong decision.">
   <p class="subhead">Two optimization models, linked through a cheap stand-in for the first. The stand-in fits well and still sends the second model the wrong way.</p>
+
+  <aside class="talk">
+    <p class="talk-kicker">INFORMS Annual Meeting 2026 · San Francisco · November 2, 2026</p>
+    <p class="talk-title">Rapid Resilience Analysis for Energy–Critical Mineral Interdependencies via Surrogate Model Coupling</p>
+    <p>Erick C. Jones Jr., with Raziye Aghapour and Sara Alavi, SEAR Lab, UT Arlington.</p>
+    <p><strong>The takeaway:</strong> coupled energy–mineral models tell a shock that only
+    reroutes trade from one that reaches the grid. Surrogates can make that coupling fast
+    enough to explore many scenarios.</p>
+    <p>The toy below is a made-up miniature of the talk's central caution: a surrogate that
+    fits well can still send the next model to the wrong decision. The research behind the
+    talk:</p>
+    <ul>
+      <li><a href="/projects/critical-mineral-flows/">Critical Mineral Flows</a>: where the
+      battery supply chain depends on other countries</li>
+      <li><a href="/projects/lithium-supply-chain/">Lithium Supply Chain</a>: the network model
+      on the mineral side</li>
+      <li><a href="/projects/energy-systems/">Energy Systems</a>: the Texas grid models on the
+      energy side, including Aghapour, Alavi, Atitebi &amp; Jones (2025),
+      <a href="https://doi.org/10.21872/annual2025_6968">IISE Annual Conference</a></li>
+    </ul>
+    <p class="hint">Questions: <a href="mailto:erick.jones@uta.edu">erick.jones@uta.edu</a></p>
+  </aside>
 
   <p class="disclaimer">
     <strong>This is a teaching toy, not research.</strong> Both models are
@@ -82,16 +107,26 @@ import Base from "../layouts/Base.astro";
         <span><i class="sw sw-gp"></i>Surrogate's prediction</span>
         <span><i class="sw sw-band"></i>Surrogate's uncertainty (±2σ)</span>
         <span><i class="sw sw-run"></i>A run of the planning model</span>
-        <span><i class="sw sw-wrong"></i>Wrong plants opened</span>
+        <span><i class="sw sw-wrong"></i>Different plants from the true plan</span>
+        <span><i class="sw-x" aria-hidden="true">✕</i>Infeasible: the plants opened can't supply the metal needed</span>
       </div>
 
       <svg id="strip" viewBox="0 0 720 96" role="img" aria-labelledby="strip-title">
         <title id="strip-title">Which processing plants the supply-chain model opens at each price: planning on the true model, and planning on the surrogate</title>
       </svg>
-      <p class="hint">Plants: A large refinery (500 kt), B mid-size plant (300 kt), C small plant (200 kt). Darker means more capacity opened.</p>
+      <ul class="plant-key">
+        <li><b>A</b> Large refinery <span>500 kt</span></li>
+        <li><b>B</b> Mid-size plant <span>300 kt</span></li>
+        <li><b>C</b> Small plant <span>200 kt</span></li>
+      </ul>
+      <p class="hint">Darker means more capacity opened.</p>
 
+      <h3 class="readout-head">At the price you picked</h3>
       <dl class="readout" id="here"></dl>
-      <dl class="readout" id="overall"></dl>
+      <dl class="readout tests" id="tests"></dl>
+
+      <h3 class="readout-head">Across all prices: a good fit, judged three ways</h3>
+      <dl class="readout tests" id="overall"></dl>
     </div>
   </div>
 
@@ -102,10 +137,26 @@ import Base from "../layouts/Base.astro";
     surrogate is smooth. With eight runs it explains most of the variation and
     looks like a good fit. But each step's flat top sits just above or below a
     point where the supply-chain model needs another plant, so a prediction off
-    by a few percent lands on the wrong side and opens the wrong plants. The red
-    bands are those prices. Where the plan comes up short, the metal has to be
-    bought in a hurry at a premium.
+    by a few percent lands on the wrong side of it.
   </p>
+  <p>
+    Landing on the wrong side can go wrong in three different ways, which is
+    why the page judges the surrogate on three separate tests:
+  </p>
+  <ol class="three">
+    <li><strong>Same plants?</strong> The supply-chain model opens a different
+    set of plants from the one it would open with the real answer (the red
+    bands). In optimization terms, the <em>active set</em>, the constraints that
+    bind at the solution, does not match.</li>
+    <li><strong>Can the plan be carried out?</strong> When the surrogate
+    predicts too little metal, the plants opened are too small for what is
+    actually needed. The plan is <em>infeasible</em> (marked ✕), and the
+    missing metal has to be bought in a hurry at a premium.</li>
+    <li><strong>What does trusting it cost?</strong> The <em>regret</em>: the
+    extra cost of acting on the surrogate compared with acting on the real
+    answer. A plan can be feasible and still cost more, for example by
+    opening a plant that was not needed.</li>
+  </ol>
   <p>
     Try it: add runs and watch the fit improve faster than the decisions do.
     Resample and see how much depends on where the runs happened to land. Then
@@ -126,6 +177,19 @@ import Base from "../layouts/Base.astro";
     choosing where to run the expensive model by what it does to the decision,
     is open research.
   </p>
+
+  <h2>Related projects</h2>
+  <p>The lab's research on the models this toy links, from the grid to the minerals it needs:</p>
+  <ul class="related">
+    <li><a href="/projects/energy-systems/">Energy Systems</a>: how Texas's changing grid ripples through the rest of the energy system</li>
+    <li><a href="/projects/grid-dashboard/">Texas Grid Dashboard</a>: which Texas power plants run, where and when</li>
+    <li><a href="/projects/data-centers/">AI Data Center Energy</a>: powering large new loads with their own generation and batteries</li>
+    <li><a href="/projects/critical-mineral-flows/">Critical Mineral Flows</a>: who mines and processes battery metals, and where</li>
+    <li><a href="/projects/lithium-supply-chain/">Lithium Supply Chain Model</a>: an optimization model from mine to battery pack</li>
+    <li><a href="/projects/battery-recycling/">Battery Recycling and Black Mass</a>: making recycling cheaper and more local</li>
+    <li><a href="/projects/ai-optimization-programming/">AI for Optimization Programming</a>: plain English in, optimization models out</li>
+  </ul>
+  <p class="hint"><a href="/projects/">All projects</a></p>
 
   <h2>What it leaves out</h2>
   <p>
@@ -148,6 +212,17 @@ import Base from "../layouts/Base.astro";
 </Base>
 
 <style>
+  .talk {
+    border: 1px solid var(--rule); border-radius: 6px;
+    padding: .8rem 1rem; margin: 1rem 0 1.2rem;
+  }
+  .talk p { margin: .4rem 0; }
+  .talk ul { margin: .3rem 0 .4rem; padding-left: 1.2rem; }
+  .talk-kicker {
+    font-family: system-ui, sans-serif; font-size: .78rem; text-transform: uppercase;
+    letter-spacing: .06em; color: var(--accent);
+  }
+  .talk-title { font-weight: 600; font-size: 1.05rem; }
   .disclaimer {
     border-left: 3px solid var(--accent);
     padding: .6rem .9rem;
@@ -191,6 +266,22 @@ import Base from "../layouts/Base.astro";
   .sw-band { background: var(--accent); opacity: .18; }
   .sw-run { width: .6rem; height: .6rem; border-radius: 50%; background: var(--accent); }
   .sw-wrong { background: var(--wrong); opacity: .25; }
+  .sw-x { font-style: normal; font-weight: 700; color: var(--wrong); margin-right: .3rem; }
+  .plant-key {
+    display: flex; flex-wrap: wrap; gap: .3rem 1.2rem; list-style: none; padding: 0; margin: .5rem 0 0;
+    font-family: system-ui, sans-serif; font-size: .82rem;
+  }
+  .plant-key b {
+    display: inline-block; min-width: 1.3rem; text-align: center; margin-right: .3rem;
+    border: 1px solid var(--rule); border-radius: 4px;
+  }
+  .plant-key span { color: var(--muted); }
+  .readout-head {
+    font-family: system-ui, sans-serif; font-size: .78rem; text-transform: uppercase;
+    letter-spacing: .06em; color: var(--accent); margin: 1.3rem 0 0; font-weight: 600;
+  }
+  .three li { margin-bottom: .4rem; }
+  .related li { margin-bottom: .25rem; }
   .model { --wrong: #b23a2e; }
   @media (prefers-color-scheme: dark) { .model { --wrong: #f07a6e; } }
 </style>
@@ -206,11 +297,19 @@ import Base from "../layouts/Base.astro";
   #link .readout dt { font-size: .72rem; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
   #link .readout dd { margin: .15rem 0 0; font-size: 1.15rem; font-variant-numeric: tabular-nums; }
   #link .readout dd small { font-size: .78rem; color: var(--muted); }
+  #link .readout.tests { margin-top: .6rem; }
+  #link .readout div.bad dd { color: var(--wrong); }
+  #link .readout div.bad dd small { color: var(--muted); }
+  #link .readout .meter {
+    display: block; height: .45rem; margin-top: .45rem; border-radius: 3px;
+    background: var(--wrong); opacity: .9; overflow: hidden;
+  }
+  #link .readout .meter i { display: block; height: 100%; background: var(--accent); }
 </style>
 
 <script>
   import {
-    PRICE, PROCESSORS, upstreamBreaks, latinHypercube, evaluate, nextRun, operate, downstream,
+    PRICE, PROCESSORS, upstreamBreaks, latinHypercube, evaluate, nextRun,
   } from "../scripts/surrogateLinkModel.js";
 
   const root = document.getElementById("link");
@@ -235,6 +334,10 @@ import Base from "../layouts/Base.astro";
   const SETS = ["C", "B", "BC", "A", "AC", "AB", "ABC"];
   const shade = (k) => 0.18 + 0.72 * (SETS.indexOf(k) / (SETS.length - 1));
   const plants = (k) => k.split("").join("+");
+  const SHORT = { A: "Large", B: "Mid", C: "Small" };
+  const capOf = (k) => k.split("").reduce((s, c) => s + PROCESSORS.find((q) => q.key === c).cap, 0);
+  const named = (k) => k.split("").map((c) => SHORT[c]).join(" + ");
+  const isShort = (r) => r.short > 1e-6;
 
   let ev = null;
   function recompute() {
@@ -307,6 +410,28 @@ import Base from "../layouts/Base.astro";
     ev.xs.forEach((p, i) => svg.appendChild(el("circle", { cx: x(p), cy: y(ev.ys[i]), r: 4.5,
       fill: "var(--accent)", stroke: "var(--bg)", "stroke-width": 1.5 })));
 
+    // Infeasible stretches: an X on the true need the plan cannot meet, one
+    // every ~36 px, with a line down to what the surrogate predicted.
+    for (let i = 0; i < rows.length; ) {
+      if (!isShort(rows[i])) { i++; continue; }
+      let j = i;
+      while (j + 1 < rows.length && isShort(rows[j + 1])) j++;
+      const x0 = x(rows[i].p - dx), x1 = x(rows[j].p + dx);
+      const k = Math.max(1, Math.round((x1 - x0) / 36));
+      for (let m = 0; m < k; m++) {
+        const cx = x0 + ((m + 0.5) * (x1 - x0)) / k;
+        const r = rows.reduce((b, q) => (Math.abs(x(q.p) - cx) < Math.abs(x(b.p) - cx) ? q : b), rows[i]);
+        svg.appendChild(el("line", { x1: cx, x2: cx, y1: y(r.Dhat), y2: y(r.D), stroke: "var(--wrong)",
+          "stroke-width": 1.2, "stroke-dasharray": "2 2" }));
+        const s = 5.5, cy = y(r.D);
+        svg.appendChild(el("path", { d: `M ${cx - s} ${cy - s} L ${cx + s} ${cy + s} M ${cx + s} ${cy - s} L ${cx - s} ${cy + s}`,
+          stroke: "var(--bg)", "stroke-width": 5, "stroke-linecap": "round" }));
+        svg.appendChild(el("path", { d: `M ${cx - s} ${cy - s} L ${cx + s} ${cy + s} M ${cx + s} ${cy - s} L ${cx - s} ${cy + s}`,
+          stroke: "var(--wrong)", "stroke-width": 2.5, "stroke-linecap": "round" }));
+      }
+      i = j + 1;
+    }
+
     // The price being inspected.
     svg.appendChild(el("line", { x1: x(state.p), x2: x(state.p), y1: T, y2: H - B,
       stroke: "var(--text)", "stroke-width": 1.2, opacity: .7 }));
@@ -330,10 +455,13 @@ import Base from "../layouts/Base.astro";
         const x0 = x(rows[i].p - dx), x1 = x(rows[j].p + dx);
         svg.appendChild(el("rect", { x: x0, y: top, width: Math.max(0.5, x1 - x0), height: rowH,
           fill: "var(--accent)", "fill-opacity": shade(rows[i][key]) }));
-        if (x1 - x0 > 30) {
+        // Plant names where they fit, letters (keyed below the strip) where not.
+        const k = rows[i][key];
+        const label = x1 - x0 > 7.5 * named(k).length + 10 ? named(k) : x1 - x0 > 30 ? plants(k) : null;
+        if (label) {
           svg.appendChild(el("text", { x: (x0 + x1) / 2, y: top + rowH / 2 + 4, "text-anchor": "middle",
             "font-size": 10.5, "font-weight": 600, fill: "var(--text)",
-            "font-family": "system-ui, sans-serif" }, plants(rows[i][key])));
+            "font-family": "system-ui, sans-serif" }, label));
         }
         i = j + 1;
       }
@@ -347,20 +475,38 @@ import Base from "../layouts/Base.astro";
         height: rowH, fill: "none", stroke: "var(--wrong)", "stroke-width": 2 }));
       i = j + 1;
     }
+    // And mark the infeasible ones, as on the chart above.
+    for (let i = 0; i < rows.length; ) {
+      if (!isShort(rows[i])) { i++; continue; }
+      let j = i;
+      while (j + 1 < rows.length && isShort(rows[j + 1])) j++;
+      const cx = (x(rows[i].p - dx) + x(rows[j].p + dx)) / 2;
+      svg.appendChild(el("text", { x: cx, y: 52 + rowH + 11, "text-anchor": "middle", "font-size": 11,
+        "font-weight": 700, fill: "var(--wrong)", "font-family": "system-ui, sans-serif" }, "✕"));
+      i = j + 1;
+    }
     svg.appendChild(el("line", { x1: x(state.p), x2: x(state.p), y1: 4, y2: 86,
       stroke: "var(--text)", "stroke-width": 1.2, opacity: .7 }));
   }
 
   // ---------------------------------------------------------------- readouts
+  // Each item: [label, value, sub, bad, meter]. A meter is the share of prices
+  // that pass, drawn as a bar: passing in the accent, failing in red.
   function cells(dl, items) {
     dl.innerHTML = "";
-    for (const [k, v, sub, bad] of items) {
+    for (const [k, v, sub, bad, meter] of items) {
       const d = document.createElement("div");
       if (bad) d.className = "bad";
       const dt = document.createElement("dt"); dt.textContent = k;
       const dd = document.createElement("dd"); dd.textContent = v;
       if (sub) { const s = document.createElement("small"); s.textContent = ` ${sub}`; dd.appendChild(s); }
-      d.append(dt, dd); dl.appendChild(d);
+      d.append(dt, dd);
+      if (meter != null) {
+        const m = document.createElement("span"); m.className = "meter";
+        const f = document.createElement("i"); f.style.width = `${Math.max(0, Math.min(100, meter))}%`;
+        m.appendChild(f); d.appendChild(m);
+      }
+      dl.appendChild(d);
     }
   }
 
@@ -368,27 +514,35 @@ import Base from "../layouts/Base.astro";
     const rows = ev.rows;
     const r = rows.reduce((b, q) => (Math.abs(q.p - state.p) < Math.abs(b.p - state.p) ? q : b), rows[0]);
     const wrong = r.chosen !== r.truth;
-    const ran = operate(downstream(Math.max(0.01, r.Dhat)).open, r.D);
+    const short = isShort(r);
+    const costly = r.regret >= 0.05;
     cells($("#here"), [
       ["Metal needed", `${Math.round(r.D)} kt`, r.mix.label],
       ["Surrogate says", `${Math.round(r.Dhat)} kt`, `±${Math.round(2 * r.sd)}`],
-      ["Plants, true plan", plants(r.truth)],
-      ["Plants, surrogate", plants(r.chosen), wrong ? "wrong" : "same", wrong],
-      ["Cost of trusting it", r.regret < 0.05 ? "none" : `+${r.regret.toFixed(1)}`,
-        ran.short > 0 ? `short ${Math.round(ran.short)} kt` : (wrong ? "overbuilt" : ""), wrong],
+      ["Plants, true plan", plants(r.truth), `${named(r.truth)}, ${capOf(r.truth)} kt`],
+      ["Plants, surrogate", plants(r.chosen), `${named(r.chosen)}, ${capOf(r.chosen)} kt`, wrong],
+    ]);
+    cells($("#tests"), [
+      ["1 · Same plants?", wrong ? "≠ Different" : "✓ Same", wrong ? "active set doesn't match" : "", wrong],
+      ["2 · Feasible?", short ? "✕ No" : "✓ Yes", short ? `short ${Math.round(r.short)} kt` : "", short],
+      ["3 · Regret", costly ? `+${r.regret.toFixed(1)}` : "none",
+        !costly ? "" : short ? "emergency purchase" : capOf(r.chosen) > capOf(r.truth) ? "overbuilt" : "costlier plants",
+        costly],
     ]);
     const s = ev.summary;
     cells($("#overall"), [
-      ["Runs used", String(ev.xs.length)],
-      ["Fit across prices", `R² ${s.r2.toFixed(2)}`, `error ${s.maePct.toFixed(0)}% of range`],
-      ["Wrong plants at", `${Math.round(s.wrongPct)}%`, "of prices", s.wrongPct > 0.5],
-      ["Short of metal at", `${Math.round(s.shortPct)}%`, "of prices", s.shortPct > 0.5],
+      ["The usual test: fit", `R² ${s.r2.toFixed(2)}`, `${ev.xs.length} runs, error ${s.maePct.toFixed(0)}% of range`],
+      ["1 · Same plants", `${Math.round(100 - s.wrongPct)}%`, "of prices", s.wrongPct > 0.5, 100 - s.wrongPct],
+      ["2 · Feasible", `${Math.round(100 - s.shortPct)}%`, `of prices; ✕ at ${Math.round(s.shortPct)}%`,
+        s.shortPct > 0.5, 100 - s.shortPct],
+      ["3 · Regret", `+${s.meanRegret.toFixed(1)}`, "average extra cost", s.meanRegret >= 0.05],
     ]);
     $("#runs-hint").textContent = state.extra.length
       ? `${state.n} spread evenly at random, plus ${state.extra.length} added where the surrogate was least certain.`
       : `Spread by a Latin hypercube: one at random in each of ${state.n} equal slices of the price range.`;
     $("#chart-desc").textContent = `With ${ev.xs.length} runs the surrogate's fit has R squared ${s.r2.toFixed(2)}, `
-      + `yet the supply-chain model opens the wrong plants at ${Math.round(s.wrongPct)} percent of prices.`;
+      + `yet the supply-chain model opens different plants at ${Math.round(s.wrongPct)} percent of prices `
+      + `and its plan is infeasible at ${Math.round(s.shortPct)} percent.`;
   }
 
   function labels() {
