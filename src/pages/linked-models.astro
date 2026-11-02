@@ -12,12 +12,37 @@ import Base from "../layouts/Base.astro";
  * Its companion is "What a Grid Is Made Of", where the reader picks the mix.
  * Here a model picks it, and the question is whether the next model can trust
  * a cheap stand-in for the first.
+ *
+ * The boxed note at the top is the landing spot for the INFORMS 2026 talk QR
+ * code (Jones, 2026-11-01). Keep the URL /linked-models/ stable.
  */
 ---
 
 <Base title="Accurate, and Still Wrong" wide={true} og="models"
       description="A teaching toy: a surrogate can predict one model's output well and still send the next model to the wrong decision.">
   <p class="subhead">Two optimization models, linked through a cheap stand-in for the first. The stand-in fits well and still sends the second model the wrong way.</p>
+
+  <aside class="talk">
+    <p class="talk-kicker">INFORMS Annual Meeting 2026 · San Francisco · November 2, 2026</p>
+    <p class="talk-title">Rapid Resilience Analysis for Energy–Critical Mineral Interdependencies via Surrogate Model Coupling</p>
+    <p>Erick C. Jones Jr., with Raziye Aghapour and Sarasadat Alavi, SEAR Lab, UT Arlington.</p>
+    <p><strong>The takeaway:</strong> coupled energy–mineral models tell a shock that only
+    reroutes trade from one that reaches the grid. Surrogates can make that coupling fast
+    enough to explore many scenarios.</p>
+    <p>The toy below is a made-up miniature of the talk's central caution: a surrogate that
+    fits well can still send the next model to the wrong decision. The research behind the
+    talk:</p>
+    <ul>
+      <li><a href="/projects/critical-mineral-flows/">Critical Mineral Flows</a>: where the
+      battery supply chain depends on other countries</li>
+      <li><a href="/projects/lithium-supply-chain/">Lithium Supply Chain</a>: the network model
+      on the mineral side</li>
+      <li><a href="/projects/energy-systems/">Energy Systems</a>: the Texas grid models on the
+      energy side, including Aghapour, Alavi, Atitebi &amp; Jones (2025),
+      <a href="https://doi.org/10.21872/annual2025_6968">IISE Annual Conference</a></li>
+    </ul>
+    <p class="hint">Questions: <a href="mailto:erick.jones@uta.edu">erick.jones@uta.edu</a></p>
+  </aside>
 
   <p class="disclaimer">
     <strong>This is a teaching toy, not research.</strong> Both models are
@@ -148,6 +173,17 @@ import Base from "../layouts/Base.astro";
 </Base>
 
 <style>
+  .talk {
+    border: 1px solid var(--rule); border-radius: 6px;
+    padding: .8rem 1rem; margin: 1rem 0 1.2rem;
+  }
+  .talk p { margin: .4rem 0; }
+  .talk ul { margin: .3rem 0 .4rem; padding-left: 1.2rem; }
+  .talk-kicker {
+    font-family: system-ui, sans-serif; font-size: .78rem; text-transform: uppercase;
+    letter-spacing: .06em; color: var(--accent);
+  }
+  .talk-title { font-weight: 600; font-size: 1.05rem; }
   .disclaimer {
     border-left: 3px solid var(--accent);
     padding: .6rem .9rem;
